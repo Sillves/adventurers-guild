@@ -12,6 +12,22 @@
 
   let { screen = $bindable() }: { screen: Screen } = $props();
 
+  async function exportSave(): Promise<void> {
+    const data = game.exportSave();
+    try {
+      await navigator.clipboard.writeText(data);
+      alert('Save copied to clipboard!');
+    } catch {
+      window.prompt('Copy your save:', data);
+    }
+  }
+
+  function importSave(): void {
+    const data = window.prompt('Paste your save:');
+    if (data === null) return;
+    if (!game.importSave(data)) alert('That save could not be read.');
+  }
+
   const items: ReadonlyArray<{ id: Screen; label: string; icon: string }> = [
     { id: 'guild', label: 'Guild', icon: '🏰' },
     { id: 'heroes', label: 'Heroes', icon: '🧙' },
@@ -46,6 +62,10 @@
     {muted ? '🔇 Sound off' : '🔊 Sound on'}
   </button>
   <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
+  <div class="save-actions">
+    <button onclick={exportSave}>Export save</button>
+    <button onclick={importSave}>Import save</button>
+  </div>
 </nav>
 
 <style>
@@ -72,4 +92,12 @@
   .rate { color: var(--text-dim); font-size: 0.8rem; }
   .mute { font-size: 0.85rem; color: var(--text-dim); }
   .credits { color: var(--text-dim); font-size: 0.75rem; padding: 4px 12px; text-decoration: none; display: block; text-align: center; }
+  .save-actions { display: flex; gap: 6px; }
+  .save-actions button { flex: 1; font-size: 0.75rem; color: var(--text-dim); padding: 6px; background: var(--panel-raised); }
+  @media (max-width: 700px) {
+    nav { flex-direction: row; align-items: center; min-width: 0; overflow-x: auto; }
+    .balances { margin-top: 0; margin-left: auto; padding: 0 8px; }
+    .rate { display: none; }
+    .mute, .credits, .save-actions { display: none; }
+  }
 </style>

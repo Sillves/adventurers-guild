@@ -74,4 +74,17 @@ export const game = {
   dismissOffline(): void {
     offlineReport = null;
   },
+  exportSave(): string {
+    persist();
+    return serializeSave(state);
+  },
+  importSave(json: string): boolean {
+    const parsed = parseSave(json);
+    if (parsed === null) return false;
+    const result = applyOffline(parsed, Date.now());
+    state = result.state;
+    offlineReport = result.report;
+    persist();
+    return true;
+  },
 };

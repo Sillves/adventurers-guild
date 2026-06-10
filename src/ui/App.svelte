@@ -36,4 +36,7 @@
 <style>
   .app { display: flex; min-height: 100vh; }
   main { flex: 1; }
+  @media (max-width: 700px) {
+    .app { flex-direction: column-reverse; }
+  }
 </style>
