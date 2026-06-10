@@ -8,6 +8,7 @@
   import { formatNumber } from './format';
   import { game } from './game.svelte';
   import Icon from './Icon.svelte';
+  import { isMuted, toggleMuted } from './sound';
 
   let { screen = $bindable() }: { screen: Screen } = $props();
 
@@ -19,6 +20,7 @@
   ];
 
   const production = $derived(productionPerSecond(game.state));
+  let muted = $state(isMuted());
 </script>
 
 <nav>
@@ -40,6 +42,9 @@
       {/if}
     {/each}
   </div>
+  <button class="mute" onclick={() => (muted = toggleMuted())}>
+    {muted ? '🔇 Sound off' : '🔊 Sound on'}
+  </button>
 </nav>
 
 <style>
@@ -64,4 +69,5 @@
   .balances { margin-top: auto; padding: 12px 4px; display: grid; gap: 6px; }
   .balance { display: flex; align-items: center; gap: 6px; color: var(--gold); }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
+  .mute { font-size: 0.85rem; color: var(--text-dim); }
 </style>

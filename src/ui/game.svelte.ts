@@ -3,6 +3,7 @@ import * as commands from '../engine/commands';
 import { parseSave, serializeSave } from '../engine/save';
 import { createInitialState, type GameState } from '../engine/state';
 import { localStorageStore, RotatingSaveStorage } from '../engine/storage';
+import { playSound, startMusic } from './sound';
 
 const storage = new RotatingSaveStorage(localStorageStore);
 
@@ -48,16 +49,26 @@ export const game = {
   },
 
   quest(): void {
+    startMusic();
+    playSound('click');
     state = commands.performQuest(state);
   },
   buyHero(heroId: string): void {
-    state = commands.buyHero(state, heroId);
+    startMusic();
+    const next = commands.buyHero(state, heroId);
+    if (next !== state) playSound('buy');
+    state = next;
   },
   buyUpgrade(upgradeId: string): void {
-    state = commands.buyUpgrade(state, upgradeId);
+    startMusic();
+    const next = commands.buyUpgrade(state, upgradeId);
+    if (next !== state) playSound('buy');
+    state = next;
   },
   prestige(): void {
-    state = commands.doPrestige(state, Date.now());
+    const next = commands.doPrestige(state, Date.now());
+    if (next !== state) playSound('prestige');
+    state = next;
     persist();
   },
   dismissOffline(): void {
