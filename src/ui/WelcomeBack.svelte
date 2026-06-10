@@ -1,14 +1,18 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { OfflineReport } from '../engine/advance';
   import { CURRENCIES } from '../content/currencies';
   import { formatDuration, formatNumber } from './format';
   import Icon from './Icon.svelte';
 
   let { report, onclose }: { report: OfflineReport; onclose: () => void } = $props();
+  let dialog: HTMLDivElement;
+
+  onMount(() => dialog?.focus());
 </script>
 
-<div class="backdrop" role="presentation" onclick={onclose}>
-  <div class="modal" role="dialog" aria-label="Welcome back" onclick={(e) => e.stopPropagation()}>
+<div class="backdrop" role="presentation" onclick={onclose} onkeydown={(e) => { if (e.key === 'Escape') onclose(); }}>
+  <div class="modal" role="dialog" aria-label="Welcome back" aria-modal="true" tabindex="-1" bind:this={dialog} onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
     <h2>Welcome back!</h2>
     <p class="dim">Your guild kept working for {formatDuration(report.seconds)}:</p>
     {#each CURRENCIES as currency (currency.id)}
