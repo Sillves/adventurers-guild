@@ -8,7 +8,11 @@ Design & code: Loren — all code MIT-licensed unless noted.
   [game-icons.net](https://game-icons.net) SVGs: those are **CC BY 3.0** and REQUIRE
   attribution to the individual artists (Lorc, Delapouite, et al.) — list each icon
   and artist here when added.
-- **Audio:** see `public/audio/README.md` — CC0 sources only (Kenney, OpenGameArt CC0).
+- **Audio:**
+  - Background music: ["Medieval: The Old Tower Inn"](https://opengameart.org/content/medieval-the-old-tower-inn)
+    by **RandomMind** — CC0 (attribution not required, but appreciated).
+  - Sound effects: synthesized by `scripts/generate-audio.py` (own work, no license needed).
+  - See `public/audio/README.md` for details.
 
 ## Tools
 Built with Svelte 5, Vite, Vitest.

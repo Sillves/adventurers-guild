@@ -2,6 +2,12 @@
 
 The game works fine without audio files (missing audio is silently skipped).
 
+## Background music
+
+`music.mp3` is ["Medieval: The Old Tower Inn" by RandomMind](https://opengameart.org/content/medieval-the-old-tower-inn),
+CC0 from OpenGameArt. Starts on the first user interaction (autoplay policy), loops,
+respects the mute toggle.
+
 ## Current SFX (generated)
 
 `click.wav`, `buy.wav` and `prestige.wav` are synthesized by `scripts/generate-audio.py`
@@ -22,6 +28,6 @@ extension changes:
 | `click.wav` | Kenney "Interface Sounds" — https://kenney.nl/assets/interface-sounds (CC0) |
 | `buy.wav` | Kenney "Interface Sounds" — pick a "confirmation" sound (CC0) |
 | `prestige.wav` | Kenney "Jingles" — https://kenney.nl/assets?q=jingles (CC0) |
-| `music.ogg` | Any CC0 loop, e.g. search https://opengameart.org for "medieval loop CC0" — not included yet |
+| `music.mp3` | Any CC0 loop, e.g. search https://opengameart.org for "medieval loop CC0" |
 
 Keep files small (< 1 MB total preferred). Update `docs/CREDITS.md` when adding files.

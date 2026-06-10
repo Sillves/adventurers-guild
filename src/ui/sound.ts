@@ -45,7 +45,7 @@ export function playSound(name: SoundName): void {
 export function startMusic(): void {
   if (music !== null) return;
   try {
-    music = new Audio('audio/music.ogg');
+    music = new Audio('audio/music.mp3');
     music.loop = true;
     music.volume = 0.25;
     music.muted = muted;
