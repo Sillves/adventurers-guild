@@ -41,8 +41,8 @@
 
 <nav>
   {#each items as item (item.id)}
-    <button class:active={screen === item.id} onclick={() => (screen = item.id)}>
-      <Icon icon={item.icon} size={18} /> {item.label}
+    <button class="tab" class:active={screen === item.id} onclick={() => (screen = item.id)}>
+      <Icon icon={item.icon} size={18} /> <span>{item.label}</span>
     </button>
   {/each}
   <div class="balances">
@@ -59,7 +59,7 @@
     {/each}
   </div>
   <button class="mute" onclick={() => (muted = toggleMuted())}>
-    {muted ? '🔇 Sound off' : '🔊 Sound on'}
+    {muted ? '🔇' : '🔊'}<span class="mute-label"> {muted ? 'Sound off' : 'Sound on'}</span>
   </button>
   <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
   <div class="save-actions">
@@ -95,9 +95,52 @@
   .save-actions { display: flex; gap: 6px; }
   .save-actions button { flex: 1; font-size: 0.75rem; color: var(--text-dim); padding: 6px; background: var(--panel-raised); }
   @media (max-width: 700px) {
-    nav { flex-direction: row; align-items: center; min-width: 0; overflow-x: auto; }
-    .balances { margin-top: 0; margin-left: auto; padding: 0 8px; }
-    .rate { display: none; }
-    .mute, .credits, .save-actions { display: none; }
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      flex-direction: row;
+      gap: 4px;
+      min-width: 0;
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border);
+      z-index: 10;
+    }
+    .tab {
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      padding: 6px 0;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+    .balances {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      margin: 0;
+      padding: 10px 14px;
+      padding-right: 52px;
+      display: flex;
+      gap: 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .mute {
+      position: fixed;
+      top: 3px;
+      right: 4px;
+      z-index: 11;
+      padding: 8px 10px;
+      background: transparent;
+      font-size: 1rem;
+    }
+    .mute-label { display: none; }
+    .credits,
+    .save-actions { display: none; }
   }
 </style>

@@ -37,6 +37,10 @@
   .app { display: flex; min-height: 100vh; }
   main { flex: 1; }
   @media (max-width: 700px) {
-    .app { flex-direction: column-reverse; }
+    .app { flex-direction: column; }
+    main {
+      padding-top: 48px;
+      padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    }
   }
 </style>
