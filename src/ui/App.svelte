@@ -5,7 +5,9 @@
   import Sidebar, { type Screen } from './Sidebar.svelte';
   import GuildScreen from './screens/GuildScreen.svelte';
   import HeroesScreen from './screens/HeroesScreen.svelte';
+  import PrestigeScreen from './screens/PrestigeScreen.svelte';
   import UpgradesScreen from './screens/UpgradesScreen.svelte';
+  import WelcomeBack from './WelcomeBack.svelte';
 
   let screen = $state<Screen>('guild');
   let realmId = $state(REALMS[0].id);
@@ -23,9 +25,12 @@
     {:else if screen === 'upgrades'}
       <UpgradesScreen {realmId} />
     {:else}
-      <p style="padding: 24px;">Coming soon…</p>
+      <PrestigeScreen />
     {/if}
   </main>
+  {#if game.offlineReport !== null}
+    <WelcomeBack report={game.offlineReport} onclose={() => game.dismissOffline()} />
+  {/if}
 </div>
 
 <style>

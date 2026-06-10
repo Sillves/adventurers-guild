@@ -1,6 +1,6 @@
 <script lang="ts">
   import { HEROES } from '../../content/heroes';
-  import { heroCost, heroMultiplier } from '../../engine/formulas';
+  import { fameBonus, heroCost, heroMultiplier } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -26,7 +26,7 @@
   {#each realmHeroes.slice(0, visibleCount) as hero (hero.id)}
     {@const owned = ownedCount(hero.id)}
     {@const cost = heroCost(hero, owned)}
-    {@const production = (hero.production.gold ?? 0) * Math.max(owned, 1) * heroMultiplier(hero.id, game.state.upgrades)}
+    {@const production = (hero.production.gold ?? 0) * Math.max(owned, 1) * heroMultiplier(hero.id, game.state.upgrades) * fameBonus(game.state.balances['fame'] ?? 0)}
     <div class="row">
       <Icon icon={hero.icon} size={32} />
       <div class="info">
