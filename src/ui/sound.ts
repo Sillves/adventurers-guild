@@ -31,7 +31,7 @@ export function playSound(name: SoundName): void {
   try {
     let audio = cache[name];
     if (audio === undefined) {
-      audio = new Audio(`audio/${name}.ogg`);
+      audio = new Audio(`audio/${name}.wav`);
       audio.volume = 0.5;
       cache[name] = audio;
     }
