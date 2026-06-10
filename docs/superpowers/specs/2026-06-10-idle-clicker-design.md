@@ -23,6 +23,7 @@ Een gratis idle clicker game, gebouwd om (1) echte spelers te bereiken, (2) game
 - **8 helden**, oplopend in kosten en productie: Boerenknecht → Schildknaap → Krijger → Boogschutter → Magiër → Paladijn → Drakentemmer → Aartsmagiër.
 - **±20 upgrades**, eenmalige aankopen met effecten als `{ target: 'hero:warrior', multiplier: 2 }`.
 - **2 valuta:** Goud (kernloop) en Roem (prestige). Het systeem ondersteunt onbeperkt extra valuta.
+- **1 rijk:** alle v1-content hoort bij het startrijk. Het datamodel ondersteunt meerdere rijken (zie Uitbreidbaarheid); een tweede rijk is v2-content.
 
 **Formules:**
 - Heldkosten: `kosten = basisKosten × 1.15^aantalInBezit`
@@ -34,7 +35,9 @@ Een gratis idle clicker game, gebouwd om (1) echte spelers te bereiken, (2) game
 
 ## Uitbreidbaarheid (kerneis)
 
-Nieuwe valuta, helden en upgrades toevoegen mag nooit engine- of UI-wijzigingen vereisen. Alle content staat als data in `src/content/` (TypeScript-arrays met `as const`). De engine itereert generiek over deze lijsten; kosten en productie zijn multi-currency maps (`{ gold: 15 }`). Saves bewaren alleen aantallen per id, zodat oude saves blijven werken wanneer content wordt toegevoegd.
+Nieuwe valuta, helden, upgrades en rijken toevoegen mag nooit engine- of UI-wijzigingen vereisen. Alle content staat als data in `src/content/` (TypeScript-arrays met `as const`). De engine itereert generiek over deze lijsten; kosten en productie zijn multi-currency maps (`{ gold: 15 }`). Saves bewaren alleen aantallen per id, zodat oude saves blijven werken wanneer content wordt toegevoegd.
+
+**Rijken:** elk rijk is een content-entry in `realms.ts` met een naam, thema-accentkleur en een unlock-voorwaarde (bijv. `{ minFame: 10 }`). Elke held en upgrade hoort bij een rijk (`realmId`). De UI toont vergrendelde rijken als teaser en rendert per rijk generiek dezelfde schermen; de sidebar krijgt een rijk-wisselaar zodra er meer dan één rijk ontgrendeld is. Een tweede rijk toevoegen = één entry in `realms.ts` plus helden/upgrades met dat `realmId` — geen code.
 
 ## Architectuur
 
@@ -42,7 +45,7 @@ Nieuwe valuta, helden en upgrades toevoegen mag nooit engine- of UI-wijzigingen 
 
 **Lagen:**
 - `src/engine/` — pure TypeScript, geen Svelte/DOM. Tick-loop, formules, save/load, offline-berekening. Volledig unit-testbaar.
-- `src/content/` — data-definities: `currencies.ts`, `heroes.ts`, `upgrades.ts`.
+- `src/content/` — data-definities: `currencies.ts`, `realms.ts`, `heroes.ts`, `upgrades.ts`.
 - `src/ui/` — Svelte-componenten. Lezen state, sturen commando's ("koop held X"). Geen spellogica.
 
 **Tick-loop:** `requestAnimationFrame` voor weergave; logica rekent met delta-tijd via één functie `advance(state, seconds)`. Dezelfde functie verwerkt offline-tijd (één aanroep met het verstreken aantal seconden, gecapt op 8 uur). Eén codepad voor online en offline progressie.
@@ -86,6 +89,7 @@ Nieuwe valuta, helden en upgrades toevoegen mag nooit engine- of UI-wijzigingen 
 
 ## Buiten scope v1
 
+- Tweede rijk (v2 — puur content dankzij het rijken-datamodel)
 - Achievements (v2, herbruikbaar voor Steam)
 - Monetisatie
 - Meertaligheid (v1 is Engelstalig voor maximaal bereik)
