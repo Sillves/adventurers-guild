@@ -45,6 +45,7 @@
   <button class="mute" onclick={() => (muted = toggleMuted())}>
     {muted ? '🔇 Sound off' : '🔊 Sound on'}
   </button>
+  <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
 </nav>
 
 <style>
@@ -70,4 +71,5 @@
   .balance { display: flex; align-items: center; gap: 6px; color: var(--gold); }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
   .mute { font-size: 0.85rem; color: var(--text-dim); }
+  .credits { color: var(--text-dim); font-size: 0.75rem; padding: 4px 12px; text-decoration: none; display: block; text-align: center; }
 </style>
