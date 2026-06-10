@@ -36,7 +36,7 @@ export function parseSave(json: string): GameState | null {
     const parsed: unknown = JSON.parse(json);
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
     let raw = parsed as RawObject;
-    let version = typeof raw.version === 'number' ? raw.version : 0;
+    let version = typeof raw.version === 'number' && Number.isFinite(raw.version) ? raw.version : 0;
     if (version < 1 || version > SAVE_VERSION) return null;
     while (version < SAVE_VERSION) {
       const migrate = MIGRATIONS[version];

@@ -37,6 +37,7 @@ describe('parseSave robustness', () => {
     expect(parsed?.heroes).toEqual({ farmhand: 2 });
     expect(parsed?.upgrades).toEqual(['stronger-grip']);
     expect(parsed?.balances).toEqual({ gold: 10, fame: 0 });
+    expect(parsed?.runEarned).toEqual({ gold: 10 });
   });
 
   it('rejects negative or non-finite numbers', () => {
