@@ -31,7 +31,7 @@ export function playSound(name: SoundName): void {
   try {
     let audio = cache[name];
     if (audio === undefined) {
-      audio = new Audio(`audio/${name}.ogg`);
+      audio = new Audio(`audio/${name}.wav`);
       audio.volume = 0.5;
       cache[name] = audio;
     }
@@ -45,7 +45,7 @@ export function playSound(name: SoundName): void {
 export function startMusic(): void {
   if (music !== null) return;
   try {
-    music = new Audio('audio/music.ogg');
+    music = new Audio('audio/music.mp3');
     music.loop = true;
     music.volume = 0.25;
     music.muted = muted;
