@@ -34,14 +34,23 @@ describe('content integrity', () => {
   it('upgrades reference existing realms, currencies and hero targets', () => {
     for (const upgrade of UPGRADES) {
       expect(realmIds.has(upgrade.realmId), `${upgrade.id} realm`).toBe(true);
-      expect(upgrade.effect.multiplier).toBeGreaterThan(1);
+      const effect = upgrade.effect;
+      if (effect.target === 'click-synergy') {
+        expect(effect.percentOfProduction, `${upgrade.id} percent`).toBeGreaterThan(0);
+      } else if (effect.target === 'click-crit') {
+        expect(effect.chance, `${upgrade.id} chance`).toBeGreaterThan(0);
+        expect(effect.chance, `${upgrade.id} chance`).toBeLessThanOrEqual(1);
+        expect(effect.critMultiplier, `${upgrade.id} crit multiplier`).toBeGreaterThan(1);
+      } else {
+        expect(effect.multiplier, `${upgrade.id} multiplier`).toBeGreaterThan(1);
+        if (effect.target !== 'click') {
+          const heroId = effect.target.slice('hero:'.length);
+          expect(heroIds.has(heroId), `${upgrade.id} targets unknown hero ${heroId}`).toBe(true);
+        }
+      }
       for (const [cur, amount] of Object.entries(upgrade.cost)) {
         expect(currencyIds.has(cur), `${upgrade.id} cost currency ${cur}`).toBe(true);
         expect(amount).toBeGreaterThan(0);
-      }
-      if (upgrade.effect.target !== 'click') {
-        const heroId = upgrade.effect.target.slice('hero:'.length);
-        expect(heroIds.has(heroId), `${upgrade.id} targets unknown hero ${heroId}`).toBe(true);
       }
     }
   });

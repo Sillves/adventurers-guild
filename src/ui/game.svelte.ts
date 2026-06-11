@@ -1,5 +1,6 @@
 import { applyOffline, advance, type OfflineReport } from '../engine/advance';
 import * as commands from '../engine/commands';
+import { clickOutcome, type ClickOutcome } from '../engine/formulas';
 import { parseSave, serializeSave } from '../engine/save';
 import { createInitialState, type GameState } from '../engine/state';
 import { localStorageStore, RotatingSaveStorage } from '../engine/storage';
@@ -48,10 +49,13 @@ export const game = {
     });
   },
 
-  quest(): void {
+  quest(): ClickOutcome {
     startMusic();
-    playSound('click');
-    state = commands.performQuest(state);
+    const roll = Math.random();
+    const outcome = clickOutcome(state, roll);
+    playSound(outcome.crit ? 'buy' : 'click');
+    state = commands.performQuest(state, roll);
+    return outcome;
   },
   buyHero(heroId: string): void {
     startMusic();

@@ -13,16 +13,46 @@
   const prestigeProgress = $derived(
     Math.min(Math.max((lifetimeGold - prevTarget) / (nextTarget - prevTarget), 0), 1),
   );
+
+  interface FloatingGain {
+    readonly id: number;
+    readonly x: number;
+    readonly text: string;
+    readonly crit: boolean;
+  }
+
+  let floats = $state<FloatingGain[]>([]);
+  let nextFloatId = 0;
+
+  function quest(): void {
+    const outcome = game.quest();
+    const id = nextFloatId++;
+    floats = [
+      ...floats.slice(-24),
+      {
+        id,
+        x: (Math.random() - 0.5) * 140,
+        text: `${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`,
+        crit: outcome.crit,
+      },
+    ];
+    setTimeout(() => (floats = floats.filter((f) => f.id !== id)), 900);
+  }
 </script>
 
 <section>
   <h2>Adventurers Guild</h2>
   <p class="dim">Send your guild on quests and recruit heroes to earn gold for you.</p>
 
-  <button class="quest" onclick={() => game.quest()}>
-    <span class="quest-icon">⚔️</span>
-    <span>Run quest<br /><small>+{formatNumber(gain)} gold</small></span>
-  </button>
+  <div class="quest-area">
+    <button class="quest" onclick={quest}>
+      <span class="quest-icon">⚔️</span>
+      <span>Run quest<br /><small>+{formatNumber(gain)} gold</small></span>
+    </button>
+    {#each floats as f (f.id)}
+      <span class="float" class:crit={f.crit} style="left: calc(50% + {f.x}px)">{f.text}</span>
+    {/each}
+  </div>
 
   <GuildYard />
 
@@ -54,6 +84,28 @@
   }
   .quest:active { transform: scale(0.97); }
   .quest-icon { font-size: 2rem; }
+  .quest-area { position: relative; }
+  .float {
+    position: absolute;
+    top: -6px;
+    transform: translateX(-50%);
+    color: var(--text);
+    font-weight: 600;
+    pointer-events: none;
+    animation: float-up 0.9s ease-out forwards;
+    white-space: nowrap;
+  }
+  .float.crit {
+    color: var(--gold);
+    font-size: 1.3rem;
+  }
+  @keyframes float-up {
+    from { translate: 0 0; opacity: 1; }
+    to { translate: 0 -48px; opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .float { animation-duration: 0.5s; }
+  }
   .stats { display: grid; gap: 8px; width: min(420px, 100%); }
   .bar { background: var(--panel-raised); border-radius: 999px; height: 10px; overflow: hidden; }
   .fill { background: var(--success); height: 100%; }

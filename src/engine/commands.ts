@@ -1,7 +1,7 @@
 import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap } from '../content/types';
-import { clickGain, fameGain, heroCost } from './formulas';
+import { clickOutcome, fameGain, heroCost } from './formulas';
 import { addMaps, canAfford, subtractMaps } from './maps';
 import { createInitialState, type GameState } from './state';
 
@@ -14,8 +14,9 @@ export function earn(state: GameState, amount: CurrencyMap): GameState {
   };
 }
 
-export function performQuest(state: GameState): GameState {
-  return earn(state, clickGain(state));
+/** roll ∈ [0, 1) bepaalt of de klik crit; default 1 = nooit crit (deterministisch). */
+export function performQuest(state: GameState, roll = 1): GameState {
+  return earn(state, clickOutcome(state, roll).gain);
 }
 
 export function buyHero(state: GameState, heroId: string): GameState {
