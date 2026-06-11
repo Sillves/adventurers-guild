@@ -109,6 +109,7 @@ describe('doPrestige', () => {
     expect(after.upgrades).toEqual([]);
     expect(after.runEarned).toEqual({});
     expect(after.lifetimeEarned).toEqual({ gold: 25_000_000 });
+    expect(after.prestiges).toBe(1);
     expect(after.lastSavedAt).toBe(123);
   });
 });

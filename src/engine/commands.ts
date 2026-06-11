@@ -53,5 +53,6 @@ export function doPrestige(state: GameState, now: number): GameState {
     ...fresh,
     balances: { ...fresh.balances, fame: (state.balances['fame'] ?? 0) + gain },
     lifetimeEarned: state.lifetimeEarned,
+    prestiges: state.prestiges + 1,
   };
 }
