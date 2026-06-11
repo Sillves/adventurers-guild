@@ -72,6 +72,32 @@ valsspelen) en het blijft gratis. Vereist een eigen Cloudflare-account.
 Totaal: ±twee werksessies. Nieuwe operationele afhankelijkheid: één
 Cloudflare-account.
 
+## Cloud saves & valsspelen — waarom opslag ≠ integriteit
+
+Vraag uit review: "kunnen we niet gewoon cloud saves doen, dan is valsspelen
+onmogelijk?" Nee — cloud saves verplaatsen **waar** de data staat, niet **wie**
+ze produceert. De client berekent de cijfers; een vervalste save wordt gewoon
+geüpload in plaats van lokaal bewaard. De anti-cheat-ladder:
+
+1. **Cloud saves (opslag):** geen integriteitswinst, wél waardevol als feature —
+   cross-device spelen ("fix me account" van Ilyes) en backup. Apart plannen.
+2. **Plausibiliteits-envelope (aanbevolen voor dit leaderboard):** de Worker
+   kent de spelformules én we hebben al een perfect-play simulator
+   (`scripts/simulate.ts`). Server berekent het theoretische maximum aan
+   lifetime goud voor de verstreken wandkloktijd sinds de eerste submission en
+   weigert alles daarboven. Onmogelijke scores → geweigerd; menselijk-plausibele
+   vervalsingen blijven mogelijk.
+3. **Server-authoritative simulatie (enige echte fix, uitgesteld):** server
+   houdt de state, client stuurt acties, de pure TS-engine draait server-side
+   (kan letterlijk dezelfde code in de Worker zijn). Kost: sync-protocol,
+   client prediction, server-enforced offline-cap, conflicthantering — ±5-10×
+   het werk van dit plan. Alleen overwegen als het spel de vriendenkring
+   ontgroeit.
+
+**Aanbeveling:** leaderboard-validatie upgraden van losse sanity checks naar de
+simulator-envelope (punt 2); cloud saves als losse feature plannen; punt 3
+expliciet uitstellen.
+
 ## Buiten scope
 
 - Accounts, cloud saves, vriendenlijsten
