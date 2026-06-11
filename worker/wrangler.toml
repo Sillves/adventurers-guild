@@ -1,0 +1,11 @@
+name = "adventurers-guild-api"
+main = "index.ts"
+compatibility_date = "2026-06-01"
+
+# database_id wordt bij deploy ingevuld door de GitHub Action
+# (.github/workflows/deploy-worker.yml), die de database zo nodig aanmaakt.
+[[d1_databases]]
+binding = "DB"
+database_name = "adventurers-guild-db"
+database_id = "__DATABASE_ID__"
+migrations_dir = "migrations"
