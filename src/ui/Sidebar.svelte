@@ -175,9 +175,10 @@
       left: 0;
       right: 0;
       margin: 0;
-      padding: 10px 14px;
-      padding-right: 92px;
+      height: 44px;
+      padding: 0 92px 0 14px;
       display: flex;
+      align-items: center;
       gap: 18px;
       background: var(--panel);
       border-bottom: 1px solid var(--border);
@@ -186,27 +187,23 @@
     /* fame rechts verankeren zodat die niet meeschuift als het goudgetal breder wordt;
        enkel de tweede balance krijgt auto-marge zodat latere valuta rechts gegroepeerd blijven */
     .balance:first-child + .balance { margin-left: auto; }
-    .mute {
-      position: fixed;
-      top: 3px;
-      right: 4px;
-      z-index: 11;
-      padding: 8px 10px;
-      background: transparent;
-      font-size: 1rem;
-    }
-    .mute-label { display: none; }
-    .mute { right: 44px; }
+    /* knoppen overspannen de volledige balkhoogte en centreren hun icoon,
+       in plaats van op een hardgecodeerde top-offset te hangen */
+    .mute,
     .settings-toggle {
-      display: block;
       position: fixed;
-      top: 3px;
-      right: 4px;
+      top: 0;
+      height: 44px;
+      display: flex;
+      align-items: center;
       z-index: 11;
-      padding: 8px 10px;
+      padding: 0 10px;
       background: transparent;
       font-size: 1rem;
     }
+    .mute { right: 44px; }
+    .settings-toggle { right: 4px; }
+    .mute-label { display: none; }
     .settings-panel {
       display: grid;
       gap: 8px;
