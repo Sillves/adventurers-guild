@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { clickGain, fameGain, fameTargetGold, productionPerSecond } from '../../engine/formulas';
+  import { clickGain, fameGain, fameTargetGold } from '../../engine/formulas';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
   import GuildYard from '../GuildYard.svelte';
 
   const gain = $derived(clickGain(game.state).gold ?? 0);
-  const gold = $derived(game.state.balances['gold'] ?? 0);
-  const rate = $derived(productionPerSecond(game.state)['gold'] ?? 0);
   const runGold = $derived(game.state.runEarned['gold'] ?? 0);
   const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
   const fame = $derived(game.state.balances['fame'] ?? 0);
@@ -46,13 +44,6 @@
   <h2>Adventurers Guild</h2>
   <p class="dim">Send your guild on quests and recruit heroes to earn gold for you.</p>
 
-  <div class="wallet">
-    <span class="wallet-gold">🪙 {formatNumber(gold)}</span>
-    {#if rate > 0}
-      <span class="wallet-rate">+{formatNumber(rate)}/s</span>
-    {/if}
-  </div>
-
   <div class="quest-area">
     <button class="quest" onclick={quest}>
       <span class="quest-icon">⚔️</span>
@@ -68,7 +59,9 @@
   <div class="stats">
     <div>Earned this guild era: <strong>{formatNumber(runGold)}</strong> gold</div>
     {#if fameGain(game.state) === 0}
-      <div class="dim">Reach {formatNumber(nextTarget)} lifetime gold for your next Fame</div>
+      <div class="dim">
+        Next Fame: <strong class="lifetime">{formatNumber(lifetimeGold)}</strong> / {formatNumber(nextTarget)} lifetime gold
+      </div>
       <div class="bar"><div class="fill" style="width: {prestigeProgress * 100}%"></div></div>
     {:else}
       <div class="success">👑 Prestige available — check the Prestige tab!</div>
@@ -78,22 +71,7 @@
 
 <style>
   section { display: grid; gap: 20px; justify-items: center; padding: 32px; text-align: center; }
-  .wallet {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    margin: -6px 0;
-  }
-  .wallet-gold {
-    font-size: 1.7rem;
-    font-weight: 700;
-    color: var(--gold);
-    font-variant-numeric: tabular-nums;
-  }
-  .wallet-rate {
-    color: var(--text-dim);
-    font-variant-numeric: tabular-nums;
-  }
+  .lifetime { color: var(--gold); font-weight: 600; }
   .dim { color: var(--text-dim); }
   .success { color: var(--success); }
   .quest {
