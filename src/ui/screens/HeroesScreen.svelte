@@ -42,7 +42,8 @@
       ? Math.max(maxAffordableHeroes(hero, owned, game.state.balances), 1)
       : buyAmount}
     {@const cost = buyCount === 1 ? heroCost(hero, owned) : bulkHeroCost(hero, owned, buyCount)}
-    {@const production = (hero.production.gold ?? 0) * Math.max(owned, 1) * heroMultiplier(hero.id, game.state.upgrades) * fameBonus(game.state.balances['fame'] ?? 0)}
+    {@const perHero = (hero.production.gold ?? 0) * heroMultiplier(hero.id, game.state.upgrades) * fameBonus(game.state.balances['fame'] ?? 0)}
+    {@const production = perHero * Math.max(owned, 1)}
     <div class="row">
       <Icon icon={hero.icon} size={32} />
       <div class="info">
@@ -50,7 +51,9 @@
         <span class="dim">{owned > 0 ? `+${formatNumber(production)} gold/s` : `produces ${formatNumber(hero.production.gold ?? 0)} gold/s`}</span>
       </div>
       <button disabled={!canAfford(game.state.balances, cost)} onclick={() => game.buyHero(hero.id, buyCount)}>
-        Recruit{#if buyCount > 1}&nbsp;×{buyCount}{/if}<br /><small>🪙 {formatNumber(cost.gold ?? 0)}</small>
+        Recruit{#if buyCount > 1}&nbsp;×{buyCount}{/if}<br />
+        <small>🪙 {formatNumber(cost.gold ?? 0)}</small><br />
+        <small class="gain">+{formatNumber(perHero * buyCount)}/s</small>
       </button>
     </div>
   {/each}
@@ -86,5 +89,6 @@
   .info { display: grid; flex: 1; }
   .count { color: var(--text-dim); font-weight: 400; }
   .dim { color: var(--text-dim); font-size: 0.85rem; }
-  button { padding: 8px 16px; background: var(--accent); color: white; }
+  button { padding: 8px 16px; background: var(--accent); color: white; display: block; text-align: center; }
+  .gain { color: #bbf7d0; }
 </style>
