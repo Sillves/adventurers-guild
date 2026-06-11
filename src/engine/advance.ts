@@ -1,6 +1,6 @@
 import type { CurrencyMap } from '../content/types';
 import { earn } from './commands';
-import { productionPerSecond } from './formulas';
+import { incomePerSecond } from './formulas';
 import { scaleMap } from './maps';
 import type { GameState } from './state';
 
@@ -14,7 +14,7 @@ export interface OfflineReport {
 
 export function advance(state: GameState, seconds: number): GameState {
   if (seconds <= 0) return state;
-  return earn(state, scaleMap(productionPerSecond(state), seconds));
+  return earn(state, scaleMap(incomePerSecond(state), seconds));
 }
 
 export function applyOffline(
@@ -23,7 +23,7 @@ export function applyOffline(
 ): { state: GameState; report: OfflineReport | null } {
   const elapsed = Math.min(Math.max((now - state.lastSavedAt) / 1000, 0), OFFLINE_CAP_SECONDS);
   if (elapsed < OFFLINE_REPORT_MIN_SECONDS) return { state, report: null };
-  const earned = scaleMap(productionPerSecond(state), elapsed);
+  const earned = scaleMap(incomePerSecond(state), elapsed);
   return {
     state: advance(state, elapsed),
     report: { seconds: elapsed, earned },

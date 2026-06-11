@@ -1,0 +1,109 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - button "Guild" [ref=e5] [cursor=pointer]:
+      - generic [ref=e6]: 🏰
+      - generic [ref=e7]: Guild
+    - button "Heroes" [ref=e8] [cursor=pointer]:
+      - generic [ref=e9]: 🧙
+      - generic [ref=e10]: Heroes
+    - button "Upgrades" [ref=e12] [cursor=pointer]:
+      - generic [ref=e13]: ⬆️
+      - generic [ref=e14]: Upgrades
+    - button "Prestige" [ref=e16] [cursor=pointer]:
+      - generic [ref=e17]: 👑
+      - generic [ref=e18]: Prestige
+    - button "Ranking" [ref=e19] [cursor=pointer]:
+      - generic [ref=e20]: 🥇
+      - generic [ref=e21]: Ranking
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: 🪙
+        - strong [ref=e25]: 198M
+        - generic [ref=e26]: +71,194/s
+      - generic [ref=e27]:
+        - generic [ref=e28]: 🏆
+        - strong [ref=e29]: "15"
+    - button "🔇 Sound off" [ref=e30] [cursor=pointer]:
+      - text: 🔇
+      - generic [ref=e31]: Sound off
+    - generic [ref=e32]:
+      - generic [ref=e33]: Keep screen on
+      - switch "Keep screen on" [ref=e34] [cursor=pointer]
+    - link "Credits & licenses" [ref=e36] [cursor=pointer]:
+      - /url: https://github.com/game-icons/icons
+    - generic [ref=e37]:
+      - button "Export save" [ref=e38] [cursor=pointer]
+      - button "Import save" [ref=e39] [cursor=pointer]
+  - main [ref=e40]:
+    - generic [ref=e41]:
+      - heading "Adventurers Guild" [level=2] [ref=e42]
+      - paragraph [ref=e43]: Send your guild on quests and recruit heroes to earn gold for you.
+      - button "⚔️ Run quest +1,426 gold" [ref=e45] [cursor=pointer]:
+        - generic [ref=e46]: ⚔️
+        - generic [ref=e47]:
+          - text: Run quest
+          - text: +1,426 gold
+      - generic [ref=e48]:
+        - img [ref=e51]
+        - img [ref=e54]
+        - img [ref=e57]
+        - img [ref=e60]
+        - img [ref=e63]
+        - img [ref=e66]
+        - img [ref=e69]
+        - img [ref=e72]
+        - img [ref=e75]
+        - img [ref=e78]
+        - img [ref=e81]
+        - img [ref=e84]
+        - img [ref=e87]
+        - img [ref=e90]
+        - img [ref=e93]
+        - img [ref=e96]
+        - img [ref=e99]
+        - img [ref=e102]
+        - img [ref=e105]
+        - img [ref=e108]
+        - img [ref=e111]
+        - img [ref=e114]
+        - img [ref=e117]
+        - img [ref=e120]
+        - img [ref=e123]
+        - img [ref=e126]
+        - img [ref=e129]
+        - img [ref=e132]
+        - img [ref=e135]
+        - img [ref=e138]
+        - img [ref=e141]
+        - img [ref=e144]
+        - img [ref=e147]
+        - img [ref=e150]
+        - img [ref=e153]
+        - img [ref=e156]
+        - img [ref=e159]
+        - img [ref=e162]
+        - img [ref=e165]
+        - img [ref=e168]
+        - img [ref=e171]
+        - img [ref=e174]
+        - img [ref=e177]
+        - img [ref=e180]
+        - img [ref=e183]
+        - img [ref=e186]
+        - img [ref=e189]
+        - img [ref=e192]
+        - img [ref=e195]
+        - img [ref=e198]
+      - generic [ref=e199]:
+        - generic [ref=e200]:
+          - text: "Earned this guild era:"
+          - strong [ref=e201]: 198M
+          - text: gold
+        - generic [ref=e202]: 👑 Prestige available — check the Prestige tab!
+  - dialog "Welcome back" [active] [ref=e203]:
+    - heading "Welcome back!" [level=2] [ref=e204]
+    - paragraph [ref=e205]: "Your guild kept working for 12m 4s:"
+    - generic [ref=e206]:
+      - generic [ref=e207]: 🪙
+      - text: +51.6M Gold
+    - button "Collect" [ref=e208] [cursor=pointer]

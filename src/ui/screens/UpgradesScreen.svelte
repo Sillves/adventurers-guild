@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { UpgradeDef } from '../../content/types';
   import { UPGRADES } from '../../content/upgrades';
-  import { clickGain, critParams, productionPerSecond } from '../../engine/formulas';
+  import { clickGain, critParams, incomePerSecond } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import type { GameState } from '../../engine/state';
   import { formatNumber } from '../format';
@@ -56,8 +56,9 @@
       return `click fast: up to ×${upgrade.effect.maxMultiplier} per quest`;
     }
     const after: GameState = { ...game.state, upgrades: [...game.state.upgrades, upgrade.id] };
+    // inkomsten/s inclusief auto-quests, zodat ook een Quest Herald "+X gold/s" toont
     const perSecond =
-      (productionPerSecond(after)['gold'] ?? 0) - (productionPerSecond(game.state)['gold'] ?? 0);
+      (incomePerSecond(after)['gold'] ?? 0) - (incomePerSecond(game.state)['gold'] ?? 0);
     if (perSecond > 0) return `+${formatNumber(perSecond)} gold/s`;
     const perQuest = expectedQuest(after) - expectedQuest(game.state);
     if (perQuest > 0) return `+${formatNumber(perQuest)} gold per quest`;

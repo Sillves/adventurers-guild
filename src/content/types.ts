@@ -33,7 +33,9 @@ export type UpgradeEffect =
   /** Kans per klik op een critical die de opbrengst vermenigvuldigt. */
   | { readonly target: 'click-crit'; readonly chance: number; readonly critMultiplier: number }
   /** Snel doorklikken bouwt een combo op die de klikopbrengst tot dit maximum vermenigvuldigt. */
-  | { readonly target: 'click-combo'; readonly maxMultiplier: number };
+  | { readonly target: 'click-combo'; readonly maxMultiplier: number }
+  /** Personeel dat zelf quests draait: zoveel kliks per seconde, ook offline. */
+  | { readonly target: 'auto-click'; readonly clicksPerSecond: number };
 
 export interface UpgradeDef {
   readonly id: string;

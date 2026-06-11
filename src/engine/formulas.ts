@@ -114,6 +114,33 @@ export function clickGain(state: GameState): CurrencyMap {
   return { gold: base + (synergy / 100) * production };
 }
 
+/** Hoogste auto-click-tempo onder de gekochte upgrades; tiers vervangen elkaar. */
+export function autoClickRate(purchased: readonly string[]): number {
+  let rate = 0;
+  for (const u of UPGRADES) {
+    if (purchased.includes(u.id) && u.effect.target === 'auto-click') {
+      rate = Math.max(rate, u.effect.clicksPerSecond);
+    }
+  }
+  return rate;
+}
+
+/**
+ * Opbrengst/s van auto-quests: gewone klikwaarde × crit-verwachtingswaarde.
+ * Bewust zonder combo — heat blijft het domein van échte vingers.
+ */
+export function autoClickPerSecond(state: GameState): CurrencyMap {
+  const rate = autoClickRate(state.upgrades);
+  if (rate === 0) return {};
+  const { chance, multiplier } = critParams(state.upgrades);
+  return scaleMap(clickGain(state), rate * (1 + chance * (multiplier - 1)));
+}
+
+/** Totale inkomsten/s: heldenproductie plus auto-quests. */
+export function incomePerSecond(state: GameState): CurrencyMap {
+  return addMaps(productionPerSecond(state), autoClickPerSecond(state));
+}
+
 export interface ClickOutcome {
   readonly gain: CurrencyMap;
   readonly crit: boolean;

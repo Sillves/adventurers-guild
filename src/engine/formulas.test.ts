@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { HEROES } from '../content/heroes';
 import {
-  bulkHeroCost, clickGain, clickMultiplier, clickOutcome, clickSynergyPercent, comboCap,
-  critParams, fameBonus, fameGain, fameTargetGold, heroCost, heroMultiplier,
-  isRealmUnlocked, maxAffordableHeroes, productionPerSecond, PRESTIGE_THRESHOLD_GOLD,
+  autoClickPerSecond, autoClickRate, bulkHeroCost, clickGain, clickMultiplier, clickOutcome,
+  clickSynergyPercent, comboCap, critParams, fameBonus, fameGain, fameTargetGold, heroCost,
+  heroMultiplier, incomePerSecond, isRealmUnlocked, maxAffordableHeroes, productionPerSecond,
+  PRESTIGE_THRESHOLD_GOLD,
 } from './formulas';
 import { createInitialState } from './state';
 import { REALMS } from '../content/realms';
@@ -145,6 +146,38 @@ describe('click combo', () => {
     const state = { ...createInitialState(0), upgrades: ['battle-rhythm', 'lucky-strikes'] };
     const base = clickOutcome(state, 0.99).gain.gold ?? 0;
     expect(clickOutcome(state, 0.01, 2).gain.gold).toBeCloseTo(base * 2 * 10);
+  });
+});
+
+describe('auto-click', () => {
+  it('rate is 0 without upgrades, tiers replace each other', () => {
+    expect(autoClickRate([])).toBe(0);
+    expect(autoClickRate(['quest-herald'])).toBe(1);
+    expect(autoClickRate(['quest-herald', 'guild-steward'])).toBe(3);
+    expect(autoClickRate(['quest-herald', 'guild-steward', 'royal-envoy'])).toBe(6);
+  });
+
+  it('earns the click value per second, without combo', () => {
+    const state = { ...createInitialState(0), upgrades: ['quest-herald', 'stronger-grip'] };
+    // klikwaarde 2 (stronger-grip) × 1 klik/s
+    expect(autoClickPerSecond(state)).toEqual({ gold: 2 });
+    expect(autoClickPerSecond(createInitialState(0))).toEqual({});
+  });
+
+  it('includes the crit expected value', () => {
+    const state = { ...createInitialState(0), upgrades: ['quest-herald', 'lucky-strikes'] };
+    // 1 klik/s × (1 + 0.05 × 9) = 1.45
+    expect(autoClickPerSecond(state).gold).toBeCloseTo(1.45);
+  });
+
+  it('incomePerSecond sums hero production and auto-clicks', () => {
+    const state = {
+      ...createInitialState(0),
+      heroes: { farmhand: 10 },
+      upgrades: ['quest-herald'],
+    };
+    const production = productionPerSecond(state).gold ?? 0;
+    expect(incomePerSecond(state).gold).toBeCloseTo(production + 1);
   });
 });
 
