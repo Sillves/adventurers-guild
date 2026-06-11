@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { REALMS } from '../content/realms';
   import { game } from './game.svelte';
   import Sidebar, { type Screen } from './Sidebar.svelte';
@@ -12,11 +12,22 @@
   let screen = $state<Screen>('guild');
   let realmId = $state(REALMS[0].id);
 
+  // Onthoud de scrollpositie per tab, zodat je bv. in Upgrades niet telkens
+  // opnieuw naar beneden moet scrollen.
+  const scrollPositions: Partial<Record<Screen, number>> = {};
+
+  function switchScreen(next: Screen): void {
+    if (next === screen) return;
+    scrollPositions[screen] = window.scrollY;
+    screen = next;
+    void tick().then(() => window.scrollTo(0, scrollPositions[next] ?? 0));
+  }
+
   onMount(() => game.init());
 </script>
 
 <div class="app">
-  <Sidebar bind:screen {realmId} />
+  <Sidebar {screen} onswitch={switchScreen} {realmId} />
   <main>
     {#if screen === 'guild'}
       <GuildScreen />

@@ -13,7 +13,7 @@
   import Icon from './Icon.svelte';
   import { isMuted, toggleMuted } from './sound';
 
-  let { screen = $bindable(), realmId }: { screen: Screen; realmId: string } = $props();
+  let { screen, onswitch, realmId }: { screen: Screen; onswitch: (next: Screen) => void; realmId: string } = $props();
 
   async function exportSave(): Promise<void> {
     const data = game.exportSave();
@@ -69,7 +69,7 @@
 
 <nav>
   {#each items as item (item.id)}
-    <button class="tab" class:active={screen === item.id} onclick={() => (screen = item.id)}>
+    <button class="tab" class:active={screen === item.id} onclick={() => onswitch(item.id)}>
       <Icon icon={item.icon} size={18} /> <span>{item.label}</span>
       {#if badges[item.id] === true && screen !== item.id}
         <span class="dot"></span>
