@@ -21,6 +21,11 @@ const COMBO_DRAIN_PER_SECOND = 0.5;
 let comboHeat = $state(0);
 let lastQuestAt = 0;
 
+// Voortschrijdend venster van échte klikopbrengsten (incl. crits en combo),
+// zodat de UI kan tonen wat je vingers per seconde waard zijn.
+const CLICK_WINDOW_MS = 5000;
+let clickWindow = $state.raw<ReadonlyArray<{ readonly t: number; readonly gold: number }>>([]);
+
 function persist(): void {
   state = { ...state, lastSavedAt: Date.now() };
   storage.save(serializeSave(state));
@@ -51,6 +56,9 @@ export const game = {
       if (comboHeat > 0 && now - lastQuestAt > COMBO_IDLE_MS) {
         comboHeat = Math.max(0, comboHeat - dt * COMBO_DRAIN_PER_SECOND);
       }
+      if (clickWindow.length > 0 && clickWindow[0].t < now - CLICK_WINDOW_MS) {
+        clickWindow = clickWindow.filter((c) => c.t >= now - CLICK_WINDOW_MS);
+      }
       lastTick = now;
       requestAnimationFrame(tick);
     };
@@ -69,6 +77,12 @@ export const game = {
   get comboMultiplier(): number {
     return 1 + comboHeat * (comboCap(state.upgrades) - 1);
   },
+  /** Gemeten klikinkomsten over de laatste 5 s, als goud per seconde. */
+  get clickIncomeRate(): number {
+    let sum = 0;
+    for (const c of clickWindow) sum += c.gold;
+    return sum / (CLICK_WINDOW_MS / 1000);
+  },
 
   quest(): ClickOutcome {
     startMusic();
@@ -78,6 +92,7 @@ export const game = {
     state = commands.performQuest(state, roll, this.comboMultiplier);
     comboHeat = Math.min(1, comboHeat + 1 / COMBO_CLICKS_TO_FULL);
     lastQuestAt = performance.now();
+    clickWindow = [...clickWindow, { t: lastQuestAt, gold: outcome.gain.gold ?? 0 }];
     return outcome;
   },
   buyHero(heroId: string, count = 1): void {
