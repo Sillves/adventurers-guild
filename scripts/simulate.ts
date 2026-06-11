@@ -10,6 +10,7 @@ import * as commands from '../src/engine/commands';
 import { clickGain, critParams, fameGain, heroCost } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
 import { createInitialState, type GameState } from '../src/engine/state';
+import { formatNumber } from '../src/ui/format';
 
 interface PrestigeEvent {
   readonly n: number;
@@ -33,13 +34,6 @@ function fmt(seconds: number): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m${Math.round(seconds % 60)}s`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h${Math.floor((seconds % 3600) / 60)}m`;
   return `${Math.floor(seconds / 86400)}d${Math.floor((seconds % 86400) / 3600)}h`;
-}
-
-function fmtGold(value: number): string {
-  const suffixes = ['', 'K', 'M', 'B', 'T'];
-  let tier = 0;
-  while (value >= 1000 && tier < suffixes.length - 1) { value /= 1000; tier++; }
-  return `${value.toFixed(value < 10 && tier > 0 ? 1 : 0)}${suffixes[tier]}`;
 }
 
 /**
@@ -130,7 +124,7 @@ function report(result: SimResult): void {
   console.log('     #   na (totaal)   era-duur     +fame   fame   lifetime goud');
   for (const p of result.prestiges) {
     console.log(
-      `    ${String(p.n).padStart(2)}   ${fmt(p.atSeconds).padStart(11)}   ${fmt(p.eraSeconds).padStart(8)}   ${String(p.gain).padStart(5)}   ${String(p.fameAfter).padStart(4)}   ${fmtGold(p.lifetimeGold).padStart(8)}`,
+      `    ${String(p.n).padStart(2)}   ${fmt(p.atSeconds).padStart(11)}   ${fmt(p.eraSeconds).padStart(8)}   ${String(p.gain).padStart(5)}   ${String(p.fameAfter).padStart(4)}   ${formatNumber(p.lifetimeGold).padStart(8)}`,
     );
   }
   if (result.capped) console.log(`  ⚠️ gestopt op de tijdslimiet (${fmt(result.endSeconds)})`);
