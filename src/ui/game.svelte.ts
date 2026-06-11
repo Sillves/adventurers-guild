@@ -71,9 +71,15 @@ export const game = {
   },
   prestige(): void {
     const next = commands.doPrestige(state, Date.now());
-    if (next !== state) playSound('prestige');
+    if (next !== state) {
+      playSound('prestige');
+      state = next;
+      persist();
+      // hét moment dat telt voor het bord
+      void import('./leaderboard.svelte').then(({ leaderboard }) => leaderboard.submitNow(state));
+      return;
+    }
     state = next;
-    persist();
   },
   dismissOffline(): void {
     offlineReport = null;

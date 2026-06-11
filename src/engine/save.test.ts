@@ -73,12 +73,35 @@ describe('migration v1 → v2', () => {
       lastSavedAt: 0,
     };
     const parsed = parseSave(JSON.stringify(raw));
-    expect(parsed?.version).toBe(2);
+    expect(parsed?.version).toBe(3);
     expect(parsed?.lifetimeEarned).toEqual({ gold: 11_000_000 }); // 3² × 1M + 2M
   });
 
   it('treats a v1 save without fame as a fresh lifetime', () => {
     const raw = { version: 1, balances: {}, runEarned: { gold: 10 }, heroes: {}, upgrades: [], lastSavedAt: 0 };
     expect(parseSave(JSON.stringify(raw))?.lifetimeEarned).toEqual({ gold: 10 });
+  });
+});
+
+describe('migration v2 → v3', () => {
+  it('adds a zero prestige counter to v2 saves', () => {
+    const raw = {
+      version: 2,
+      balances: { gold: 5, fame: 3 },
+      runEarned: {},
+      lifetimeEarned: { gold: 9_000_000 },
+      heroes: {},
+      upgrades: [],
+      lastSavedAt: 0,
+    };
+    const parsed = parseSave(JSON.stringify(raw));
+    expect(parsed?.version).toBe(3);
+    expect(parsed?.prestiges).toBe(0);
+  });
+
+  it('keeps an existing v3 prestige counter and rejects fractions', () => {
+    const v3 = { version: 3, balances: {}, runEarned: {}, lifetimeEarned: {}, heroes: {}, upgrades: [], prestiges: 7, lastSavedAt: 0 };
+    expect(parseSave(JSON.stringify(v3))?.prestiges).toBe(7);
+    expect(parseSave(JSON.stringify({ ...v3, prestiges: 1.5 }))?.prestiges).toBe(0);
   });
 });

@@ -1,5 +1,5 @@
 <script module lang="ts">
-  export type Screen = 'guild' | 'heroes' | 'upgrades' | 'prestige';
+  export type Screen = 'guild' | 'heroes' | 'upgrades' | 'prestige' | 'leaderboard';
 </script>
 
 <script lang="ts">
@@ -37,6 +37,7 @@
     { id: 'heroes', label: 'Heroes', icon: '🧙' },
     { id: 'upgrades', label: 'Upgrades', icon: '⬆️' },
     { id: 'prestige', label: 'Prestige', icon: '👑' },
+    { id: 'leaderboard', label: 'Ranking', icon: '🥇' },
   ];
 
   const production = $derived(productionPerSecond(game.state));

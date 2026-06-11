@@ -5,9 +5,11 @@
   import Sidebar, { type Screen } from './Sidebar.svelte';
   import GuildScreen from './screens/GuildScreen.svelte';
   import HeroesScreen from './screens/HeroesScreen.svelte';
+  import LeaderboardScreen from './screens/LeaderboardScreen.svelte';
   import PrestigeScreen from './screens/PrestigeScreen.svelte';
   import UpgradesScreen from './screens/UpgradesScreen.svelte';
   import WelcomeBack from './WelcomeBack.svelte';
+  import { leaderboard } from './leaderboard.svelte';
 
   let screen = $state<Screen>('guild');
   let realmId = $state(REALMS[0].id);
@@ -23,7 +25,12 @@
     void tick().then(() => window.scrollTo(0, scrollPositions[next] ?? 0));
   }
 
-  onMount(() => game.init());
+  onMount(() => {
+    game.init();
+    // gethrottlede leaderboard-submissions; de module bewaakt interval en opt-in
+    const timer = setInterval(() => leaderboard.maybeSubmit(game.state), 60_000);
+    return () => clearInterval(timer);
+  });
 </script>
 
 <div class="app">
@@ -35,8 +42,10 @@
       <HeroesScreen {realmId} />
     {:else if screen === 'upgrades'}
       <UpgradesScreen {realmId} />
-    {:else}
+    {:else if screen === 'prestige'}
       <PrestigeScreen />
+    {:else}
+      <LeaderboardScreen />
     {/if}
   </main>
   {#if game.offlineReport !== null}

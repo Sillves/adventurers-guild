@@ -1,7 +1,7 @@
 import { CURRENCIES } from '../content/currencies';
 import type { CurrencyMap } from '../content/types';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface GameState {
   readonly version: number;
@@ -11,6 +11,8 @@ export interface GameState {
   readonly lifetimeEarned: CurrencyMap;
   readonly heroes: Readonly<Record<string, number>>;
   readonly upgrades: readonly string[];
+  /** Aantal refounds ooit; overleeft prestige. */
+  readonly prestiges: number;
   readonly lastSavedAt: number;
 }
 
@@ -26,6 +28,7 @@ export function createInitialState(now: number): GameState {
     lifetimeEarned: {},
     heroes: {},
     upgrades: [],
+    prestiges: 0,
     lastSavedAt: now,
   };
 }
