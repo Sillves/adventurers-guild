@@ -1,7 +1,8 @@
 // Genereert worker/envelope.json: per uur het maximum aan lifetime goud dat
-// met perfecte play haalbaar is (doubling-prestige bot, 3 kliks/s, crits als
-// verwachtingswaarde), met ruime veiligheidsmarge. De Worker gebruikt dit als
-// plausibiliteits-envelope voor leaderboard-submissions.
+// met eerlijke play haalbaar is, over MEERDERE strategieën heen — nooit
+// prestigen wint vroeg (heroes/upgrades compounden zonder reset), doubling
+// wint laat (fame compoundt harder). De Worker gebruikt het per-uur maximum
+// (×4 marge) als plausibiliteits-envelope voor leaderboard-submissions.
 //
 //   npx vite-node scripts/generate-envelope.ts
 //
@@ -16,60 +17,82 @@ import { createInitialState, type GameState } from '../src/engine/state';
 
 const DAYS = 60;
 const STEP_SECONDS = 5;
-const CLICKS_PER_SECOND = 3;
-// marge voor autoclickers, betere strategieën dan de bot en toekomstige buffs
+// snelle menselijke tikker; daarboven is het een autoclicker en mag de 🤡 komen
+const CLICKS_PER_SECOND = 8;
+// extra marge voor strategieën die de bots niet kennen en toekomstige buffs
 const SAFETY_FACTOR = 4;
 
-let state: GameState = createInitialState(0);
-const hourly: number[] = [];
-let t = 0;
-const maxSeconds = DAYS * 86400;
-let nextSample = 0;
+type PrestigePolicy = (gain: number, fame: number) => boolean;
 
-while (t < maxSeconds) {
-  state = advance(state, STEP_SECONDS);
-  const { chance, multiplier } = critParams(state.upgrades);
-  const avgCrit = 1 + chance * (multiplier - 1);
-  state = commands.earn(
-    state,
-    scaleMap(clickGain(state), CLICKS_PER_SECOND * STEP_SECONDS * avgCrit),
-  );
-  t += STEP_SECONDS;
+function simulate(shouldPrestige: PrestigePolicy): number[] {
+  let state: GameState = createInitialState(0);
+  const hourly: number[] = [];
+  let t = 0;
+  const maxSeconds = DAYS * 86400;
+  let nextSample = 0;
 
-  for (;;) {
-    let bestCost = Infinity;
-    let buy: (() => GameState) | null = null;
-    for (const hero of HEROES) {
-      const cost = heroCost(hero, state.heroes[hero.id] ?? 0)['gold'] ?? Infinity;
-      if (cost < bestCost) {
-        bestCost = cost;
-        buy = () => commands.buyHero(state, hero.id);
+  while (t < maxSeconds) {
+    state = advance(state, STEP_SECONDS);
+    const { chance, multiplier } = critParams(state.upgrades);
+    const avgCrit = 1 + chance * (multiplier - 1);
+    state = commands.earn(
+      state,
+      scaleMap(clickGain(state), CLICKS_PER_SECOND * STEP_SECONDS * avgCrit),
+    );
+    t += STEP_SECONDS;
+
+    for (;;) {
+      let bestCost = Infinity;
+      let buy: (() => GameState) | null = null;
+      for (const hero of HEROES) {
+        const cost = heroCost(hero, state.heroes[hero.id] ?? 0)['gold'] ?? Infinity;
+        if (cost < bestCost) {
+          bestCost = cost;
+          buy = () => commands.buyHero(state, hero.id);
+        }
       }
-    }
-    for (const upgrade of UPGRADES) {
-      if (state.upgrades.includes(upgrade.id)) continue;
-      if (!isUpgradeUnlocked(upgrade, state.upgrades)) continue;
-      const cost = upgrade.cost['gold'] ?? Infinity;
-      if (cost < bestCost) {
-        bestCost = cost;
-        buy = () => commands.buyUpgrade(state, upgrade.id);
+      for (const upgrade of UPGRADES) {
+        if (state.upgrades.includes(upgrade.id)) continue;
+        if (!isUpgradeUnlocked(upgrade, state.upgrades)) continue;
+        const cost = upgrade.cost['gold'] ?? Infinity;
+        if (cost < bestCost) {
+          bestCost = cost;
+          buy = () => commands.buyUpgrade(state, upgrade.id);
+        }
       }
+      if (buy === null || (state.balances['gold'] ?? 0) < bestCost) break;
+      state = buy();
     }
-    if (buy === null || (state.balances['gold'] ?? 0) < bestCost) break;
-    state = buy();
-  }
 
-  // prestige bij minstens verdubbeling van fame (snelste bekende strategie)
-  const gain = fameGain(state);
-  if (gain >= Math.max(1, state.balances['fame'] ?? 0)) {
-    state = commands.doPrestige(state, t * 1000);
-  }
+    const gain = fameGain(state);
+    if (gain >= 1 && shouldPrestige(gain, state.balances['fame'] ?? 0)) {
+      state = commands.doPrestige(state, t * 1000);
+    }
 
-  if (t >= nextSample) {
-    hourly.push(Math.ceil((state.lifetimeEarned['gold'] ?? 0) * SAFETY_FACTOR));
-    nextSample += 3600;
+    if (t >= nextSample) {
+      hourly.push(state.lifetimeEarned['gold'] ?? 0);
+      nextSample += 3600;
+    }
   }
+  return hourly;
 }
 
-writeFileSync('worker/envelope.json', JSON.stringify(hourly));
-console.log(`worker/envelope.json: ${hourly.length} uursamples, eindwaarde ${hourly.at(-1)?.toExponential(2)}`);
+const strategies: Record<string, PrestigePolicy> = {
+  'nooit prestigen': () => false,
+  'prestige bij verdubbeling': (gain, fame) => gain >= Math.max(1, fame),
+  'prestige zodra mogelijk': () => true,
+};
+
+const curves = Object.entries(strategies).map(([label, policy]) => {
+  const curve = simulate(policy);
+  console.log(`${label}: 24h ${curve[24]?.toExponential(2)}, eind ${curve.at(-1)?.toExponential(2)}`);
+  return curve;
+});
+
+const length = Math.min(...curves.map((c) => c.length));
+const envelope = Array.from({ length }, (_, i) =>
+  Math.ceil(Math.max(...curves.map((c) => c[i])) * SAFETY_FACTOR),
+);
+
+writeFileSync('worker/envelope.json', JSON.stringify(envelope));
+console.log(`worker/envelope.json: ${envelope.length} uursamples, eindwaarde ${envelope.at(-1)?.toExponential(2)}`);
