@@ -151,9 +151,8 @@
     padding: 12px;
     background: var(--panel);
     min-width: 180px;
-    /* navbar blijft staan terwijl de content rechts meescrolt met het venster */
-    position: sticky;
-    top: 0;
+    /* de app-shell is 100vh en alleen <main> scrolt; de navbar vult de kolom
+       en scrolt hooguit intern als hij zelf niet past */
     height: 100vh;
     overflow-y: auto;
   }
