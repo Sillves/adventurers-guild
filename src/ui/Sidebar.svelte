@@ -12,6 +12,7 @@
   import { game } from './game.svelte';
   import Icon from './Icon.svelte';
   import { isMuted, toggleMuted } from './sound';
+  import { isKeepAwake, toggleKeepAwake, wakeLockSupported } from './wakelock';
 
   let { screen, onswitch, realmId }: { screen: Screen; onswitch: (next: Screen) => void; realmId: string } = $props();
 
@@ -40,6 +41,7 @@
 
   const production = $derived(productionPerSecond(game.state));
   let muted = $state(isMuted());
+  let keepAwake = $state(isKeepAwake());
   let showSettings = $state(false);
 
   // Alleen zichtbare heroes tellen mee: na de eerste niet-gekochte hero stopt de reveal.
@@ -93,9 +95,35 @@
   <button class="mute" onclick={() => (muted = toggleMuted())}>
     {muted ? '🔇' : '🔊'}<span class="mute-label"> {muted ? 'Sound off' : 'Sound on'}</span>
   </button>
+  {#if wakeLockSupported}
+    <div class="awake switch-row">
+      <span>Keep screen on</span>
+      <button
+        class="switch"
+        class:on={keepAwake}
+        role="switch"
+        aria-checked={keepAwake}
+        aria-label="Keep screen on"
+        onclick={() => (keepAwake = toggleKeepAwake())}
+      ><span class="knob"></span></button>
+    </div>
+  {/if}
   <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>⚙️</button>
   {#if showSettings}
     <div class="settings-panel">
+      {#if wakeLockSupported}
+        <div class="switch-row">
+          <span>Keep screen on</span>
+          <button
+            class="switch"
+            class:on={keepAwake}
+            role="switch"
+            aria-checked={keepAwake}
+            aria-label="Keep screen on"
+            onclick={() => (keepAwake = toggleKeepAwake())}
+          ><span class="knob"></span></button>
+        </div>
+      {/if}
       <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
       <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
       <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
@@ -145,6 +173,38 @@
   .balance strong, .rate { font-variant-numeric: tabular-nums; }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
   .mute { font-size: 0.85rem; color: var(--text-dim); }
+  /* zelfde padding als de knoppen, zodat label en knopteksten uitlijnen */
+  .switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .switch {
+    position: relative;
+    flex: none;
+    width: 38px;
+    height: 22px;
+    padding: 0;
+    border-radius: 999px;
+    background: var(--panel-raised);
+    transition: background 0.15s;
+  }
+  .switch.on { background: var(--accent); }
+  .knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    transition: translate 0.15s;
+  }
+  .switch.on .knob { translate: 16px 0; }
   .credits { color: var(--text-dim); font-size: 0.75rem; padding: 4px 12px; text-decoration: none; display: block; text-align: center; }
   .save-actions { display: flex; gap: 6px; }
   .save-actions button { flex: 1; font-size: 0.75rem; color: var(--text-dim); padding: 6px; background: var(--panel-raised); }
@@ -216,9 +276,15 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 12px;
+      /* één lettergrootte voor alle rijen in het paneel */
+      font-size: 0.9rem;
     }
-    .settings-panel .credits { display: block; }
+    .settings-panel .switch-row,
+    .settings-panel .credits { font-size: inherit; }
+    .settings-panel .credits { display: block; text-align: left; padding: 4px 12px; }
     .dot { top: 2px; right: calc(50% - 16px); }
+    /* op mobiel zit de wakker-blijven-toggle in het instellingenpaneel */
+    .awake,
     .desktop-credits,
     .save-actions { display: none; }
   }
