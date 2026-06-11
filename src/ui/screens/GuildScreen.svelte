@@ -59,7 +59,9 @@
   <div class="stats">
     <div>Earned this guild era: <strong>{formatNumber(runGold)}</strong> gold</div>
     {#if fameGain(game.state) === 0}
-      <div class="dim">Reach {formatNumber(nextTarget)} lifetime gold for your next Fame</div>
+      <div class="dim">
+        Next Fame: <strong class="lifetime">{formatNumber(lifetimeGold)}</strong> / {formatNumber(nextTarget)} lifetime gold
+      </div>
       <div class="bar"><div class="fill" style="width: {prestigeProgress * 100}%"></div></div>
     {:else}
       <div class="success">👑 Prestige available — check the Prestige tab!</div>
@@ -69,6 +71,7 @@
 
 <style>
   section { display: grid; gap: 20px; justify-items: center; padding: 32px; text-align: center; }
+  .lifetime { color: var(--gold); font-weight: 600; }
   .dim { color: var(--text-dim); }
   .success { color: var(--success); }
   .quest {
