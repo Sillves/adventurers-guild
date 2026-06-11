@@ -276,7 +276,11 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 12px;
+      /* één lettergrootte voor alle rijen in het paneel */
+      font-size: 0.9rem;
     }
+    .settings-panel .switch-row,
+    .settings-panel .credits { font-size: inherit; }
     .settings-panel .credits { display: block; text-align: left; padding: 4px 12px; }
     .dot { top: 2px; right: calc(50% - 16px); }
     /* op mobiel zit de wakker-blijven-toggle in het instellingenpaneel */
