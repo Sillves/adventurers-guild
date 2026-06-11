@@ -26,13 +26,15 @@ export function toggleMuted(): boolean {
   return muted;
 }
 
+const SFX_VOLUME: Record<SoundName, number> = { click: 0.5, buy: 0.5, prestige: 0.8 };
+
 export function playSound(name: SoundName): void {
   if (muted) return;
   try {
     let audio = cache[name];
     if (audio === undefined) {
       audio = new Audio(`audio/${name}.wav`);
-      audio.volume = 0.5;
+      audio.volume = SFX_VOLUME[name];
       cache[name] = audio;
     }
     audio.currentTime = 0;
@@ -55,4 +57,21 @@ export function startMusic(): void {
   } catch {
     music = null;
   }
+}
+
+// Muziek hoort niet door te spelen als de speler naar een andere app/tab gaat.
+let resumeOnReturn = false;
+
+function handleVisibilityChange(): void {
+  if (music === null) return;
+  if (document.hidden) {
+    resumeOnReturn = !music.paused;
+    music.pause();
+  } else if (resumeOnReturn) {
+    void music.play().catch(() => {});
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 }

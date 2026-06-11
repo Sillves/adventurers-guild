@@ -4,13 +4,16 @@
 
 <script lang="ts">
   import { CURRENCIES } from '../content/currencies';
-  import { productionPerSecond } from '../engine/formulas';
+  import { HEROES } from '../content/heroes';
+  import { UPGRADES } from '../content/upgrades';
+  import { heroCost, productionPerSecond } from '../engine/formulas';
+  import { canAfford } from '../engine/maps';
   import { formatNumber } from './format';
   import { game } from './game.svelte';
   import Icon from './Icon.svelte';
   import { isMuted, toggleMuted } from './sound';
 
-  let { screen = $bindable() }: { screen: Screen } = $props();
+  let { screen = $bindable(), realmId }: { screen: Screen; realmId: string } = $props();
 
   async function exportSave(): Promise<void> {
     const data = game.exportSave();
@@ -37,12 +40,40 @@
 
   const production = $derived(productionPerSecond(game.state));
   let muted = $state(isMuted());
+  let showSettings = $state(false);
+
+  // Alleen zichtbare heroes tellen mee: na de eerste niet-gekochte hero stopt de reveal.
+  const heroAffordable = $derived.by(() => {
+    for (const hero of HEROES.filter((h) => h.realmId === realmId)) {
+      const owned = game.state.heroes[hero.id] ?? 0;
+      if (canAfford(game.state.balances, heroCost(hero, owned))) return true;
+      if (owned === 0) break;
+    }
+    return false;
+  });
+
+  const upgradeAffordable = $derived(
+    UPGRADES.some(
+      (u) =>
+        u.realmId === realmId &&
+        !game.state.upgrades.includes(u.id) &&
+        canAfford(game.state.balances, u.cost),
+    ),
+  );
+
+  const badges = $derived<Partial<Record<Screen, boolean>>>({
+    heroes: heroAffordable,
+    upgrades: upgradeAffordable,
+  });
 </script>
 
 <nav>
   {#each items as item (item.id)}
     <button class="tab" class:active={screen === item.id} onclick={() => (screen = item.id)}>
       <Icon icon={item.icon} size={18} /> <span>{item.label}</span>
+      {#if badges[item.id] === true && screen !== item.id}
+        <span class="dot"></span>
+      {/if}
     </button>
   {/each}
   <div class="balances">
@@ -61,7 +92,15 @@
   <button class="mute" onclick={() => (muted = toggleMuted())}>
     {muted ? '🔇' : '🔊'}<span class="mute-label"> {muted ? 'Sound off' : 'Sound on'}</span>
   </button>
-  <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
+  <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>⚙️</button>
+  {#if showSettings}
+    <div class="settings-panel">
+      <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
+      <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
+      <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
+    </div>
+  {/if}
+  <a class="credits desktop-credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
   <div class="save-actions">
     <button onclick={exportSave}>Export save</button>
     <button onclick={importSave}>Import save</button>
@@ -87,6 +126,18 @@
     color: var(--text-dim);
   }
   button.active { background: var(--accent); color: white; }
+  .tab { position: relative; }
+  .dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+  .settings-toggle,
+  .settings-panel { display: none; }
   .balances { margin-top: auto; padding: 12px 4px; display: grid; gap: 6px; }
   .balance { display: flex; align-items: center; gap: 6px; color: var(--gold); }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
@@ -123,7 +174,7 @@
       right: 0;
       margin: 0;
       padding: 10px 14px;
-      padding-right: 52px;
+      padding-right: 92px;
       display: flex;
       gap: 18px;
       background: var(--panel);
@@ -140,7 +191,32 @@
       font-size: 1rem;
     }
     .mute-label { display: none; }
-    .credits,
+    .mute { right: 44px; }
+    .settings-toggle {
+      display: block;
+      position: fixed;
+      top: 3px;
+      right: 4px;
+      z-index: 11;
+      padding: 8px 10px;
+      background: transparent;
+      font-size: 1rem;
+    }
+    .settings-panel {
+      display: grid;
+      gap: 8px;
+      position: fixed;
+      top: 48px;
+      right: 8px;
+      z-index: 12;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .settings-panel .credits { display: block; }
+    .dot { top: 2px; right: calc(50% - 16px); }
+    .desktop-credits,
     .save-actions { display: none; }
   }
 </style>

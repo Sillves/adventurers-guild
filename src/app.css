@@ -28,6 +28,11 @@ button {
   cursor: pointer;
   background: var(--panel-raised);
   border-radius: var(--radius-sm);
+  /* snel tikken mag niet zoomen of tekst selecteren op mobiel */
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:disabled { opacity: 0.4; cursor: default; }
