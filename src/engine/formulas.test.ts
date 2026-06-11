@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { HEROES } from '../content/heroes';
 import {
-  clickGain, clickMultiplier, fameBonus, fameGain, heroCost,
+  clickGain, clickMultiplier, fameBonus, fameGain, fameTargetGold, heroCost,
   heroMultiplier, isRealmUnlocked, productionPerSecond, PRESTIGE_THRESHOLD_GOLD,
 } from './formulas';
 import { createInitialState } from './state';
@@ -62,14 +62,29 @@ describe('production and clicking', () => {
 });
 
 describe('prestige', () => {
-  it('yields zero fame below the threshold', () => {
-    const state = { ...createInitialState(0), runEarned: { gold: PRESTIGE_THRESHOLD_GOLD - 1 } };
+  it('yields zero fame below the first lifetime milestone', () => {
+    const state = { ...createInitialState(0), lifetimeEarned: { gold: PRESTIGE_THRESHOLD_GOLD - 1 } };
     expect(fameGain(state)).toBe(0);
   });
 
-  it('yields floor(sqrt(earned / 1M)) fame', () => {
-    expect(fameGain({ ...createInitialState(0), runEarned: { gold: 1_000_000 } })).toBe(1);
-    expect(fameGain({ ...createInitialState(0), runEarned: { gold: 9_000_000 } })).toBe(3);
+  it('derives fame from lifetime gold: nth point at n² × 1M', () => {
+    expect(fameGain({ ...createInitialState(0), lifetimeEarned: { gold: 1_000_000 } })).toBe(1);
+    expect(fameGain({ ...createInitialState(0), lifetimeEarned: { gold: 9_000_000 } })).toBe(3);
+  });
+
+  it('subtracts owned fame, so re-grinding old milestones yields nothing', () => {
+    const state = {
+      ...createInitialState(0),
+      balances: { gold: 0, fame: 3 },
+      lifetimeEarned: { gold: 9_500_000 },
+    };
+    expect(fameGain(state)).toBe(0);
+    expect(fameGain({ ...state, lifetimeEarned: { gold: 16_000_000 } })).toBe(1);
+  });
+
+  it('computes the lifetime gold target for the nth fame point', () => {
+    expect(fameTargetGold(1)).toBe(1_000_000);
+    expect(fameTargetGold(4)).toBe(16_000_000);
   });
 });
 

@@ -27,7 +27,7 @@ Een gratis idle clicker game, gebouwd om (1) echte spelers te bereiken, (2) game
 
 **Formules:**
 - Heldkosten: `kosten = basisKosten × 1.15^aantalInBezit`
-- Prestige: beschikbaar vanaf 1.000.000 totaal verdiend goud; Roem-opbrengst: `roem = floor(sqrt(totaalVerdiendGoud / 1.000.000))`; elke Roem geeft +2% productie, permanent over resets heen. (Exacte tuning mag tijdens implementatie bijgesteld worden, de formulevorm staat vast.)
+- Prestige: beschikbaar vanaf 1.000.000 totaal verdiend goud; Roem-opbrengst: `roem = floor(sqrt(totaalVerdiendGoud / 1.000.000))`, waarbij `totaalVerdiendGoud` het goud over **alle era's heen** is (lifetime, overleeft resets) en je bij een refound het verschil krijgt met al verdiende Roem. Het n-de Roem-punt vergt dus n² × 1M lifetime goud — telkens opnieuw 1M grinden levert niets op. Elke Roem geeft +2% productie, permanent over resets heen. (Exacte tuning mag tijdens implementatie bijgesteld worden, de formulevorm staat vast.)
 
 **Offline progress:** bij het laden wordt het tijdsverschil sinds de laatste save berekend en als goud uitgekeerd (cap: 8 uur), gepresenteerd in een "Welkom terug!"-popup.
 

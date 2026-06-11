@@ -3,11 +3,12 @@ import { buyHero, buyUpgrade, doPrestige, performQuest } from './commands';
 import { createInitialState } from './state';
 
 describe('performQuest', () => {
-  it('adds click gain to balances and runEarned, immutably', () => {
+  it('adds click gain to balances, runEarned and lifetimeEarned, immutably', () => {
     const before = createInitialState(0);
     const after = performQuest(before);
     expect(after.balances.gold).toBe(1);
     expect(after.runEarned.gold).toBe(1);
+    expect(after.lifetimeEarned.gold).toBe(1);
     expect(before.balances.gold).toBe(0);
   });
 });
@@ -53,15 +54,25 @@ describe('buyUpgrade', () => {
 
 describe('doPrestige', () => {
   it('does nothing below 1 fame gain', () => {
-    const state = { ...createInitialState(0), runEarned: { gold: 999_999 } };
+    const state = { ...createInitialState(0), lifetimeEarned: { gold: 999_999 } };
     expect(doPrestige(state, 123)).toBe(state);
   });
 
-  it('resets the run and banks fame on top of existing fame', () => {
+  it('does nothing when lifetime gold only re-covers already-owned fame', () => {
+    const state = {
+      ...createInitialState(0),
+      balances: { gold: 2_000_000, fame: 2 },
+      lifetimeEarned: { gold: 5_000_000 }, // fame 3 vergt 9M lifetime
+    };
+    expect(doPrestige(state, 123)).toBe(state);
+  });
+
+  it('resets the run, banks fame and keeps lifetimeEarned', () => {
     const state = {
       ...createInitialState(0),
       balances: { gold: 5_000_000, fame: 2 },
       runEarned: { gold: 9_000_000 },
+      lifetimeEarned: { gold: 25_000_000 }, // totaal 5 fame waard
       heroes: { farmhand: 50 },
       upgrades: ['stronger-grip'],
     };
@@ -71,6 +82,7 @@ describe('doPrestige', () => {
     expect(after.heroes).toEqual({});
     expect(after.upgrades).toEqual([]);
     expect(after.runEarned).toEqual({});
+    expect(after.lifetimeEarned).toEqual({ gold: 25_000_000 });
     expect(after.lastSavedAt).toBe(123);
   });
 });

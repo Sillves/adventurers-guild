@@ -10,6 +10,7 @@ export function earn(state: GameState, amount: CurrencyMap): GameState {
     ...state,
     balances: addMaps(state.balances, amount),
     runEarned: addMaps(state.runEarned, amount),
+    lifetimeEarned: addMaps(state.lifetimeEarned, amount),
   };
 }
 
@@ -49,5 +50,6 @@ export function doPrestige(state: GameState, now: number): GameState {
   return {
     ...fresh,
     balances: { ...fresh.balances, fame: (state.balances['fame'] ?? 0) + gain },
+    lifetimeEarned: state.lifetimeEarned,
   };
 }
