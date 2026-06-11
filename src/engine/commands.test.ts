@@ -42,6 +42,14 @@ describe('buyHero', () => {
 });
 
 describe('buyUpgrade', () => {
+  it('refuses an upgrade whose prerequisite is not yet purchased', () => {
+    const rich = { ...createInitialState(0), balances: { gold: 1_000_000, fame: 0 } };
+    expect(buyUpgrade(rich, 'steel-pitchforks')).toBe(rich);
+    const withTier1 = { ...rich, upgrades: ['iron-pitchforks'] };
+    const after = buyUpgrade(withTier1, 'steel-pitchforks');
+    expect(after.upgrades).toContain('steel-pitchforks');
+  });
+
   it('deducts cost and records the upgrade', () => {
     const state = { ...createInitialState(0), balances: { gold: 500, fame: 0 } };
     const after = buyUpgrade(state, 'stronger-grip');

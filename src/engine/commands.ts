@@ -1,7 +1,7 @@
 import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap } from '../content/types';
-import { clickOutcome, fameGain, heroCost } from './formulas';
+import { clickOutcome, fameGain, heroCost, isUpgradeUnlocked } from './formulas';
 import { addMaps, canAfford, subtractMaps } from './maps';
 import { createInitialState, type GameState } from './state';
 
@@ -36,6 +36,7 @@ export function buyUpgrade(state: GameState, upgradeId: string): GameState {
   const def = UPGRADES.find((u) => u.id === upgradeId);
   if (def === undefined) return state;
   if (state.upgrades.includes(upgradeId)) return state;
+  if (!isUpgradeUnlocked(def, state.upgrades)) return state;
   if (!canAfford(state.balances, def.cost)) return state;
   return {
     ...state,

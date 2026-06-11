@@ -1,6 +1,6 @@
 import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
-import type { CurrencyMap, HeroDef, RealmDef } from '../content/types';
+import type { CurrencyMap, HeroDef, RealmDef, UpgradeDef } from '../content/types';
 import { addMaps, scaleMap } from './maps';
 
 import type { GameState } from './state';
@@ -114,4 +114,9 @@ export function fameGain(state: GameState): number {
 
 export function isRealmUnlocked(realm: RealmDef, state: GameState): boolean {
   return (state.balances['fame'] ?? 0) >= realm.unlock.minFame;
+}
+
+/** Een upgrade is pas koopbaar als zijn vereiste upgrade al gekocht is. */
+export function isUpgradeUnlocked(def: UpgradeDef, purchased: readonly string[]): boolean {
+  return def.requires === undefined || purchased.includes(def.requires);
 }

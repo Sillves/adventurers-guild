@@ -55,6 +55,19 @@ describe('content integrity', () => {
     }
   });
 
+  it('upgrade prerequisites reference an existing, same-realm, strictly cheaper upgrade', () => {
+    const byId = new Map(UPGRADES.map((u) => [u.id, u]));
+    for (const upgrade of UPGRADES) {
+      if (upgrade.requires === undefined) continue;
+      const required = byId.get(upgrade.requires);
+      expect(required, `${upgrade.id} requires unknown upgrade ${upgrade.requires}`).toBeDefined();
+      expect(required?.realmId, `${upgrade.id} requires upgrade in another realm`).toBe(upgrade.realmId);
+      // strikt goedkoper ⇒ ketens lopen altijd van goedkoop naar duur en zijn cyclusvrij
+      expect(required?.cost.gold ?? Infinity, `${upgrade.id} requires a more expensive upgrade`)
+        .toBeLessThan(upgrade.cost.gold ?? 0);
+    }
+  });
+
   it('every hero is strictly more expensive and productive than the previous', () => {
     for (let i = 1; i < HEROES.length; i++) {
       expect(HEROES[i].baseCost.gold).toBeGreaterThan(HEROES[i - 1].baseCost.gold);
