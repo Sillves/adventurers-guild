@@ -1,7 +1,9 @@
 <script lang="ts">
   import type { UpgradeDef } from '../../content/types';
   import { UPGRADES } from '../../content/upgrades';
+  import { clickGain, critParams, productionPerSecond } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
+  import type { GameState } from '../../engine/state';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
   import Icon from '../Icon.svelte';
@@ -40,6 +42,23 @@
   const sorted = $derived(
     [...chains].sort((a, b) => (a[0].cost.gold ?? 0) - (b[0].cost.gold ?? 0)),
   );
+
+  /** Gemiddelde quest-opbrengst inclusief crit-verwachtingswaarde. */
+  function expectedQuest(state: GameState): number {
+    const { chance, multiplier } = critParams(state.upgrades);
+    return (clickGain(state)['gold'] ?? 0) * (1 + chance * (multiplier - 1));
+  }
+
+  /** Wat levert deze upgrade nu concreet op? Berekend met de echte engine. */
+  function gainText(upgrade: UpgradeDef): string {
+    const after: GameState = { ...game.state, upgrades: [...game.state.upgrades, upgrade.id] };
+    const perSecond =
+      (productionPerSecond(after)['gold'] ?? 0) - (productionPerSecond(game.state)['gold'] ?? 0);
+    if (perSecond > 0) return `+${formatNumber(perSecond)} gold/s`;
+    const perQuest = expectedQuest(after) - expectedQuest(game.state);
+    if (perQuest > 0) return `+${formatNumber(perQuest)} gold per quest`;
+    return 'no effect yet';
+  }
 </script>
 
 <section>
@@ -69,6 +88,7 @@
         {#if maxed}
           <span class="cost">✓ Max level</span>
         {:else}
+          <span class="gain">{gainText(shown)}</span>
           <span class="cost" class:too-expensive={!affordable}>🪙 {formatNumber(shown.cost.gold ?? 0)}</span>
         {/if}
       </button>
@@ -109,5 +129,6 @@
     border-radius: 999px;
   }
   .dim { color: var(--text-dim); font-size: 0.8rem; }
+  .gain { color: var(--success); font-size: 0.8rem; }
   .cost { color: var(--gold); font-size: 0.85rem; }
 </style>
