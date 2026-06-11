@@ -183,8 +183,9 @@
       border-bottom: 1px solid var(--border);
       z-index: 10;
     }
-    /* fame rechts verankeren zodat die niet meeschuift als het goudgetal breder wordt */
-    .balance:not(:first-child) { margin-left: auto; }
+    /* fame rechts verankeren zodat die niet meeschuift als het goudgetal breder wordt;
+       enkel de tweede balance krijgt auto-marge zodat latere valuta rechts gegroepeerd blijven */
+    .balance:first-child + .balance { margin-left: auto; }
     .mute {
       position: fixed;
       top: 3px;
