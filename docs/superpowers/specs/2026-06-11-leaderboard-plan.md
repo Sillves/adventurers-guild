@@ -1,6 +1,6 @@
-# Leaderboard — plan (nog niet bouwen)
+# Leaderboard — plan
 
-**Status:** voorstel, wacht op go van Lorenz
+**Status:** GO (2026-06-11) — hosting beslist: Cloudflare Worker + D1
 **Datum:** 2026-06-11
 
 ## Doel
@@ -114,6 +114,59 @@ geüpload in plaats van lokaal bewaard. De anti-cheat-ladder:
 "cheated"-label (punt 2, accepteren + labelen i.p.v. weigeren); cloud saves als
 losse feature plannen; punt 3 expliciet uitstellen. Tabel krijgt extra kolommen:
 `first_seen_at`, `flagged_at`, `flag_reason`.
+
+## Hostingbeslissing (geverifieerd 2026-06-11)
+
+Cloudflare Worker + D1, op basis van actueel onderzoek:
+- **Gratis-blijvend op papier:** D1-FAQ belooft expliciet dat het Workers Free
+  plan D1 gratis blijft omvatten. Supabase pauzeert gratis projecten na 1 week
+  inactiviteit (handmatige restore; verwijderrisico bij lang pauzeren) — fataal
+  voor een hobbyproject dat al eens een week stilvalt.
+- **Duurzaamheid:** D1 Time Travel = point-in-time recovery tot 7 dagen op het
+  gratis plan (30 dagen betaald). Supabase free heeft géén backups (Pro-only).
+- **Limieten (vrienden-schaal gebruikt <2%):** Workers 100K requests/dag, D1
+  5M row reads/dag, 100K writes/dag, 5 GB. Bij overschrijding: harde fout tot
+  middernacht UTC, geen verrassingsfactuur (geen kaart gekoppeld). Escape
+  hatch: Workers Paid $5/maand.
+- Client behandelt de API als optioneel: bord toont stale data, spel draait door.
+
+## Wat is er nodig van Lorenz (eenmalig)
+
+1. Cloudflare-account (eigen e-mail, gratis, geen kaart).
+2. Twee GitHub repo-secrets voor CI-deploys via Actions:
+   `CLOUDFLARE_ACCOUNT_ID` en `CLOUDFLARE_API_TOKEN` (template "Edit Cloudflare
+   Workers" + D1-edit, niets meer — least privilege, intrekbaar).
+3. Tijdens de build: de éne gratis rate-limiting-regel aanzetten in het
+   dashboard (instellingen worden gedocumenteerd).
+
+API draait op het gratis `*.workers.dev`-subdomein; geen eigen domein nodig.
+
+## Security & misbruik (Worker + D1)
+
+Publieke API zonder accounts — doel is misbruik **begrensd, goedkoop en
+onaantrekkelijk** maken, in lagen:
+
+1. **Edge rate limit vóór de Worker:** de gratis Cloudflare-regel op
+   `POST /score` per IP; geblokkeerde floods raken het Worker-quotum niet.
+2. **Strikte inputvalidatie:** max ~1 KB body, exact JSON-schema (onbekende
+   velden → 400), `playerId` = geldige UUIDv4, naam ≤ 20 printbare tekens,
+   getallen eindig en ≥ 0.
+3. **Per-speler write-throttle:** submissions < ~4 min na `updated_at` → 429;
+   één goedkope indexed read bewaakt elke write.
+4. **Cap op nieuwe rijen:** ~100 nieuwe playerIds/dag globaal — "database
+   vullen" wordt "een paar junkrijen", en Time Travel kan terugspoelen.
+5. **Onraadbare identiteit:** UUIDv4 (122 random bits); geen admin-routes over
+   HTTP — moderatie (flag wissen, rij verwijderen) enkel via `wrangler d1`.
+6. **XSS-veilig:** namen renderen via Svelte-textinterpolatie (nooit
+   innerHTML); validatie stript control chars.
+7. **CORS gepind** op de GitHub Pages-origin (curl kan liegen; lagen 1-4
+   dekken dat).
+8. **Nette 429 bij quota:** client bakt back-off in; het spel hangt nooit af
+   van de API.
+9. **Escalatie (niet nu bouwen):** Cloudflare Turnstile op eerste opt-in als
+   bot-signups ooit echt gebeuren.
+
+Vangnet onder alles: Time Travel (7 dagen, gratis).
 
 ## Buiten scope
 
