@@ -1,7 +1,6 @@
 export type SoundName = 'click' | 'buy' | 'prestige';
 
 const MUTE_KEY = 'ag.muted';
-const cache: Partial<Record<SoundName, HTMLAudioElement>> = {};
 let music: HTMLAudioElement | null = null;
 let muted = false;
 
@@ -27,20 +26,52 @@ export function toggleMuted(): boolean {
 }
 
 const SFX_VOLUME: Record<SoundName, number> = { click: 0.5, buy: 0.5, prestige: 0.8 };
+const SFX_NAMES: readonly SoundName[] = ['click', 'buy', 'prestige'];
+
+// SFX via Web Audio: een enkel <audio>-element kan niet snel genoeg herstarten,
+// waardoor bij snel tikken de meeste kliks geluidloos bleven.
+let ctx: AudioContext | null = null;
+const sfxData: Partial<Record<SoundName, Promise<ArrayBuffer>>> = {};
+const sfxBuffers: Partial<Record<SoundName, AudioBuffer>> = {};
+
+function fetchSfx(name: SoundName): Promise<ArrayBuffer> {
+  return (sfxData[name] ??= fetch(`audio/${name}.wav`).then((r) => r.arrayBuffer()));
+}
+
+if (typeof document !== 'undefined') {
+  for (const name of SFX_NAMES) void fetchSfx(name).catch(() => {});
+}
 
 export function playSound(name: SoundName): void {
   if (muted) return;
   try {
-    let audio = cache[name];
-    if (audio === undefined) {
-      audio = new Audio(`audio/${name}.wav`);
-      audio.volume = SFX_VOLUME[name];
-      cache[name] = audio;
+    ctx ??= new AudioContext();
+    if (ctx.state === 'suspended') void ctx.resume();
+    const play = (buffer: AudioBuffer): void => {
+      if (ctx === null) return;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      const gain = ctx.createGain();
+      gain.gain.value = SFX_VOLUME[name];
+      source.connect(gain).connect(ctx.destination);
+      source.start();
+    };
+    const cached = sfxBuffers[name];
+    if (cached !== undefined) {
+      play(cached);
+      return;
     }
-    audio.currentTime = 0;
-    void audio.play().catch(() => {});
+    void fetchSfx(name)
+      // decodeAudioData consumeert de buffer; slice houdt de cache bruikbaar
+      .then((data) => ctx?.decodeAudioData(data.slice(0)))
+      .then((buffer) => {
+        if (buffer === undefined) return;
+        sfxBuffers[name] = buffer;
+        play(buffer);
+      })
+      .catch(() => {});
   } catch {
-    // audiobestand ontbreekt of autoplay geweigerd — stil doorgaan
+    // audiobestand ontbreekt of geen Web Audio-ondersteuning — stil doorgaan
   }
 }
 
