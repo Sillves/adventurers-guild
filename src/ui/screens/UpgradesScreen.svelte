@@ -1,6 +1,6 @@
 <script lang="ts">
+  import type { UpgradeDef } from '../../content/types';
   import { UPGRADES } from '../../content/upgrades';
-  import { isUpgradeUnlocked } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -8,39 +8,69 @@
 
   let { realmId }: { realmId: string } = $props();
 
-  const realmUpgrades = $derived(
-    [...UPGRADES.filter((u) => u.realmId === realmId)].sort((a, b) => (a.cost.gold ?? 0) - (b.cost.gold ?? 0)),
-  );
+  // Upgrades met een requires-keten vormen één kaart met levels: je ziet
+  // altijd alleen de eerstvolgende tier, nooit duurdere duplicaten ernaast.
+  const chains = $derived.by(() => {
+    const realm = UPGRADES.filter((u) => u.realmId === realmId);
+    const childOf = new Map<string, UpgradeDef>();
+    for (const u of realm) {
+      if (u.requires !== undefined) childOf.set(u.requires, u);
+    }
+    return realm
+      .filter((u) => u.requires === undefined)
+      .map((head) => {
+        const tiers: UpgradeDef[] = [head];
+        let cur = head;
+        while (childOf.has(cur.id)) {
+          cur = childOf.get(cur.id)!;
+          tiers.push(cur);
+        }
+        return tiers;
+      });
+  });
 
-  function requiresName(id: string): string {
-    return UPGRADES.find((u) => u.id === id)?.name ?? id;
+  function levelOf(tiers: readonly UpgradeDef[]): number {
+    let level = 0;
+    while (level < tiers.length && game.state.upgrades.includes(tiers[level].id)) level += 1;
+    return level;
   }
+
+  // sorteer op de prijs van de eerstvolgende tier; volledig gekochte ketens achteraan
+  const sorted = $derived(
+    [...chains].sort((a, b) => {
+      const nextA = a[levelOf(a)];
+      const nextB = b[levelOf(b)];
+      if (nextA === undefined && nextB === undefined) return 0;
+      if (nextA === undefined) return 1;
+      if (nextB === undefined) return -1;
+      return (nextA.cost.gold ?? 0) - (nextB.cost.gold ?? 0);
+    }),
+  );
 </script>
 
 <section>
   <h2>Upgrades</h2>
   <div class="grid">
-    {#each realmUpgrades as upgrade (upgrade.id)}
-      {@const purchased = game.state.upgrades.includes(upgrade.id)}
-      {@const locked = !isUpgradeUnlocked(upgrade, game.state.upgrades)}
+    {#each sorted as tiers (tiers[0].id)}
+      {@const level = levelOf(tiers)}
+      {@const maxed = level >= tiers.length}
+      {@const shown = maxed ? tiers[tiers.length - 1] : tiers[level]}
       <button
         class="tile"
-        class:purchased
-        class:locked
-        disabled={purchased || locked || !canAfford(game.state.balances, upgrade.cost)}
-        onclick={() => game.buyUpgrade(upgrade.id)}
-        title={upgrade.description}
+        class:purchased={maxed}
+        disabled={maxed || !canAfford(game.state.balances, shown.cost)}
+        onclick={() => game.buyUpgrade(shown.id)}
+        title={shown.description}
       >
-        <Icon icon={upgrade.icon} size={26} />
-        <strong>{upgrade.name}</strong>
-        <span class="dim">{upgrade.description}</span>
-        {#if purchased}
-          <span class="cost">✓ Purchased</span>
-        {:else if locked}
-          <span class="cost dim">🔒 Requires {requiresName(upgrade.requires ?? '')}</span>
-        {:else}
-          <span class="cost">🪙 {formatNumber(upgrade.cost.gold ?? 0)}</span>
-        {/if}
+        <div class="head">
+          <Icon icon={shown.icon} size={26} />
+          {#if tiers.length > 1}
+            <span class="level">Lv {level}/{tiers.length}</span>
+          {/if}
+        </div>
+        <strong>{shown.name}</strong>
+        <span class="dim">{shown.description}</span>
+        <span class="cost">{maxed ? '✓ Max level' : `🪙 ${formatNumber(shown.cost.gold ?? 0)}`}</span>
       </button>
     {/each}
   </div>
@@ -64,7 +94,14 @@
     border-radius: var(--radius);
   }
   .tile.purchased { opacity: 0.45; }
-  .tile.locked { opacity: 0.55; border: 1px dashed var(--border); }
+  .head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .level {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    background: var(--panel-raised);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
   .dim { color: var(--text-dim); font-size: 0.8rem; }
   .cost { color: var(--gold); font-size: 0.85rem; }
 </style>
