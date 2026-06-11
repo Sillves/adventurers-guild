@@ -17,6 +17,13 @@ describe('performQuest', () => {
     expect(performQuest(state, 0.01).balances.gold).toBe(10);
     expect(performQuest(state, 0.99).balances.gold).toBe(1);
   });
+
+  it('applies the combo multiplier, clamped to the unlocked cap', () => {
+    const state = { ...createInitialState(0), upgrades: ['battle-rhythm'] };
+    expect(performQuest(state, 1, 2).balances.gold).toBe(2);
+    expect(performQuest(state, 1, 99).balances.gold).toBe(2);
+    expect(performQuest(createInitialState(0), 1, 2).balances.gold).toBe(1);
+  });
 });
 
 describe('buyHero', () => {

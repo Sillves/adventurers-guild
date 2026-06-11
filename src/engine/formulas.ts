@@ -78,6 +78,17 @@ export function critParams(purchased: readonly string[]): { chance: number; mult
   return { chance: Math.min(chance, 1), multiplier };
 }
 
+/** Hoogste combo-plafond onder de gekochte upgrades; 1 = combo niet ontgrendeld. */
+export function comboCap(purchased: readonly string[]): number {
+  let cap = 1;
+  for (const u of UPGRADES) {
+    if (purchased.includes(u.id) && u.effect.target === 'click-combo') {
+      cap = Math.max(cap, u.effect.maxMultiplier);
+    }
+  }
+  return cap;
+}
+
 export function fameBonus(fame: number): number {
   return 1 + FAME_BONUS_PER_POINT * fame;
 }
@@ -103,17 +114,49 @@ export function clickGain(state: GameState): CurrencyMap {
   return { gold: base + (synergy / 100) * production };
 }
 
+/** Hoogste auto-click-tempo onder de gekochte upgrades; tiers vervangen elkaar. */
+export function autoClickRate(purchased: readonly string[]): number {
+  let rate = 0;
+  for (const u of UPGRADES) {
+    if (purchased.includes(u.id) && u.effect.target === 'auto-click') {
+      rate = Math.max(rate, u.effect.clicksPerSecond);
+    }
+  }
+  return rate;
+}
+
+/**
+ * Opbrengst/s van auto-quests: gewone klikwaarde × crit-verwachtingswaarde.
+ * Bewust zonder combo — heat blijft het domein van échte vingers.
+ */
+export function autoClickPerSecond(state: GameState): CurrencyMap {
+  const rate = autoClickRate(state.upgrades);
+  if (rate === 0) return {};
+  const { chance, multiplier } = critParams(state.upgrades);
+  return scaleMap(clickGain(state), rate * (1 + chance * (multiplier - 1)));
+}
+
+/** Totale inkomsten/s: heldenproductie plus auto-quests. */
+export function incomePerSecond(state: GameState): CurrencyMap {
+  return addMaps(productionPerSecond(state), autoClickPerSecond(state));
+}
+
 export interface ClickOutcome {
   readonly gain: CurrencyMap;
   readonly crit: boolean;
 }
 
-/** Bepaalt de klikopbrengst voor een gegeven random roll in [0, 1). Deterministisch. */
-export function clickOutcome(state: GameState, roll: number): ClickOutcome {
+/**
+ * Bepaalt de klikopbrengst voor een gegeven random roll in [0, 1). Deterministisch.
+ * `combo` komt uit de UI (heat is bewust ephemeral) maar wordt hier geklemd op
+ * [1, comboCap], zodat de engine nooit meer toekent dan de upgrades toestaan.
+ */
+export function clickOutcome(state: GameState, roll: number, combo = 1): ClickOutcome {
   const { chance, multiplier } = critParams(state.upgrades);
   const crit = roll < chance;
-  const gain = clickGain(state);
-  return { gain: crit ? scaleMap(gain, multiplier) : gain, crit };
+  const clamped = Math.min(Math.max(combo, 1), comboCap(state.upgrades));
+  const factor = clamped * (crit ? multiplier : 1);
+  return { gain: scaleMap(clickGain(state), factor), crit };
 }
 
 // Fame volgt uit het totaal verdiende goud over alle era's: het n-de punt vergt

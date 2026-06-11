@@ -41,6 +41,10 @@ describe('content integrity', () => {
         expect(effect.chance, `${upgrade.id} chance`).toBeGreaterThan(0);
         expect(effect.chance, `${upgrade.id} chance`).toBeLessThanOrEqual(1);
         expect(effect.critMultiplier, `${upgrade.id} crit multiplier`).toBeGreaterThan(1);
+      } else if (effect.target === 'click-combo') {
+        expect(effect.maxMultiplier, `${upgrade.id} combo cap`).toBeGreaterThan(1);
+      } else if (effect.target === 'auto-click') {
+        expect(effect.clicksPerSecond, `${upgrade.id} auto-click rate`).toBeGreaterThan(0);
       } else {
         expect(effect.multiplier, `${upgrade.id} multiplier`).toBeGreaterThan(1);
         if (effect.target !== 'click') {

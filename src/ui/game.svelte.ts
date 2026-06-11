@@ -1,6 +1,6 @@
 import { applyOffline, advance, type OfflineReport } from '../engine/advance';
 import * as commands from '../engine/commands';
-import { clickOutcome, type ClickOutcome } from '../engine/formulas';
+import { clickOutcome, comboCap, type ClickOutcome } from '../engine/formulas';
 import { parseSave, serializeSave } from '../engine/save';
 import { leaderboard } from './leaderboard.svelte';
 import { createInitialState, type GameState } from '../engine/state';
@@ -12,6 +12,14 @@ const storage = new RotatingSaveStorage(localStorageStore);
 let state = $state.raw<GameState>(createInitialState(Date.now()));
 let offlineReport = $state.raw<OfflineReport | null>(null);
 let lastTick = 0;
+
+// Combo-heat is bewust ephemeral (nooit in de save): hij beloont kliks NU.
+// ~20 kliks naar vol; na 1s stilte loopt hij in 2s leeg.
+const COMBO_CLICKS_TO_FULL = 20;
+const COMBO_IDLE_MS = 1000;
+const COMBO_DRAIN_PER_SECOND = 0.5;
+let comboHeat = $state(0);
+let lastQuestAt = 0;
 
 function persist(): void {
   state = { ...state, lastSavedAt: Date.now() };
@@ -38,7 +46,11 @@ export const game = {
     }
     lastTick = performance.now();
     const tick = (now: number): void => {
-      state = advance(state, (now - lastTick) / 1000);
+      const dt = (now - lastTick) / 1000;
+      state = advance(state, dt);
+      if (comboHeat > 0 && now - lastQuestAt > COMBO_IDLE_MS) {
+        comboHeat = Math.max(0, comboHeat - dt * COMBO_DRAIN_PER_SECOND);
+      }
       lastTick = now;
       requestAnimationFrame(tick);
     };
@@ -50,12 +62,22 @@ export const game = {
     });
   },
 
+  // Heat van vóór deze klik telt: de combo beloont de reeks, niet de klik zelf.
+  get comboHeat(): number {
+    return comboHeat;
+  },
+  get comboMultiplier(): number {
+    return 1 + comboHeat * (comboCap(state.upgrades) - 1);
+  },
+
   quest(): ClickOutcome {
     startMusic();
     const roll = Math.random();
-    const outcome = clickOutcome(state, roll);
+    const outcome = clickOutcome(state, roll, this.comboMultiplier);
     playSound(outcome.crit ? 'buy' : 'click');
-    state = commands.performQuest(state, roll);
+    state = commands.performQuest(state, roll, this.comboMultiplier);
+    comboHeat = Math.min(1, comboHeat + 1 / COMBO_CLICKS_TO_FULL);
+    lastQuestAt = performance.now();
     return outcome;
   },
   buyHero(heroId: string, count = 1): void {
@@ -75,6 +97,7 @@ export const game = {
     if (next !== state) {
       playSound('prestige');
       state = next;
+      comboHeat = 0;
       persist();
       // hét moment dat telt voor het bord
       leaderboard.submitNow(state);

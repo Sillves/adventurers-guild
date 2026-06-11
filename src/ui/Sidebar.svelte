@@ -6,7 +6,7 @@
   import { CURRENCIES } from '../content/currencies';
   import { HEROES } from '../content/heroes';
   import { UPGRADES } from '../content/upgrades';
-  import { heroCost, isUpgradeUnlocked, productionPerSecond } from '../engine/formulas';
+  import { heroCost, incomePerSecond, isUpgradeUnlocked } from '../engine/formulas';
   import { canAfford } from '../engine/maps';
   import { formatNumber } from './format';
   import { game } from './game.svelte';
@@ -40,7 +40,8 @@
     { id: 'leaderboard', label: 'Ranking', icon: '🥇' },
   ];
 
-  const production = $derived(productionPerSecond(game.state));
+  // inclusief auto-quests: de teller toont wat er werkelijk per seconde binnenkomt
+  const production = $derived(incomePerSecond(game.state));
   let muted = $state(isMuted());
   let keepAwake = $state(isKeepAwake());
   let showSettings = $state(false);

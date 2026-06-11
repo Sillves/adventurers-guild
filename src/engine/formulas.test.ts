@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { HEROES } from '../content/heroes';
 import {
-  bulkHeroCost, clickGain, clickMultiplier, clickOutcome, clickSynergyPercent,
-  critParams, fameBonus, fameGain, fameTargetGold, heroCost, heroMultiplier,
-  isRealmUnlocked, maxAffordableHeroes, productionPerSecond, PRESTIGE_THRESHOLD_GOLD,
+  autoClickPerSecond, autoClickRate, bulkHeroCost, clickGain, clickMultiplier, clickOutcome,
+  clickSynergyPercent, comboCap, critParams, fameBonus, fameGain, fameTargetGold, heroCost,
+  heroMultiplier, incomePerSecond, isRealmUnlocked, maxAffordableHeroes, productionPerSecond,
+  PRESTIGE_THRESHOLD_GOLD,
 } from './formulas';
 import { createInitialState } from './state';
 import { REALMS } from '../content/realms';
@@ -114,6 +115,69 @@ describe('critical clicks', () => {
 
   it('never crits without crit upgrades', () => {
     expect(clickOutcome(createInitialState(0), 0).crit).toBe(false);
+  });
+});
+
+describe('click combo', () => {
+  it('cap is 1 without combo upgrades, then the highest purchased cap', () => {
+    expect(comboCap([])).toBe(1);
+    expect(comboCap(['battle-rhythm'])).toBe(2);
+    expect(comboCap(['battle-rhythm', 'battle-frenzy'])).toBe(3);
+  });
+
+  it('multiplies the click gain by the combo', () => {
+    const state = { ...createInitialState(0), upgrades: ['battle-rhythm', 'battle-frenzy'] };
+    const base = clickOutcome(state, 1).gain.gold ?? 0;
+    expect(clickOutcome(state, 1, 3).gain.gold).toBeCloseTo(base * 3);
+  });
+
+  it('clamps the combo to [1, comboCap] so the UI can never overpay', () => {
+    const unlocked = { ...createInitialState(0), upgrades: ['battle-rhythm'] };
+    const base = clickOutcome(unlocked, 1).gain.gold ?? 0;
+    expect(clickOutcome(unlocked, 1, 99).gain.gold).toBeCloseTo(base * 2);
+    expect(clickOutcome(unlocked, 1, 0.5).gain.gold).toBeCloseTo(base);
+    // zonder upgrade doet een meegegeven combo niets
+    expect(clickOutcome(createInitialState(0), 1, 3).gain.gold).toBeCloseTo(
+      clickOutcome(createInitialState(0), 1).gain.gold ?? 0,
+    );
+  });
+
+  it('stacks multiplicatively with crits', () => {
+    const state = { ...createInitialState(0), upgrades: ['battle-rhythm', 'lucky-strikes'] };
+    const base = clickOutcome(state, 0.99).gain.gold ?? 0;
+    expect(clickOutcome(state, 0.01, 2).gain.gold).toBeCloseTo(base * 2 * 10);
+  });
+});
+
+describe('auto-click', () => {
+  it('rate is 0 without upgrades, tiers replace each other', () => {
+    expect(autoClickRate([])).toBe(0);
+    expect(autoClickRate(['quest-herald'])).toBe(1);
+    expect(autoClickRate(['quest-herald', 'guild-steward'])).toBe(3);
+    expect(autoClickRate(['quest-herald', 'guild-steward', 'royal-envoy'])).toBe(6);
+  });
+
+  it('earns the click value per second, without combo', () => {
+    const state = { ...createInitialState(0), upgrades: ['quest-herald', 'stronger-grip'] };
+    // klikwaarde 2 (stronger-grip) × 1 klik/s
+    expect(autoClickPerSecond(state)).toEqual({ gold: 2 });
+    expect(autoClickPerSecond(createInitialState(0))).toEqual({});
+  });
+
+  it('includes the crit expected value', () => {
+    const state = { ...createInitialState(0), upgrades: ['quest-herald', 'lucky-strikes'] };
+    // 1 klik/s × (1 + 0.05 × 9) = 1.45
+    expect(autoClickPerSecond(state).gold).toBeCloseTo(1.45);
+  });
+
+  it('incomePerSecond sums hero production and auto-clicks', () => {
+    const state = {
+      ...createInitialState(0),
+      heroes: { farmhand: 10 },
+      upgrades: ['quest-herald'],
+    };
+    const production = productionPerSecond(state).gold ?? 0;
+    expect(incomePerSecond(state).gold).toBeCloseTo(production + 1);
   });
 });
 

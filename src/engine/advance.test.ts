@@ -23,6 +23,14 @@ describe('advance', () => {
     expect(advance(producing, 0)).toBe(producing);
     expect(advance(producing, -5)).toBe(producing);
   });
+
+  it('auto-clicks quest alongside hero production, also offline', () => {
+    const state = { ...producing, upgrades: ['quest-herald'], lastSavedAt: 0 };
+    // 5 gold/s productie + 1 auto-quest/s à 1 goud
+    expect(advance(state, 10).balances.gold).toBe(60);
+    const { report } = applyOffline(state, 600_000);
+    expect(report?.earned.gold).toBe(6 * 600);
+  });
 });
 
 describe('applyOffline', () => {

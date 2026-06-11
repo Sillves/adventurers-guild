@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { clickGain, fameGain, fameTargetGold } from '../../engine/formulas';
+  import { clickGain, comboCap, fameGain, fameTargetGold } from '../../engine/formulas';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
   import GuildYard from '../GuildYard.svelte';
 
   const gain = $derived(clickGain(game.state).gold ?? 0);
+  const maxCombo = $derived(comboCap(game.state.upgrades));
+  const comboMult = $derived(game.comboMultiplier);
   const runGold = $derived(game.state.runEarned['gold'] ?? 0);
   const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
   const fame = $derived(game.state.balances['fame'] ?? 0);
@@ -45,14 +47,21 @@
   <p class="dim">Send your guild on quests and recruit heroes to earn gold for you.</p>
 
   <div class="quest-area">
-    <button class="quest" onclick={quest}>
+    <button class="quest" class:frenzy={game.comboHeat >= 1} onclick={quest}>
       <span class="quest-icon">⚔️</span>
-      <span>Run quest<br /><small>+{formatNumber(gain)} gold</small></span>
+      <span>Run quest<br /><small>+{formatNumber(gain * comboMult)} gold</small></span>
     </button>
     {#each floats as f (f.id)}
       <span class="float" class:crit={f.crit} style="left: calc(50% + {f.x}px)">{f.text}</span>
     {/each}
   </div>
+
+  {#if maxCombo > 1}
+    <div class="combo" class:hot={game.comboHeat >= 1}>
+      <div class="combo-bar"><div class="combo-fill" style="width: {game.comboHeat * 100}%"></div></div>
+      <span class="combo-label">Combo ×{comboMult.toFixed(1)}</span>
+    </div>
+  {/if}
 
   <GuildYard />
 
@@ -86,7 +95,29 @@
     box-shadow: 0 4px 20px rgb(59 130 246 / 0.5);
   }
   .quest:active { transform: scale(0.97); }
+  .quest.frenzy { box-shadow: 0 4px 24px rgb(245 158 11 / 0.7); }
   .quest-icon { font-size: 2rem; }
+  .combo { display: flex; align-items: center; gap: 10px; width: min(280px, 100%); }
+  .combo-bar {
+    flex: 1;
+    background: var(--panel-raised);
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .combo-fill {
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    height: 100%;
+    /* geen transition: de breedte volgt de heat per frame al vloeiend */
+  }
+  .combo-label {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 4.5em;
+    text-align: left;
+  }
+  .combo.hot .combo-label { color: var(--gold); font-weight: 600; }
   .quest-area { position: relative; }
   .float {
     position: absolute;
