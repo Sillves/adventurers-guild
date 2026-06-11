@@ -22,8 +22,13 @@ const MIGRATIONS: Record<number, (raw: RawObject) => RawObject> = {
       fameTargetGold(isValidAmount(fame) ? fame : 0) + (isValidAmount(runGold) ? runGold : 0);
     return { ...raw, lifetimeEarned: { gold } };
   },
-  // v2 kende geen prestige-teller; historiek is onkenbaar, start op 0.
-  2: (raw) => ({ ...raw, prestiges: 0 }),
+  // v2 kende geen prestige-teller; het exacte aantal is onkenbaar (fame en goud
+  // verraden niet hoeveel losse refounds er waren). Wie al fame heeft, heeft
+  // minstens 1× geprestiged — die ondergrens is eerlijker dan 0 ("nooit").
+  2: (raw) => {
+    const fame = asObject(raw.balances).fame;
+    return { ...raw, prestiges: isValidAmount(fame) && fame >= 1 ? 1 : 0 };
+  },
 };
 
 export function serializeSave(state: GameState): string {

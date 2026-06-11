@@ -84,7 +84,7 @@ describe('migration v1 → v2', () => {
 });
 
 describe('migration v2 → v3', () => {
-  it('adds a zero prestige counter to v2 saves', () => {
+  it('floors the prestige counter to 1 when a v2 save already has fame', () => {
     const raw = {
       version: 2,
       balances: { gold: 5, fame: 3 },
@@ -96,7 +96,20 @@ describe('migration v2 → v3', () => {
     };
     const parsed = parseSave(JSON.stringify(raw));
     expect(parsed?.version).toBe(3);
-    expect(parsed?.prestiges).toBe(0);
+    expect(parsed?.prestiges).toBe(1);
+  });
+
+  it('keeps 0 prestiges for a v2 save that never earned fame', () => {
+    const raw = {
+      version: 2,
+      balances: { gold: 5, fame: 0 },
+      runEarned: {},
+      lifetimeEarned: { gold: 500_000 },
+      heroes: {},
+      upgrades: [],
+      lastSavedAt: 0,
+    };
+    expect(parseSave(JSON.stringify(raw))?.prestiges).toBe(0);
   });
 
   it('keeps an existing v3 prestige counter and rejects fractions', () => {
