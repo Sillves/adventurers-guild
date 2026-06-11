@@ -58,6 +58,14 @@ function playerId(): string {
   return id;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export interface LeaderboardIdentity {
+  readonly playerId: string;
+  readonly name: string;
+  readonly optIn: boolean;
+}
+
 async function submit(state: GameState): Promise<void> {
   write(LAST_SUBMIT_KEY, String(Date.now()));
   try {
@@ -130,6 +138,27 @@ export const leaderboard = {
   submitNow(gameState: GameState): void {
     if (!optIn) return;
     void submit(gameState);
+  },
+
+  /** Identiteit voor in de save-export, zodat die meeverhuist naar een ander toestel. */
+  identity(): LeaderboardIdentity | null {
+    const id = read(PLAYER_ID_KEY);
+    if (id === null) return null;
+    return { playerId: id, name: playerName, optIn };
+  },
+
+  /** Herstelt een identiteit uit een geïmporteerde save (best-effort, gevalideerd). */
+  adoptIdentity(raw: unknown): void {
+    if (typeof raw !== 'object' || raw === null) return;
+    const o = raw as Record<string, unknown>;
+    if (typeof o.playerId !== 'string' || !UUID_RE.test(o.playerId)) return;
+    write(PLAYER_ID_KEY, o.playerId.toLowerCase());
+    if (typeof o.name === 'string' && o.name.trim().length > 0) {
+      playerName = o.name.trim().slice(0, 20);
+      write(NAME_KEY, playerName);
+    }
+    optIn = o.optIn === true;
+    write(OPT_IN_KEY, optIn ? '1' : '0');
   },
 
   async refresh(): Promise<void> {

@@ -2,6 +2,7 @@ import { applyOffline, advance, type OfflineReport } from '../engine/advance';
 import * as commands from '../engine/commands';
 import { clickOutcome, type ClickOutcome } from '../engine/formulas';
 import { parseSave, serializeSave } from '../engine/save';
+import { leaderboard } from './leaderboard.svelte';
 import { createInitialState, type GameState } from '../engine/state';
 import { localStorageStore, RotatingSaveStorage } from '../engine/storage';
 import { playSound, startMusic } from './sound';
@@ -76,7 +77,7 @@ export const game = {
       state = next;
       persist();
       // hét moment dat telt voor het bord
-      void import('./leaderboard.svelte').then(({ leaderboard }) => leaderboard.submitNow(state));
+      leaderboard.submitNow(state);
       return;
     }
     state = next;
@@ -86,11 +87,20 @@ export const game = {
   },
   exportSave(): string {
     persist();
-    return serializeSave(state);
+    // leaderboard-identiteit verhuist mee met de save (parseSave negeert het veld)
+    const raw = JSON.parse(serializeSave(state)) as Record<string, unknown>;
+    const identity = leaderboard.identity();
+    if (identity !== null) raw.leaderboard = identity;
+    return JSON.stringify(raw);
   },
   importSave(json: string): boolean {
     const parsed = parseSave(json);
     if (parsed === null) return false;
+    try {
+      leaderboard.adoptIdentity((JSON.parse(json) as Record<string, unknown>).leaderboard);
+    } catch {
+      // identiteit is optioneel; de save zelf is al gevalideerd
+    }
     const result = applyOffline(parsed, Date.now());
     state = result.state;
     offlineReport = result.report;
