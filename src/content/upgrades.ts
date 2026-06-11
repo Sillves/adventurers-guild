@@ -3,9 +3,9 @@ import type { UpgradeDef } from './types';
 export const UPGRADES: readonly UpgradeDef[] = [
   // click upgrades
   { id: 'stronger-grip',  name: 'Stronger Grip',  description: 'Quests yield twice the gold.',      icon: '✊', realmId: 'verdant', cost: { gold: 100 },          effect: { target: 'click', multiplier: 2 } },
-  { id: 'quest-board',    name: 'Quest Board',    description: 'Quests yield twice the gold.',      icon: '📋', realmId: 'verdant', cost: { gold: 10000 },        effect: { target: 'click', multiplier: 2 } },
-  { id: 'guild-banner',   name: 'Guild Banner',   description: 'Quests yield twice the gold.',      icon: '🚩', realmId: 'verdant', cost: { gold: 1000000 },      effect: { target: 'click', multiplier: 2 } },
-  { id: 'royal-charter',  name: 'Royal Charter',  description: 'Quests yield twice the gold.',      icon: '📜', realmId: 'verdant', cost: { gold: 100000000 },    effect: { target: 'click', multiplier: 2 } },
+  { id: 'quest-board',    name: 'Quest Board',    description: 'Quests yield twice the gold.',      icon: '📋', realmId: 'verdant', cost: { gold: 10000 },        effect: { target: 'click', multiplier: 2 }, requires: 'stronger-grip' },
+  { id: 'guild-banner',   name: 'Guild Banner',   description: 'Quests yield twice the gold.',      icon: '🚩', realmId: 'verdant', cost: { gold: 1000000 },      effect: { target: 'click', multiplier: 2 }, requires: 'quest-board' },
+  { id: 'royal-charter',  name: 'Royal Charter',  description: 'Quests yield twice the gold.',      icon: '📜', realmId: 'verdant', cost: { gold: 100000000 },    effect: { target: 'click', multiplier: 2 }, requires: 'guild-banner' },
   // hero upgrades, tier 1
   { id: 'iron-pitchforks',  name: 'Iron Pitchforks',  description: 'Farmhands are twice as effective.',     icon: '🔱', realmId: 'verdant', cost: { gold: 500 },           effect: { target: 'hero:farmhand', multiplier: 2 } },
   { id: 'squire-training',  name: 'Squire Training',  description: 'Squires are twice as effective.',       icon: '🎯', realmId: 'verdant', cost: { gold: 2500 },          effect: { target: 'hero:squire', multiplier: 2 } },
