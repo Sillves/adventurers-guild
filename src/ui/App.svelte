@@ -15,14 +15,20 @@
   let realmId = $state(REALMS[0].id);
 
   // Onthoud de scrollpositie per tab, zodat je bv. in Upgrades niet telkens
-  // opnieuw naar beneden moet scrollen.
+  // opnieuw naar beneden moet scrollen. Desktop scrolt in <main>, mobiel in
+  // het venster — we lezen en herstellen allebei; de niet-scrollende klemt op 0.
   const scrollPositions: Partial<Record<Screen, number>> = {};
+  let main = $state<HTMLElement | null>(null);
 
   function switchScreen(next: Screen): void {
     if (next === screen) return;
-    scrollPositions[screen] = window.scrollY;
+    scrollPositions[screen] = (main?.scrollTop ?? 0) || window.scrollY;
     screen = next;
-    void tick().then(() => window.scrollTo(0, scrollPositions[next] ?? 0));
+    void tick().then(() => {
+      const y = scrollPositions[next] ?? 0;
+      if (main !== null) main.scrollTop = y;
+      window.scrollTo(0, y);
+    });
   }
 
   onMount(() => {
@@ -35,7 +41,7 @@
 
 <div class="app">
   <Sidebar {screen} onswitch={switchScreen} {realmId} />
-  <main>
+  <main bind:this={main}>
     {#if screen === 'guild'}
       <GuildScreen />
     {:else if screen === 'heroes'}
@@ -54,11 +60,17 @@
 </div>
 
 <style>
-  .app { display: flex; min-height: 100vh; }
-  main { flex: 1; }
+  /* Desktop: de app is exact het venster en alleen <main> scrolt. De navbar
+     staat buiten de scrollcontainer en kan dus nooit meebewegen — ook niet
+     bij de elastische bounce aan het einde van de scroll (macOS). */
+  .app { display: flex; height: 100vh; }
+  main { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
   @media (max-width: 700px) {
-    .app { flex-direction: column; }
+    /* Mobiel scrolt het venster zelf; de navbar is daar fixed onderaan. */
+    .app { flex-direction: column; height: auto; min-height: 100vh; }
     main {
+      overflow-y: visible;
+      overscroll-behavior: auto;
       padding-top: 48px;
       padding-bottom: calc(72px + env(safe-area-inset-bottom));
     }
