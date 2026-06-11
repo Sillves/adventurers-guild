@@ -56,7 +56,7 @@
     {#each sprites as sprite (sprite.key)}
       <span class="sprite" style="left: {sprite.left}%; top: {sprite.top}%;">
         <span class="bob" style="animation-delay: -{sprite.delay}s">
-          <Icon icon={sprite.icon} size={26} />
+          <Icon icon={sprite.icon} size={32} />
         </span>
       </span>
     {/each}
