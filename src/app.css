@@ -14,6 +14,12 @@
 
 * { box-sizing: border-box; }
 
+html, body {
+  /* mobiel mag nooit horizontaal scrollen of horizontaal rubber-banden */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 body {
   margin: 0;
   background: var(--bg);
