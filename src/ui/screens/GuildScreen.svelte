@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { clickGain, comboCap, fameGain, fameTargetGold } from '../../engine/formulas';
+  import { autoClickPerSecond, clickGain, comboCap, fameGain, fameTargetGold } from '../../engine/formulas';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
   import GuildYard from '../GuildYard.svelte';
@@ -7,6 +7,7 @@
   const gain = $derived(clickGain(game.state).gold ?? 0);
   const maxCombo = $derived(comboCap(game.state.upgrades));
   const comboMult = $derived(game.comboMultiplier);
+  const autoRate = $derived(autoClickPerSecond(game.state)['gold'] ?? 0);
   const runGold = $derived(game.state.runEarned['gold'] ?? 0);
   const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
   const fame = $derived(game.state.balances['fame'] ?? 0);
@@ -21,25 +22,29 @@
     readonly x: number;
     readonly text: string;
     readonly crit: boolean;
+    readonly auto: boolean;
   }
 
   let floats = $state<FloatingGain[]>([]);
   let nextFloatId = 0;
 
-  function quest(): void {
-    const outcome = game.quest();
+  function addFloat(text: string, crit: boolean, auto = false): void {
     const id = nextFloatId++;
-    floats = [
-      ...floats.slice(-24),
-      {
-        id,
-        x: (Math.random() - 0.5) * 140,
-        text: `${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`,
-        crit: outcome.crit,
-      },
-    ];
+    floats = [...floats.slice(-24), { id, x: (Math.random() - 0.5) * 140, text, crit, auto }];
     setTimeout(() => (floats = floats.filter((f) => f.id !== id)), 900);
   }
+
+  function quest(): void {
+    const outcome = game.quest();
+    addFloat(`${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`, outcome.crit);
+  }
+
+  // het personeel klikt zichtbaar mee: elke seconde één zachte float met hun opbrengst
+  $effect(() => {
+    if (autoRate <= 0) return;
+    const timer = setInterval(() => addFloat(`📯 +${formatNumber(autoRate)}`, false, true), 1000);
+    return () => clearInterval(timer);
+  });
 </script>
 
 <section>
@@ -52,7 +57,7 @@
       <span>Run quest<br /><small>+{formatNumber(gain * comboMult)} gold</small></span>
     </button>
     {#each floats as f (f.id)}
-      <span class="float" class:crit={f.crit} style="left: calc(50% + {f.x}px)">{f.text}</span>
+      <span class="float" class:crit={f.crit} class:auto={f.auto} style="left: calc(50% + {f.x}px)">{f.text}</span>
     {/each}
   </div>
 
@@ -132,6 +137,11 @@
   .float.crit {
     color: var(--gold);
     font-size: 1.3rem;
+  }
+  .float.auto {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-weight: 400;
   }
   @keyframes float-up {
     from { translate: 0 0; opacity: 1; }
