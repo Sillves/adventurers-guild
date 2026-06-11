@@ -81,12 +81,25 @@ geüpload in plaats van lokaal bewaard. De anti-cheat-ladder:
 
 1. **Cloud saves (opslag):** geen integriteitswinst, wél waardevol als feature —
    cross-device spelen ("fix me account" van Ilyes) en backup. Apart plannen.
-2. **Plausibiliteits-envelope (aanbevolen voor dit leaderboard):** de Worker
+2. **Plausibiliteits-envelope met "cheated"-label (aanbevolen):** de Worker
    kent de spelformules én we hebben al een perfect-play simulator
-   (`scripts/simulate.ts`). Server berekent het theoretische maximum aan
-   lifetime goud voor de verstreken wandkloktijd sinds de eerste submission en
-   weigert alles daarboven. Onmogelijke scores → geweigerd; menselijk-plausibele
-   vervalsingen blijven mogelijk.
+   (`scripts/simulate.ts`). I.p.v. onmogelijke scores te weigeren, accepteren
+   we alles maar krijgt de speler een publiek label ("cheated") op het bord —
+   zichtbaar, grappig, en de vriendengroep handhaaft zelf. Detectieregels:
+   - **Servertijdstempels:** de Worker stempelt elke submission bij aankomst;
+     klok van de client is irrelevant.
+   - **Groei sinds eerste submission, niet absolute waarde:** de eerste
+     submission zet een vertrouwde baseline (anders flaggen we legitieme
+     save-imports op een tweede toestel); daarna geldt
+     `baseline + max haalbare groei in verstreken servertijd` (simulator).
+     Absurde eerste submissions (meer dan haalbaar sinds de publieke launch)
+     kunnen wél meteen geflagd worden.
+   - **Label is sticky per playerId:** één onmogelijke sprong = blijvend label,
+     anders wast een cheater het label weg met eerlijke deltas erna. Vers
+     beginnen kan met een nieuw ID — en dan ben je je ranking kwijt.
+   - **Dalingen niet flaggen:** een oudere save-backup terugzetten is legitiem;
+     bewaar het maximum per rij en negeer dips.
+   - Formule-consistentie blijft: fame ≈ `floor(sqrt(lifetimeGold / 1M))`.
 3. **Server-authoritative simulatie (enige echte fix, uitgesteld):** server
    houdt de state, client stuurt acties, de pure TS-engine draait server-side
    (kan letterlijk dezelfde code in de Worker zijn). Kost: sync-protocol,
@@ -94,9 +107,10 @@ geüpload in plaats van lokaal bewaard. De anti-cheat-ladder:
    het werk van dit plan. Alleen overwegen als het spel de vriendenkring
    ontgroeit.
 
-**Aanbeveling:** leaderboard-validatie upgraden van losse sanity checks naar de
-simulator-envelope (punt 2); cloud saves als losse feature plannen; punt 3
-expliciet uitstellen.
+**Aanbeveling:** leaderboard-validatie = simulator-envelope met publiek
+"cheated"-label (punt 2, accepteren + labelen i.p.v. weigeren); cloud saves als
+losse feature plannen; punt 3 expliciet uitstellen. Tabel krijgt extra kolommen:
+`first_seen_at`, `flagged_at`, `flag_reason`.
 
 ## Buiten scope
 
