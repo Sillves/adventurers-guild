@@ -7,7 +7,7 @@
   import { HEROES } from '../content/heroes';
   import { UPGRADES } from '../content/upgrades';
   import { heroCost, incomePerSecond, isUpgradeUnlocked } from '../engine/formulas';
-  import { canAfford } from '../engine/maps';
+  import { addMaps, canAfford } from '../engine/maps';
   import { formatNumber } from './format';
   import { game } from './game.svelte';
   import Icon from './Icon.svelte';
@@ -40,8 +40,13 @@
     { id: 'leaderboard', label: 'Ranking', icon: '🥇' },
   ];
 
-  // inclusief auto-quests: de teller toont wat er werkelijk per seconde binnenkomt
-  const production = $derived(incomePerSecond(game.state));
+  // de teller toont wat er werkelijk per seconde binnenkomt: heldenproductie,
+  // auto-quests én je gemeten klikinkomsten van de afgelopen seconden
+  const production = $derived.by(() => {
+    const income = incomePerSecond(game.state);
+    const clicks = game.clickIncomeRate;
+    return clicks > 0 ? addMaps(income, { gold: clicks }) : income;
+  });
   let muted = $state(isMuted());
   let keepAwake = $state(isKeepAwake());
   let showSettings = $state(false);
