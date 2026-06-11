@@ -1,7 +1,7 @@
 import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap } from '../content/types';
-import { clickOutcome, fameGain, heroCost, isUpgradeUnlocked } from './formulas';
+import { bulkHeroCost, clickOutcome, fameGain, isUpgradeUnlocked } from './formulas';
 import { addMaps, canAfford, subtractMaps } from './maps';
 import { createInitialState, type GameState } from './state';
 
@@ -19,16 +19,16 @@ export function performQuest(state: GameState, roll = 1): GameState {
   return earn(state, clickOutcome(state, roll).gain);
 }
 
-export function buyHero(state: GameState, heroId: string): GameState {
+export function buyHero(state: GameState, heroId: string, count = 1): GameState {
   const def = HEROES.find((h) => h.id === heroId);
-  if (def === undefined) return state;
+  if (def === undefined || count < 1 || !Number.isInteger(count)) return state;
   const owned = state.heroes[heroId] ?? 0;
-  const cost = heroCost(def, owned);
+  const cost = bulkHeroCost(def, owned, count);
   if (!canAfford(state.balances, cost)) return state;
   return {
     ...state,
     balances: subtractMaps(state.balances, cost),
-    heroes: { ...state.heroes, [heroId]: owned + 1 },
+    heroes: { ...state.heroes, [heroId]: owned + count },
   };
 }
 

@@ -57,9 +57,9 @@ export const game = {
     state = commands.performQuest(state, roll);
     return outcome;
   },
-  buyHero(heroId: string): void {
+  buyHero(heroId: string, count = 1): void {
     startMusic();
-    const next = commands.buyHero(state, heroId);
+    const next = commands.buyHero(state, heroId, count);
     if (next !== state) playSound('buy');
     state = next;
   },
