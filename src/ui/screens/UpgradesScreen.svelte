@@ -49,10 +49,12 @@
       {@const level = levelOf(tiers)}
       {@const maxed = level >= tiers.length}
       {@const shown = maxed ? tiers[tiers.length - 1] : tiers[level]}
+      {@const affordable = !maxed && canAfford(game.state.balances, shown.cost)}
       <button
         class="tile"
         class:purchased={maxed}
-        disabled={maxed || !canAfford(game.state.balances, shown.cost)}
+        class:unaffordable={!maxed && !affordable}
+        disabled={!affordable}
         onclick={() => game.buyUpgrade(shown.id)}
         title={shown.description}
       >
@@ -64,7 +66,11 @@
         </div>
         <strong>{shown.name}</strong>
         <span class="dim">{shown.description}</span>
-        <span class="cost">{maxed ? '✓ Max level' : `🪙 ${formatNumber(shown.cost.gold ?? 0)}`}</span>
+        {#if maxed}
+          <span class="cost">✓ Max level</span>
+        {:else}
+          <span class="cost" class:too-expensive={!affordable}>🪙 {formatNumber(shown.cost.gold ?? 0)}</span>
+        {/if}
       </button>
     {/each}
   </div>
@@ -87,6 +93,12 @@
     padding: 14px;
     border-radius: var(--radius);
   }
+  /* een onbetaalbare kaart blijft leesbaar: alleen de prijs vertelt het verhaal;
+     de globale disabled-opacity (0.4) maakte de hele kaart onleesbaar */
+  .tile:disabled { opacity: 1; }
+  .tile.unaffordable { opacity: 0.9; }
+  .tile.unaffordable :global(.pixel), .tile.unaffordable .head { filter: grayscale(0.4); }
+  .cost.too-expensive { color: var(--danger); }
   .tile.purchased { opacity: 0.45; }
   .head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
   .level {
