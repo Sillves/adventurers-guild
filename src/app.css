@@ -15,8 +15,10 @@
 * { box-sizing: border-box; }
 
 html, body {
-  /* mobiel mag nooit horizontaal scrollen of horizontaal rubber-banden */
-  overflow-x: hidden;
+  /* mobiel mag nooit horizontaal scrollen of horizontaal rubber-banden;
+     clip i.p.v. hidden: hidden maakt body een scrollcontainer en breekt
+     position: sticky op de navbar */
+  overflow-x: clip;
   overscroll-behavior-x: none;
 }
 
