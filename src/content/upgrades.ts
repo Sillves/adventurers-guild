@@ -22,6 +22,9 @@ export const UPGRADES: readonly UpgradeDef[] = [
   // critical quests
   { id: 'lucky-strikes',       name: 'Lucky Strikes',       description: '5% chance a quest crits for 10× gold.',                 icon: '🍀', realmId: 'verdant', cost: { gold: 400000 },     effect: { target: 'click-crit', chance: 0.05, critMultiplier: 10 } },
   { id: 'heroic-strikes',      name: 'Heroic Strikes',      description: 'Crit chance doubles to 10%, crits hit for 20×.',        icon: '💥', realmId: 'verdant', cost: { gold: 40000000 },   effect: { target: 'click-crit', chance: 0.05, critMultiplier: 20 }, requires: 'lucky-strikes' },
+  // click combo: snel doorklikken bouwt heat op (UI-state, nooit opgeslagen) tot dit maximum
+  { id: 'battle-rhythm',       name: 'Battle Rhythm',       description: 'Chain quests quickly to build a combo, up to ×2 gold.', icon: '🥁', realmId: 'verdant', cost: { gold: 200000 },     effect: { target: 'click-combo', maxMultiplier: 2 } },
+  { id: 'battle-frenzy',       name: 'Battle Frenzy',       description: 'Your combo now climbs all the way to ×3 gold.',         icon: '🔥', realmId: 'verdant', cost: { gold: 20000000 },   effect: { target: 'click-combo', maxMultiplier: 3 }, requires: 'battle-rhythm' },
   // hero upgrades, tier 2
   { id: 'steel-pitchforks', name: 'Steel Pitchforks', description: 'Farmhands are twice as effective.',     icon: '🔱', realmId: 'verdant', cost: { gold: 25000 },         effect: { target: 'hero:farmhand', multiplier: 2 }, requires: 'iron-pitchforks' },
   { id: 'squire-armor',     name: 'Squire Armor',     description: 'Squires are twice as effective.',       icon: '🦺', realmId: 'verdant', cost: { gold: 125000 },        effect: { target: 'hero:squire', multiplier: 2 }, requires: 'squire-training' },

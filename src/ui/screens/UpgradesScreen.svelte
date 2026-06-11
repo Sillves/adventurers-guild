@@ -51,6 +51,10 @@
 
   /** Wat levert deze upgrade nu concreet op? Berekend met de echte engine. */
   function gainText(upgrade: UpgradeDef): string {
+    // combo schaalt met je klikgedrag, niet met de state — toon het plafond
+    if (upgrade.effect.target === 'click-combo') {
+      return `click fast: up to ×${upgrade.effect.maxMultiplier} per quest`;
+    }
     const after: GameState = { ...game.state, upgrades: [...game.state.upgrades, upgrade.id] };
     const perSecond =
       (productionPerSecond(after)['gold'] ?? 0) - (productionPerSecond(game.state)['gold'] ?? 0);

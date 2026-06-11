@@ -31,7 +31,9 @@ export type UpgradeEffect =
   /** Kliks leveren extra een percentage van de productie per seconde op. */
   | { readonly target: 'click-synergy'; readonly percentOfProduction: number }
   /** Kans per klik op een critical die de opbrengst vermenigvuldigt. */
-  | { readonly target: 'click-crit'; readonly chance: number; readonly critMultiplier: number };
+  | { readonly target: 'click-crit'; readonly chance: number; readonly critMultiplier: number }
+  /** Snel doorklikken bouwt een combo op die de klikopbrengst tot dit maximum vermenigvuldigt. */
+  | { readonly target: 'click-combo'; readonly maxMultiplier: number };
 
 export interface UpgradeDef {
   readonly id: string;

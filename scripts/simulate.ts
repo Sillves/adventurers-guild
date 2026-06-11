@@ -7,7 +7,7 @@ import { HEROES } from '../src/content/heroes';
 import { UPGRADES } from '../src/content/upgrades';
 import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
-import { clickGain, critParams, fameGain, heroCost, isUpgradeUnlocked } from '../src/engine/formulas';
+import { clickGain, comboCap, critParams, fameGain, heroCost, isUpgradeUnlocked } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
 import { createInitialState, type GameState } from '../src/engine/state';
 import { formatNumber } from '../src/ui/format';
@@ -61,7 +61,9 @@ function simulate(
       // crits gemodelleerd als verwachtingswaarde: 1 + kans × (multiplier − 1)
       const { chance, multiplier } = critParams(state.upgrades);
       const avgCrit = 1 + chance * (multiplier - 1);
-      state = commands.earn(state, scaleMap(clickGain(state), clicksPerSecond * avgCrit));
+      // boven ~1 klik/s loopt de combo-heat nooit leeg → bot klikt op de cap
+      const combo = clicksPerSecond > 1 ? comboCap(state.upgrades) : 1;
+      state = commands.earn(state, scaleMap(clickGain(state), clicksPerSecond * avgCrit * combo));
     }
     t += 1;
 

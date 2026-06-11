@@ -11,7 +11,7 @@ import { HEROES } from '../src/content/heroes';
 import { UPGRADES } from '../src/content/upgrades';
 import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
-import { clickGain, critParams, fameGain, heroCost, isUpgradeUnlocked } from '../src/engine/formulas';
+import { clickGain, comboCap, critParams, fameGain, heroCost, isUpgradeUnlocked } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
 import { createInitialState, type GameState } from '../src/engine/state';
 
@@ -35,9 +35,10 @@ function simulate(shouldPrestige: PrestigePolicy): number[] {
     state = advance(state, STEP_SECONDS);
     const { chance, multiplier } = critParams(state.upgrades);
     const avgCrit = 1 + chance * (multiplier - 1);
+    // 8 kliks/s houdt de combo-heat permanent vol, dus de bot klikt op de cap
     state = commands.earn(
       state,
-      scaleMap(clickGain(state), CLICKS_PER_SECOND * STEP_SECONDS * avgCrit),
+      scaleMap(clickGain(state), CLICKS_PER_SECOND * STEP_SECONDS * avgCrit * comboCap(state.upgrades)),
     );
     t += STEP_SECONDS;
 

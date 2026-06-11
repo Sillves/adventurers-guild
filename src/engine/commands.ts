@@ -15,8 +15,8 @@ export function earn(state: GameState, amount: CurrencyMap): GameState {
 }
 
 /** roll ∈ [0, 1) bepaalt of de klik crit; default 1 = nooit crit (deterministisch). */
-export function performQuest(state: GameState, roll = 1): GameState {
-  return earn(state, clickOutcome(state, roll).gain);
+export function performQuest(state: GameState, roll = 1, combo = 1): GameState {
+  return earn(state, clickOutcome(state, roll, combo).gain);
 }
 
 export function buyHero(state: GameState, heroId: string, count = 1): GameState {
