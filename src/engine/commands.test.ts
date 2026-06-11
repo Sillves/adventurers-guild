@@ -39,6 +39,18 @@ describe('buyHero', () => {
     expect(after.heroes.farmhand).toBe(6);
     expect(after.balances.gold).toBe(1000 - Math.ceil(15 * Math.pow(1.15, 5)));
   });
+
+  it('buys multiple heroes at once for the exact summed cost', () => {
+    // farmhand: 15 + 18 = 33 voor de eerste twee
+    const state = { ...createInitialState(0), balances: { gold: 33, fame: 0 } };
+    const after = buyHero(state, 'farmhand', 2);
+    expect(after.heroes.farmhand).toBe(2);
+    expect(after.balances.gold).toBe(0);
+    const broke = { ...createInitialState(0), balances: { gold: 32, fame: 0 } };
+    expect(buyHero(broke, 'farmhand', 2)).toBe(broke);
+    expect(buyHero(state, 'farmhand', 0)).toBe(state);
+    expect(buyHero(state, 'farmhand', 1.5)).toBe(state);
+  });
 });
 
 describe('buyUpgrade', () => {

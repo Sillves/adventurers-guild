@@ -1,7 +1,7 @@
 import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap, HeroDef, RealmDef, UpgradeDef } from '../content/types';
-import { addMaps, scaleMap } from './maps';
+import { addMaps, canAfford, scaleMap } from './maps';
 
 import type { GameState } from './state';
 
@@ -14,6 +14,27 @@ export function heroCost(def: HeroDef, owned: number): CurrencyMap {
     result[currency] = Math.ceil(base * Math.pow(def.costGrowth, owned));
   }
   return result;
+}
+
+/** Kost van `count` heroes in één keer: exact de som van de losse aankopen. */
+export function bulkHeroCost(def: HeroDef, owned: number, count: number): CurrencyMap {
+  let total: CurrencyMap = {};
+  for (let i = 0; i < count; i++) {
+    total = addMaps(total, heroCost(def, owned + i));
+  }
+  return total;
+}
+
+const MAX_BULK = 1000;
+
+/** Grootste aantal heroes dat in één keer betaalbaar is (begrensd op 1000). */
+export function maxAffordableHeroes(def: HeroDef, owned: number, balances: CurrencyMap): number {
+  let total: CurrencyMap = {};
+  for (let n = 0; n < MAX_BULK; n++) {
+    total = addMaps(total, heroCost(def, owned + n));
+    if (!canAfford(balances, total)) return n;
+  }
+  return MAX_BULK;
 }
 
 export function heroMultiplier(heroId: string, purchased: readonly string[]): number {

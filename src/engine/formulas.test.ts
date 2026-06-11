@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { HEROES } from '../content/heroes';
 import {
-  clickGain, clickMultiplier, clickOutcome, clickSynergyPercent, critParams,
-  fameBonus, fameGain, fameTargetGold, heroCost, heroMultiplier, isRealmUnlocked,
-  productionPerSecond, PRESTIGE_THRESHOLD_GOLD,
+  bulkHeroCost, clickGain, clickMultiplier, clickOutcome, clickSynergyPercent,
+  critParams, fameBonus, fameGain, fameTargetGold, heroCost, heroMultiplier,
+  isRealmUnlocked, maxAffordableHeroes, productionPerSecond, PRESTIGE_THRESHOLD_GOLD,
 } from './formulas';
 import { createInitialState } from './state';
 import { REALMS } from '../content/realms';
@@ -59,6 +59,22 @@ describe('production and clicking', () => {
       upgrades: ['stronger-grip'],
     };
     expect(clickGain(state)).toEqual({ gold: 4 });
+  });
+});
+
+describe('bulk hero purchases', () => {
+  it('bulk cost equals the sum of sequential single purchases', () => {
+    const single = [0, 1, 2].map((n) => heroCost(farmhand, n).gold ?? 0);
+    expect(bulkHeroCost(farmhand, 0, 3).gold).toBe(single[0] + single[1] + single[2]);
+    expect(bulkHeroCost(farmhand, 0, 1)).toEqual(heroCost(farmhand, 0));
+  });
+
+  it('maxAffordableHeroes returns the largest affordable batch', () => {
+    // farmhand kost 15, 18, 20, 23, ... — met 53 goud zijn er precies 3 betaalbaar
+    const three = (heroCost(farmhand, 0).gold ?? 0) + (heroCost(farmhand, 1).gold ?? 0) + (heroCost(farmhand, 2).gold ?? 0);
+    expect(maxAffordableHeroes(farmhand, 0, { gold: three })).toBe(3);
+    expect(maxAffordableHeroes(farmhand, 0, { gold: three - 1 })).toBe(2);
+    expect(maxAffordableHeroes(farmhand, 0, { gold: 0 })).toBe(0);
   });
 });
 
