@@ -11,6 +11,12 @@ describe('performQuest', () => {
     expect(after.lifetimeEarned.gold).toBe(1);
     expect(before.balances.gold).toBe(0);
   });
+
+  it('applies the crit multiplier when the roll crits', () => {
+    const state = { ...createInitialState(0), upgrades: ['lucky-strikes'] };
+    expect(performQuest(state, 0.01).balances.gold).toBe(10);
+    expect(performQuest(state, 0.99).balances.gold).toBe(1);
+  });
 });
 
 describe('buyHero', () => {

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { HEROES } from '../content/heroes';
 import {
-  clickGain, clickMultiplier, fameBonus, fameGain, fameTargetGold, heroCost,
-  heroMultiplier, isRealmUnlocked, productionPerSecond, PRESTIGE_THRESHOLD_GOLD,
+  clickGain, clickMultiplier, clickOutcome, clickSynergyPercent, critParams,
+  fameBonus, fameGain, fameTargetGold, heroCost, heroMultiplier, isRealmUnlocked,
+  productionPerSecond, PRESTIGE_THRESHOLD_GOLD,
 } from './formulas';
 import { createInitialState } from './state';
 import { REALMS } from '../content/realms';
@@ -58,6 +59,45 @@ describe('production and clicking', () => {
       upgrades: ['stronger-grip'],
     };
     expect(clickGain(state)).toEqual({ gold: 4 });
+  });
+});
+
+describe('click synergy', () => {
+  it('sums synergy percentages from purchased upgrades', () => {
+    expect(clickSynergyPercent([])).toBe(0);
+    expect(clickSynergyPercent(['joint-quests'])).toBe(2);
+    expect(clickSynergyPercent(['joint-quests', 'war-councils', 'legendary-campaigns'])).toBe(10);
+  });
+
+  it('adds a share of production to the click gain', () => {
+    const state = {
+      ...createInitialState(0),
+      heroes: { farmhand: 10 },
+      upgrades: ['joint-quests'],
+    };
+    const production = productionPerSecond(state).gold ?? 0;
+    expect(clickGain(state).gold).toBeCloseTo(1 + (2 * production) / 100);
+  });
+});
+
+describe('critical clicks', () => {
+  it('stacks chance and takes the highest multiplier', () => {
+    expect(critParams([])).toEqual({ chance: 0, multiplier: 1 });
+    expect(critParams(['lucky-strikes'])).toEqual({ chance: 0.05, multiplier: 10 });
+    expect(critParams(['lucky-strikes', 'heroic-strikes'])).toEqual({ chance: 0.1, multiplier: 20 });
+  });
+
+  it('clickOutcome crits when the roll lands under the chance', () => {
+    const state = { ...createInitialState(0), upgrades: ['lucky-strikes'] };
+    const crit = clickOutcome(state, 0.01);
+    const normal = clickOutcome(state, 0.99);
+    expect(crit.crit).toBe(true);
+    expect(normal.crit).toBe(false);
+    expect(crit.gain.gold).toBeCloseTo((normal.gain.gold ?? 0) * 10);
+  });
+
+  it('never crits without crit upgrades', () => {
+    expect(clickOutcome(createInitialState(0), 0).crit).toBe(false);
   });
 });
 

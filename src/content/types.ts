@@ -25,6 +25,14 @@ export interface HeroDef {
 
 export type UpgradeTarget = `hero:${string}` | 'click';
 
+export type UpgradeEffect =
+  /** Vermenigvuldigt klik- of held-opbrengst. */
+  | { readonly target: UpgradeTarget; readonly multiplier: number }
+  /** Kliks leveren extra een percentage van de productie per seconde op. */
+  | { readonly target: 'click-synergy'; readonly percentOfProduction: number }
+  /** Kans per klik op een critical die de opbrengst vermenigvuldigt. */
+  | { readonly target: 'click-crit'; readonly chance: number; readonly critMultiplier: number };
+
 export interface UpgradeDef {
   readonly id: string;
   readonly name: string;
@@ -32,5 +40,5 @@ export interface UpgradeDef {
   readonly icon: string;
   readonly realmId: string;
   readonly cost: CurrencyMap;
-  readonly effect: { readonly target: UpgradeTarget; readonly multiplier: number };
+  readonly effect: UpgradeEffect;
 }
