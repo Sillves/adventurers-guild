@@ -173,15 +173,16 @@
   .balance strong, .rate { font-variant-numeric: tabular-nums; }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
   .mute { font-size: 0.85rem; color: var(--text-dim); }
+  /* zelfde padding als de knoppen, zodat label en knopteksten uitlijnen */
   .switch-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    padding: 10px 12px;
     font-size: 0.85rem;
     color: var(--text-dim);
   }
-  .awake.switch-row { padding: 6px 12px; }
   .switch {
     position: relative;
     flex: none;
@@ -276,7 +277,7 @@
       border-radius: var(--radius);
       padding: 12px;
     }
-    .settings-panel .credits { display: block; }
+    .settings-panel .credits { display: block; text-align: left; padding: 4px 12px; }
     .dot { top: 2px; right: calc(50% - 16px); }
     /* op mobiel zit de wakker-blijven-toggle in het instellingenpaneel */
     .awake,
