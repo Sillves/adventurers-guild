@@ -100,6 +100,9 @@ geüpload in plaats van lokaal bewaard. De anti-cheat-ladder:
    - **Dalingen niet flaggen:** een oudere save-backup terugzetten is legitiem;
      bewaar het maximum per rij en negeer dips.
    - Formule-consistentie blijft: fame ≈ `floor(sqrt(lifetimeGold / 1M))`.
+   - **Labeltekst (beslist):** Engels en grappig — badge **"🤡 Suspiciously
+     rich"** naast de naam op het bord. (Alternatieven indien gewenst:
+     "Caught red-handed", "Certified cheater".)
 3. **Server-authoritative simulatie (enige echte fix, uitgesteld):** server
    houdt de state, client stuurt acties, de pure TS-engine draait server-side
    (kan letterlijk dezelfde code in de Worker zijn). Kost: sync-protocol,
