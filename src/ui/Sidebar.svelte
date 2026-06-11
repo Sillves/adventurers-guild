@@ -96,17 +96,33 @@
     {muted ? '🔇' : '🔊'}<span class="mute-label"> {muted ? 'Sound off' : 'Sound on'}</span>
   </button>
   {#if wakeLockSupported}
-    <button class="awake" onclick={() => (keepAwake = toggleKeepAwake())}>
-      {keepAwake ? '🔆 Screen stays on' : '🌙 Screen may sleep'}
-    </button>
+    <div class="awake switch-row">
+      <span>Keep screen on</span>
+      <button
+        class="switch"
+        class:on={keepAwake}
+        role="switch"
+        aria-checked={keepAwake}
+        aria-label="Keep screen on"
+        onclick={() => (keepAwake = toggleKeepAwake())}
+      ><span class="knob"></span></button>
+    </div>
   {/if}
   <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>⚙️</button>
   {#if showSettings}
     <div class="settings-panel">
       {#if wakeLockSupported}
-        <button onclick={() => (keepAwake = toggleKeepAwake())}>
-          {keepAwake ? '🔆 Screen stays on' : '🌙 Screen may sleep'}
-        </button>
+        <div class="switch-row">
+          <span>Keep screen on</span>
+          <button
+            class="switch"
+            class:on={keepAwake}
+            role="switch"
+            aria-checked={keepAwake}
+            aria-label="Keep screen on"
+            onclick={() => (keepAwake = toggleKeepAwake())}
+          ><span class="knob"></span></button>
+        </div>
       {/if}
       <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
       <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
@@ -156,7 +172,38 @@
   /* cijfers met vaste breedte, anders verspringt de balk bij elke tick */
   .balance strong, .rate { font-variant-numeric: tabular-nums; }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
-  .mute, .awake { font-size: 0.85rem; color: var(--text-dim); }
+  .mute { font-size: 0.85rem; color: var(--text-dim); }
+  .switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .awake.switch-row { padding: 6px 12px; }
+  .switch {
+    position: relative;
+    flex: none;
+    width: 38px;
+    height: 22px;
+    padding: 0;
+    border-radius: 999px;
+    background: var(--panel-raised);
+    transition: background 0.15s;
+  }
+  .switch.on { background: var(--accent); }
+  .knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    transition: translate 0.15s;
+  }
+  .switch.on .knob { translate: 16px 0; }
   .credits { color: var(--text-dim); font-size: 0.75rem; padding: 4px 12px; text-decoration: none; display: block; text-align: center; }
   .save-actions { display: flex; gap: 6px; }
   .save-actions button { flex: 1; font-size: 0.75rem; color: var(--text-dim); padding: 6px; background: var(--panel-raised); }
