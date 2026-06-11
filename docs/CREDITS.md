@@ -4,10 +4,13 @@
 Design & code: Loren — all code MIT-licensed unless noted.
 
 ## Assets
-- **Icons:** v1 uses Unicode emoji (no license needed). If/when swapping to
-  [game-icons.net](https://game-icons.net) SVGs: those are **CC BY 3.0** and REQUIRE
-  attribution to the individual artists (Lorc, Delapouite, et al.) — list each icon
-  and artist here when added.
+- **Hero sprites:** from the ["Tiny Dungeon"](https://kenney.nl/assets/tiny-dungeon)
+  pack by **Kenney** (kenney.nl) — CC0 (attribution not required, but appreciated).
+  Files in `public/sprites/`.
+- **Other icons (tabs, upgrades, currencies):** Unicode emoji (no license needed).
+  If/when swapping to [game-icons.net](https://game-icons.net) SVGs: those are
+  **CC BY 3.0** and REQUIRE attribution to the individual artists (Lorc, Delapouite,
+  et al.) — list each icon and artist here when added.
 - **Audio:**
   - Background music: ["Medieval: The Old Tower Inn"](https://opengameart.org/content/medieval-the-old-tower-inn)
     by **RandomMind** — CC0 (attribution not required, but appreciated).

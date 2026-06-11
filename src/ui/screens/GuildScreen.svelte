@@ -2,6 +2,7 @@
   import { clickGain, fameGain, fameTargetGold } from '../../engine/formulas';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
+  import GuildYard from '../GuildYard.svelte';
 
   const gain = $derived(clickGain(game.state).gold ?? 0);
   const runGold = $derived(game.state.runEarned['gold'] ?? 0);
@@ -22,6 +23,8 @@
     <span class="quest-icon">⚔️</span>
     <span>Run quest<br /><small>+{formatNumber(gain)} gold</small></span>
   </button>
+
+  <GuildYard />
 
   <div class="stats">
     <div>Earned this guild era: <strong>{formatNumber(runGold)}</strong> gold</div>
