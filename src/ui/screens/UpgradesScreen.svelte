@@ -35,16 +35,10 @@
     return level;
   }
 
-  // sorteer op de prijs van de eerstvolgende tier; volledig gekochte ketens achteraan
+  // vaste volgorde op de prijs van de eerste tier: kaarten verspringen nooit,
+  // ook niet na een aankoop of op max level
   const sorted = $derived(
-    [...chains].sort((a, b) => {
-      const nextA = a[levelOf(a)];
-      const nextB = b[levelOf(b)];
-      if (nextA === undefined && nextB === undefined) return 0;
-      if (nextA === undefined) return 1;
-      if (nextB === undefined) return -1;
-      return (nextA.cost.gold ?? 0) - (nextB.cost.gold ?? 0);
-    }),
+    [...chains].sort((a, b) => (a[0].cost.gold ?? 0) - (b[0].cost.gold ?? 0)),
   );
 </script>
 
