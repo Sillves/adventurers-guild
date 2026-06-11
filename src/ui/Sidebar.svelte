@@ -12,6 +12,7 @@
   import { game } from './game.svelte';
   import Icon from './Icon.svelte';
   import { isMuted, toggleMuted } from './sound';
+  import { isKeepAwake, toggleKeepAwake, wakeLockSupported } from './wakelock';
 
   let { screen, onswitch, realmId }: { screen: Screen; onswitch: (next: Screen) => void; realmId: string } = $props();
 
@@ -40,6 +41,7 @@
 
   const production = $derived(productionPerSecond(game.state));
   let muted = $state(isMuted());
+  let keepAwake = $state(isKeepAwake());
   let showSettings = $state(false);
 
   // Alleen zichtbare heroes tellen mee: na de eerste niet-gekochte hero stopt de reveal.
@@ -93,9 +95,19 @@
   <button class="mute" onclick={() => (muted = toggleMuted())}>
     {muted ? '🔇' : '🔊'}<span class="mute-label"> {muted ? 'Sound off' : 'Sound on'}</span>
   </button>
+  {#if wakeLockSupported}
+    <button class="awake" onclick={() => (keepAwake = toggleKeepAwake())}>
+      {keepAwake ? '🔆 Screen stays on' : '🌙 Screen may sleep'}
+    </button>
+  {/if}
   <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>⚙️</button>
   {#if showSettings}
     <div class="settings-panel">
+      {#if wakeLockSupported}
+        <button onclick={() => (keepAwake = toggleKeepAwake())}>
+          {keepAwake ? '🔆 Screen stays on' : '🌙 Screen may sleep'}
+        </button>
+      {/if}
       <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
       <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
       <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
@@ -144,7 +156,7 @@
   /* cijfers met vaste breedte, anders verspringt de balk bij elke tick */
   .balance strong, .rate { font-variant-numeric: tabular-nums; }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
-  .mute { font-size: 0.85rem; color: var(--text-dim); }
+  .mute, .awake { font-size: 0.85rem; color: var(--text-dim); }
   .credits { color: var(--text-dim); font-size: 0.75rem; padding: 4px 12px; text-decoration: none; display: block; text-align: center; }
   .save-actions { display: flex; gap: 6px; }
   .save-actions button { flex: 1; font-size: 0.75rem; color: var(--text-dim); padding: 6px; background: var(--panel-raised); }
@@ -219,6 +231,8 @@
     }
     .settings-panel .credits { display: block; }
     .dot { top: 2px; right: calc(50% - 16px); }
+    /* op mobiel zit de wakker-blijven-toggle in het instellingenpaneel */
+    .awake,
     .desktop-credits,
     .save-actions { display: none; }
   }
