@@ -140,6 +140,8 @@
   .settings-panel { display: none; }
   .balances { margin-top: auto; padding: 12px 4px; display: grid; gap: 6px; }
   .balance { display: flex; align-items: center; gap: 6px; color: var(--gold); }
+  /* cijfers met vaste breedte, anders verspringt de balk bij elke tick */
+  .balance strong, .rate { font-variant-numeric: tabular-nums; }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
   .mute { font-size: 0.85rem; color: var(--text-dim); }
   .credits { color: var(--text-dim); font-size: 0.75rem; padding: 4px 12px; text-decoration: none; display: block; text-align: center; }
@@ -181,6 +183,8 @@
       border-bottom: 1px solid var(--border);
       z-index: 10;
     }
+    /* fame rechts verankeren zodat die niet meeschuift als het goudgetal breder wordt */
+    .balance:not(:first-child) { margin-left: auto; }
     .mute {
       position: fixed;
       top: 3px;
