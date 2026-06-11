@@ -1,5 +1,6 @@
 <script lang="ts">
   import { UPGRADES } from '../../content/upgrades';
+  import { isUpgradeUnlocked } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -10,6 +11,10 @@
   const realmUpgrades = $derived(
     [...UPGRADES.filter((u) => u.realmId === realmId)].sort((a, b) => (a.cost.gold ?? 0) - (b.cost.gold ?? 0)),
   );
+
+  function requiresName(id: string): string {
+    return UPGRADES.find((u) => u.id === id)?.name ?? id;
+  }
 </script>
 
 <section>
@@ -17,17 +22,25 @@
   <div class="grid">
     {#each realmUpgrades as upgrade (upgrade.id)}
       {@const purchased = game.state.upgrades.includes(upgrade.id)}
+      {@const locked = !isUpgradeUnlocked(upgrade, game.state.upgrades)}
       <button
         class="tile"
         class:purchased
-        disabled={purchased || !canAfford(game.state.balances, upgrade.cost)}
+        class:locked
+        disabled={purchased || locked || !canAfford(game.state.balances, upgrade.cost)}
         onclick={() => game.buyUpgrade(upgrade.id)}
         title={upgrade.description}
       >
         <Icon icon={upgrade.icon} size={26} />
         <strong>{upgrade.name}</strong>
         <span class="dim">{upgrade.description}</span>
-        <span class="cost">{purchased ? '✓ Purchased' : `🪙 ${formatNumber(upgrade.cost.gold ?? 0)}`}</span>
+        {#if purchased}
+          <span class="cost">✓ Purchased</span>
+        {:else if locked}
+          <span class="cost dim">🔒 Requires {requiresName(upgrade.requires ?? '')}</span>
+        {:else}
+          <span class="cost">🪙 {formatNumber(upgrade.cost.gold ?? 0)}</span>
+        {/if}
       </button>
     {/each}
   </div>
@@ -51,6 +64,7 @@
     border-radius: var(--radius);
   }
   .tile.purchased { opacity: 0.45; }
+  .tile.locked { opacity: 0.55; border: 1px dashed var(--border); }
   .dim { color: var(--text-dim); font-size: 0.8rem; }
   .cost { color: var(--gold); font-size: 0.85rem; }
 </style>

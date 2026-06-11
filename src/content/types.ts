@@ -41,4 +41,6 @@ export interface UpgradeDef {
   readonly realmId: string;
   readonly cost: CurrencyMap;
   readonly effect: UpgradeEffect;
+  /** Optionele vereiste: deze upgrade moet eerst gekocht zijn. */
+  readonly requires?: string;
 }

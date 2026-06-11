@@ -7,7 +7,7 @@ import { HEROES } from '../src/content/heroes';
 import { UPGRADES } from '../src/content/upgrades';
 import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
-import { clickGain, critParams, fameGain, heroCost } from '../src/engine/formulas';
+import { clickGain, critParams, fameGain, heroCost, isUpgradeUnlocked } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
 import { createInitialState, type GameState } from '../src/engine/state';
 import { formatNumber } from '../src/ui/format';
@@ -80,6 +80,7 @@ function simulate(
       }
       for (const upgrade of UPGRADES) {
         if (state.upgrades.includes(upgrade.id)) continue;
+        if (!isUpgradeUnlocked(upgrade, state.upgrades)) continue;
         const cost = upgrade.cost['gold'] ?? Infinity;
         if (cost < bestCost) {
           bestCost = cost;

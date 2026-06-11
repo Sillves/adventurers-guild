@@ -6,7 +6,7 @@
   import { CURRENCIES } from '../content/currencies';
   import { HEROES } from '../content/heroes';
   import { UPGRADES } from '../content/upgrades';
-  import { heroCost, productionPerSecond } from '../engine/formulas';
+  import { heroCost, isUpgradeUnlocked, productionPerSecond } from '../engine/formulas';
   import { canAfford } from '../engine/maps';
   import { formatNumber } from './format';
   import { game } from './game.svelte';
@@ -57,6 +57,7 @@
       (u) =>
         u.realmId === realmId &&
         !game.state.upgrades.includes(u.id) &&
+        isUpgradeUnlocked(u, game.state.upgrades) &&
         canAfford(game.state.balances, u.cost),
     ),
   );
