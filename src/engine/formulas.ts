@@ -48,8 +48,21 @@ export function clickGain(state: GameState): CurrencyMap {
   return { gold: clickMultiplier(state.upgrades) * bonus };
 }
 
+// Fame volgt uit het totaal verdiende goud over alle era's: het n-de punt vergt
+// n² × 1M lifetime goud. Opnieuw 1M grinden levert dus niets op — je moet
+// elke era dieper raken dan ooit tevoren.
+export function totalFameFor(lifetimeGold: number): number {
+  return Math.floor(Math.sqrt(Math.max(lifetimeGold, 0) / PRESTIGE_THRESHOLD_GOLD));
+}
+
+/** Lifetime goud dat nodig is om in totaal `famePoints` Fame verdiend te hebben. */
+export function fameTargetGold(famePoints: number): number {
+  return famePoints * famePoints * PRESTIGE_THRESHOLD_GOLD;
+}
+
 export function fameGain(state: GameState): number {
-  return Math.floor(Math.sqrt((state.runEarned['gold'] ?? 0) / PRESTIGE_THRESHOLD_GOLD));
+  const earnedFame = totalFameFor(state.lifetimeEarned['gold'] ?? 0);
+  return Math.max(0, earnedFame - (state.balances['fame'] ?? 0));
 }
 
 export function isRealmUnlocked(realm: RealmDef, state: GameState): boolean {

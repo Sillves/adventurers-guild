@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { clickGain, fameGain, PRESTIGE_THRESHOLD_GOLD } from '../../engine/formulas';
+  import { clickGain, fameGain, fameTargetGold } from '../../engine/formulas';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
 
   const gain = $derived(clickGain(game.state).gold ?? 0);
   const runGold = $derived(game.state.runEarned['gold'] ?? 0);
-  const prestigeProgress = $derived(Math.min(runGold / PRESTIGE_THRESHOLD_GOLD, 1));
+  const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
+  const fame = $derived(game.state.balances['fame'] ?? 0);
+  const nextTarget = $derived(fameTargetGold(fame + 1));
+  const prevTarget = $derived(fameTargetGold(fame));
+  const prestigeProgress = $derived(
+    Math.min(Math.max((lifetimeGold - prevTarget) / (nextTarget - prevTarget), 0), 1),
+  );
 </script>
 
 <section>
@@ -20,7 +26,7 @@
   <div class="stats">
     <div>Earned this guild era: <strong>{formatNumber(runGold)}</strong> gold</div>
     {#if fameGain(game.state) === 0}
-      <div class="dim">Reach {formatNumber(PRESTIGE_THRESHOLD_GOLD)} gold to unlock prestige</div>
+      <div class="dim">Reach {formatNumber(nextTarget)} lifetime gold for your next Fame</div>
       <div class="bar"><div class="fill" style="width: {prestigeProgress * 100}%"></div></div>
     {:else}
       <div class="success">👑 Prestige available — check the Prestige tab!</div>

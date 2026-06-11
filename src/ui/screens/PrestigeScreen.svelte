@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { fameGain, FAME_BONUS_PER_POINT, PRESTIGE_THRESHOLD_GOLD } from '../../engine/formulas';
+  import { fameGain, fameTargetGold, FAME_BONUS_PER_POINT } from '../../engine/formulas';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
 
   const currentFame = $derived(game.state.balances['fame'] ?? 0);
   const gain = $derived(fameGain(game.state));
+  const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
+  const nextTarget = $derived(fameTargetGold(currentFame + gain + 1));
   let confirming = $state(false);
 
   function prestige(): void {
@@ -22,10 +24,11 @@
 
   <div class="panel">
     <div>Current Fame: <strong>🏆 {formatNumber(currentFame)}</strong> (+{formatNumber(currentFame * FAME_BONUS_PER_POINT * 100)}% production)</div>
+    <div>Lifetime gold: <strong>🪙 {formatNumber(lifetimeGold)}</strong></div>
     <div>Fame on refound: <strong class="success">+{formatNumber(gain)}</strong></div>
-    {#if gain === 0}
-      <p class="dim">Earn {formatNumber(PRESTIGE_THRESHOLD_GOLD)} gold in one era to gain your first Fame.</p>
-    {/if}
+    <p class="dim">
+      Next Fame point at {formatNumber(nextTarget)} lifetime gold — each point costs more than the last.
+    </p>
   </div>
 
   {#if confirming}

@@ -61,3 +61,24 @@ describe('parseSave robustness', () => {
     expect(parsed?.lastSavedAt).toBe(5);
   });
 });
+
+describe('migration v1 → v2', () => {
+  it('reconstructs lifetimeEarned from owned fame plus the current run', () => {
+    const raw = {
+      version: 1,
+      balances: { gold: 50, fame: 3 },
+      runEarned: { gold: 2_000_000 },
+      heroes: {},
+      upgrades: [],
+      lastSavedAt: 0,
+    };
+    const parsed = parseSave(JSON.stringify(raw));
+    expect(parsed?.version).toBe(2);
+    expect(parsed?.lifetimeEarned).toEqual({ gold: 11_000_000 }); // 3² × 1M + 2M
+  });
+
+  it('treats a v1 save without fame as a fresh lifetime', () => {
+    const raw = { version: 1, balances: {}, runEarned: { gold: 10 }, heroes: {}, upgrades: [], lastSavedAt: 0 };
+    expect(parseSave(JSON.stringify(raw))?.lifetimeEarned).toEqual({ gold: 10 });
+  });
+});
