@@ -16,7 +16,7 @@
 </script>
 
 <div class="app">
-  <Sidebar bind:screen />
+  <Sidebar bind:screen {realmId} />
   <main>
     {#if screen === 'guild'}
       <GuildScreen />
