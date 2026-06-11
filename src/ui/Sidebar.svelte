@@ -144,6 +144,11 @@
     padding: 12px;
     background: var(--panel);
     min-width: 180px;
+    /* navbar blijft staan terwijl de content rechts meescrolt met het venster */
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
   }
   button {
     display: flex;
@@ -211,9 +216,12 @@
   @media (max-width: 700px) {
     nav {
       position: fixed;
+      top: auto;
       bottom: 0;
       left: 0;
       right: 0;
+      height: auto;
+      overflow-y: visible;
       flex-direction: row;
       gap: 4px;
       min-width: 0;
