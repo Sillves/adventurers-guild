@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-12',
+    icon: '🎶',
+    title: 'Click juice',
+    description:
+      'Clicks rise in pitch as your combo builds, raid blows climb as the barbarians waver, and on Android your phone buzzes on crits, raids and refounds.',
+    prs: [51],
+  },
+  {
+    date: '2026-06-12',
     icon: '⭐',
     title: 'Hero milestones',
     description:
