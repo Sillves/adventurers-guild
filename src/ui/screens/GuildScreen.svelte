@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { autoClickPerSecond, clickGain, comboCap, fameGain, fameTargetGold } from '../../engine/formulas';
-  import { formatNumber } from '../format';
+  import { autoClickPerSecond, clickGain, comboCap, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
+  import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
   import GuildYard from '../GuildYard.svelte';
 
@@ -13,6 +13,13 @@
   const fame = $derived(game.state.balances['fame'] ?? 0);
   const nextTarget = $derived(fameTargetGold(fame + 1));
   const prevTarget = $derived(fameTargetGold(fame));
+  // ETA op het huidige tempo, inclusief je gemeten klikinkomsten: hard klikken
+  // ziet het getal live dalen
+  const fameEtaSeconds = $derived.by(() => {
+    const rate = (incomePerSecond(game.state)['gold'] ?? 0) + game.clickIncomeRate;
+    if (rate <= 0) return null;
+    return Math.max(0, nextTarget - lifetimeGold) / rate;
+  });
   const prestigeProgress = $derived(
     Math.min(Math.max((lifetimeGold - prevTarget) / (nextTarget - prevTarget), 0), 1),
   );
@@ -96,7 +103,7 @@
     <div>Earned this guild era: <strong>{formatNumber(runGold)}</strong> gold</div>
     {#if fameGain(game.state) === 0}
       <div class="dim">
-        Next Fame: <strong class="lifetime">{formatNumber(lifetimeGold)}</strong> / {formatNumber(nextTarget)} lifetime gold
+        Next Fame: <strong class="lifetime">{formatNumber(lifetimeGold)}</strong> / {formatNumber(nextTarget)} lifetime gold{#if fameEtaSeconds !== null}{' '}· ~{formatEta(fameEtaSeconds)} at this rate{/if}
       </div>
       <div class="bar"><div class="fill" style="width: {prestigeProgress * 100}%"></div></div>
     {:else}

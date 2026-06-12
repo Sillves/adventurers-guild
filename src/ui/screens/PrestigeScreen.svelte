@@ -1,12 +1,17 @@
 <script lang="ts">
-  import { fameBonus, fameGain, fameTargetGold } from '../../engine/formulas';
-  import { formatNumber } from '../format';
+  import { fameBonus, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
+  import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
 
   const currentFame = $derived(game.state.balances['fame'] ?? 0);
   const gain = $derived(fameGain(game.state));
   const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
   const nextTarget = $derived(fameTargetGold(currentFame + gain + 1));
+  const etaSeconds = $derived.by(() => {
+    const rate = (incomePerSecond(game.state)['gold'] ?? 0) + game.clickIncomeRate;
+    if (rate <= 0) return null;
+    return Math.max(0, nextTarget - lifetimeGold) / rate;
+  });
   let confirming = $state(false);
 
   function prestige(): void {
@@ -27,7 +32,8 @@
     <div>Lifetime gold: <strong>🪙 {formatNumber(lifetimeGold)}</strong></div>
     <div>Fame on refound: <strong class="success">+{formatNumber(gain)}</strong></div>
     <p class="dim">
-      Next Fame point at {formatNumber(nextTarget)} lifetime gold — each point costs more than the last.
+      Next Fame point at {formatNumber(nextTarget)} lifetime gold — each point costs more than the
+      last.{#if etaSeconds !== null}{' '}At your current rate: <strong>~{formatEta(etaSeconds)}</strong>.{/if}
     </p>
   </div>
 
