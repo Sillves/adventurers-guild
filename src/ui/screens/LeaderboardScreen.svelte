@@ -47,9 +47,9 @@
       <div class="row head">
         <span class="rank">#</span>
         <span class="name">Guild</span>
-        <span class="num">🏆 Fame</span>
-        <span class="num">🪙 Lifetime</span>
-        <span class="num">👑 Refounds</span>
+        <span class="num">🏆<span class="th"> Fame</span></span>
+        <span class="num">🪙<span class="th"> Lifetime</span></span>
+        <span class="num" title="Refounds">👑<span class="th"> Refounds</span></span>
       </div>
       {#each leaderboard.board as entry (entry.rank)}
         <div class="row" class:me={entry.me}>
@@ -123,7 +123,9 @@
   .dim { color: var(--text-dim); }
   .small { font-size: 0.85rem; }
   @media (max-width: 700px) {
-    .row { grid-template-columns: 1.6rem 1fr 4rem 4.5rem; }
-    .row .num:last-child, .row.head .num:last-child { display: none; }
+    /* alle vijf kolommen blijven zichtbaar: koppen worden iconen, kolommen smaller */
+    .row { grid-template-columns: 1.6rem 1fr 3.2rem 4.2rem 2.4rem; gap: 6px; padding: 8px 10px; }
+    .th { display: none; }
+    .num { font-size: 0.85rem; }
   }
 </style>
