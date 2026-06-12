@@ -27,7 +27,10 @@ let lastQuestAt = 0;
 const CLICK_WINDOW_MS = 5000;
 let clickWindow = $state.raw<ReadonlyArray<{ readonly t: number; readonly gold: number }>>([]);
 
-// autoclicker-verdediging: cap op 15 kliks/s + ritmedetectie (zie clickguard.ts)
+// autoclicker-verdediging: cap op 15 kliks/s + ritmedetectie (zie clickguard.ts).
+// Op touch-toestellen geven we GEEN coördinaten door: een duim op dezelfde knop
+// tikt eerlijk pixel-perfect — drie testers kregen daar onterecht de 🤖 voor.
+const COARSE_POINTER = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
 const guard = new ClickGuard();
 let robotic = $state(false);
 let lastGuardedAt = 0;
@@ -124,7 +127,8 @@ export const game = {
   quest(point: { x: number; y: number } | null = null): ClickOutcome | null {
     startMusic();
     const now = performance.now();
-    const verdict = guard.record(now, point?.x ?? null, point?.y ?? null);
+    const p = COARSE_POINTER ? null : point;
+    const verdict = guard.record(now, p?.x ?? null, p?.y ?? null);
     lastGuardedAt = now;
     robotic = verdict.robotic;
     // boven de cap of robotisch: de klik bestaat gewoon niet voor de guild
@@ -145,7 +149,8 @@ export const game = {
   fight(point: { x: number; y: number } | null = null): 'hit' | 'won' | null {
     startMusic();
     const now = performance.now();
-    const verdict = guard.record(now, point?.x ?? null, point?.y ?? null);
+    const p = COARSE_POINTER ? null : point;
+    const verdict = guard.record(now, p?.x ?? null, p?.y ?? null);
     lastGuardedAt = now;
     robotic = verdict.robotic;
     if (!verdict.earned || state.raid === null) return null;
