@@ -1,6 +1,8 @@
 <script lang="ts">
   import { HEROES } from '../../content/heroes';
-  import { bulkHeroCost, fameBonus, heroCost, heroMultiplier, maxAffordableHeroes } from '../../engine/formulas';
+  // de knop-gain is het échte inkomensverschil (incl. synergy → auto-quests):
+  // pure productie loog tot ~10× te laag bij volle synergy/crit/marshal-stacks
+  import { bulkHeroCost, fameBonus, heroCost, heroMultiplier, incomePerSecond, maxAffordableHeroes } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -66,6 +68,8 @@
     {@const cost = buyCount === 1 ? heroCost(hero, owned) : bulkHeroCost(hero, owned, buyCount)}
     {@const perHero = (hero.production.gold ?? 0) * heroMultiplier(hero.id, game.state.upgrades) * fameBonus(game.state.balances['fame'] ?? 0)}
     {@const production = perHero * Math.max(owned, 1)}
+    {@const after = { ...game.state, heroes: { ...game.state.heroes, [hero.id]: owned + buyCount } }}
+    {@const buyGain = (incomePerSecond(after)['gold'] ?? 0) - (incomePerSecond(game.state)['gold'] ?? 0)}
     <div class="row">
       <Icon icon={hero.icon} size={32} />
       <div class="info">
@@ -75,7 +79,7 @@
       <button disabled={!canAfford(game.state.balances, cost)} onclick={() => game.buyHero(hero.id, buyCount)}>
         Recruit{#if buyCount > 1}&nbsp;×{buyCount}{/if}<br />
         <small>🪙 {formatNumber(cost.gold ?? 0)}</small><br />
-        <small class="gain">+{formatNumber(perHero * buyCount)}/s</small>
+        <small class="gain">+{formatNumber(buyGain)}/s</small>
       </button>
     </div>
   {/each}
