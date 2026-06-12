@@ -221,16 +221,25 @@ describe('prestige', () => {
     expect(fameTargetGold(301) / fameTargetGold(300)).toBeGreaterThan(17);
   });
 
-  it('round-trips targets through totalFameFor on both branches', () => {
-    for (const n of [1, 299, 300, 301, 500, 1466, 3000]) {
+  it('round-trips targets through totalFameFor on all three branches', () => {
+    for (const n of [1, 299, 300, 301, 500, 1466, 2000, 2001, 3000, 10000]) {
       expect(totalFameFor(fameTargetGold(n)), `n=${n}`).toBe(n);
     }
     // onder de knie is 1 goud minder exact één punt minder; boven de knie valt
     // 1 goud onder de float-resolutie van pow — daar testen we met 0.01% minder
     expect(totalFameFor(fameTargetGold(300) - 1)).toBe(299);
-    for (const n of [301, 1466, 3000]) {
+    for (const n of [301, 1466, 2000, 2001, 3000, 10000]) {
       expect(totalFameFor(fameTargetGold(n) * 0.9999), `n=${n} − 0.01%`).toBe(n - 1);
     }
+  });
+
+  it('the second knee at 2000 makes point 2001 a real wall', () => {
+    expect(fameTargetGold(2000)).toBe(Math.pow(2000, 2.5) * 1_000_000);
+    expect(fameTargetGold(2001)).toBe(Math.pow(2001, 4) * 1_000_000);
+    // ~×90,000 sprong: de teller stopt met spinnen
+    expect(fameTargetGold(2001) / fameTargetGold(2000)).toBeGreaterThan(80_000);
+    // in het gat tussen beide targets blijft de verdiende fame op 2000 hangen
+    expect(totalFameFor(1e18)).toBe(2000);
   });
 
   it('holds at 300 in the gap between the knee and the first late target', () => {

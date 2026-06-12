@@ -179,12 +179,15 @@ export function clickOutcome(state: GameState, roll: number, combo = 1): ClickOu
 // n² × 1M lifetime goud. Opnieuw 1M grinden levert dus niets op — je moet
 // elke era dieper raken dan ooit tevoren.
 //
-// Boven de knie (300 fame) wordt de curve n^2.5: zonder die muur loopt het
-// inkomen (lineair in fame × exponentiële heroes) de kwadratische targets
-// voorbij en is het spel na ~400 fame uitgespeeld. Al verdiende fame blijft
-// staan — alleen de vólgende punten kosten weer echt geld.
+// Boven de knie (300 fame) wordt de curve n^2.5, boven de tweede knie (2000)
+// n^4: zonder die muren loopt het inkomen de targets voorbij en spint de
+// fame-teller met duizenden per refound (+1138 op Sillves' eigen scherm).
+// Al verdiende fame blijft staan — alleen de vólgende punten kosten weer
+// echt geld; bij de tweede knie ~1-2 uur spelen per punt.
 export const FAME_KNEE = 300;
+export const FAME_KNEE_2 = 2000;
 const FAME_LATE_EXPONENT = 2.5;
+const FAME_END_EXPONENT = 4;
 
 export function totalFameFor(lifetimeGold: number): number {
   const g = Math.max(lifetimeGold, 0) / PRESTIGE_THRESHOLD_GOLD;
@@ -192,13 +195,16 @@ export function totalFameFor(lifetimeGold: number): number {
   if (sq <= FAME_KNEE) return sq;
   // epsilon vangt float-afronding zodat totalFameFor(fameTargetGold(n)) === n
   const pw = Math.floor(Math.pow(g, 1 / FAME_LATE_EXPONENT) + 1e-9);
-  return Math.max(FAME_KNEE, pw);
+  if (pw <= FAME_KNEE_2) return Math.max(FAME_KNEE, pw);
+  const end = Math.floor(Math.pow(g, 1 / FAME_END_EXPONENT) + 1e-9);
+  return Math.max(FAME_KNEE_2, end);
 }
 
 /** Lifetime goud dat nodig is om in totaal `famePoints` Fame verdiend te hebben. */
 export function fameTargetGold(famePoints: number): number {
   if (famePoints <= FAME_KNEE) return famePoints * famePoints * PRESTIGE_THRESHOLD_GOLD;
-  return Math.pow(famePoints, FAME_LATE_EXPONENT) * PRESTIGE_THRESHOLD_GOLD;
+  if (famePoints <= FAME_KNEE_2) return Math.pow(famePoints, FAME_LATE_EXPONENT) * PRESTIGE_THRESHOLD_GOLD;
+  return Math.pow(famePoints, FAME_END_EXPONENT) * PRESTIGE_THRESHOLD_GOLD;
 }
 
 export function fameGain(state: GameState): number {
