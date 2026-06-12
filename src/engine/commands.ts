@@ -27,7 +27,12 @@ export function earn(state: GameState, amount: CurrencyMap): GameState {
 
 /** roll ∈ [0, 1) bepaalt of de klik crit; default 1 = nooit crit (deterministisch). */
 export function performQuest(state: GameState, roll = 1, combo = 1): GameState {
-  return earn(state, clickOutcome(state, roll, combo).gain);
+  const outcome = clickOutcome(state, roll, combo);
+  const next = earn(state, outcome.gain);
+  return {
+    ...next,
+    stats: { ...next.stats, clicks: next.stats.clicks + 1, crits: next.stats.crits + (outcome.crit ? 1 : 0) },
+  };
 }
 
 export function buyHero(state: GameState, heroId: string, count = 1): GameState {
@@ -74,7 +79,13 @@ export function fightRaid(state: GameState): GameState {
   if (hitsLeft > 0) return { ...state, raid: { ...state.raid, hitsLeft } };
   if (state.raid.phase === 'incoming') {
     const loot = scaleMap(incomePerSecond(state), RAID_LOOT_SECONDS);
-    return { ...earn(state, loot), raid: null, frenzySeconds: FRENZY_SECONDS };
+    const next = earn(state, loot);
+    return {
+      ...next,
+      raid: null,
+      frenzySeconds: FRENZY_SECONDS,
+      stats: { ...next.stats, raidsWon: next.stats.raidsWon + 1 },
+    };
   }
   return { ...state, raid: null };
 }
@@ -84,7 +95,12 @@ export function payMercenaries(state: GameState): GameState {
   if (state.raid === null || state.raid.phase !== 'incoming') return state;
   const cost = scaleMap(incomePerSecond(state), MERC_COST_SECONDS);
   if (!canAfford(state.balances, cost)) return state;
-  return { ...state, balances: subtractMaps(state.balances, cost), raid: null };
+  return {
+    ...state,
+    balances: subtractMaps(state.balances, cost),
+    raid: null,
+    stats: { ...state.stats, mercsPaid: state.stats.mercsPaid + 1 },
+  };
 }
 
 /** De deadline is verstreken: 20% van de kas weg en de plundering begint. */
@@ -95,6 +111,7 @@ export function raidDeadline(state: GameState, now: number): GameState {
     ...state,
     balances: { ...state.balances, gold: gold * (1 - RAID_PLUNDER_FRACTION) },
     raid: { phase: 'plundering', hitsLeft: RAID_HITS },
+    stats: { ...state.stats, raidsLost: state.stats.raidsLost + 1 },
   };
 }
 
@@ -107,5 +124,7 @@ export function doPrestige(state: GameState, now: number): GameState {
     balances: { ...fresh.balances, fame: (state.balances['fame'] ?? 0) + gain },
     lifetimeEarned: state.lifetimeEarned,
     prestiges: state.prestiges + 1,
+    // de tellers zijn levenslang: een refound wist je geschiedenis niet
+    stats: state.stats,
   };
 }

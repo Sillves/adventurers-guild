@@ -6,7 +6,7 @@ import { leaderboard } from './leaderboard.svelte';
 import { createInitialState, type GameState } from '../engine/state';
 import { localStorageStore, RotatingSaveStorage } from '../engine/storage';
 import { ClickGuard, ROBOTIC_LABEL_MS } from './clickguard';
-import { playSound, startMusic } from './sound';
+import { playSound, startMusic, vibrate } from './sound';
 
 const storage = new RotatingSaveStorage(localStorageStore);
 
@@ -77,11 +77,14 @@ export const game = {
       if (robotic && now - lastGuardedAt > ROBOTIC_LABEL_MS) robotic = false;
       if (!document.hidden) {
         activeSeconds += dt;
+        // levenslange speeltijd: alleen mét de tab zichtbaar, net als de spawner
+        state = { ...state, stats: { ...state.stats, playSeconds: state.stats.playSeconds + dt } };
         if (state.raid === null && activeSeconds >= nextRaidAtActive) {
           const raided = commands.startRaid(state, Date.now());
           if (raided !== state) {
             state = raided;
             playSound('raid');
+            vibrate([80, 60, 80]);
           } else {
             // nog geen 50 fame: probeer het over een paar minuten opnieuw
             nextRaidAtActive = activeSeconds + RAID_SPAWN_MIN_S / 2;
@@ -90,6 +93,7 @@ export const game = {
         if (state.raid?.phase === 'incoming' && Date.now() >= state.raid.deadlineAt) {
           state = commands.raidDeadline(state, Date.now());
           playSound('raid'); // de hoorn klinkt opnieuw: nu wordt er geplunderd
+          vibrate([80, 60, 80]);
         }
       }
       lastTick = now;
@@ -131,7 +135,9 @@ export const game = {
     if (!verdict.earned) return null;
     const roll = Math.random();
     const outcome = clickOutcome(state, roll, this.comboMultiplier);
-    playSound(outcome.crit ? 'buy' : 'click');
+    // de toonhoogte klimt mee met de combo: je hóórt de frenzy opbouwen
+    playSound(outcome.crit ? 'buy' : 'click', 1 + comboHeat * 0.5);
+    if (outcome.crit) vibrate(20);
     state = commands.performQuest(state, roll, this.comboMultiplier);
     comboHeat = Math.min(1, comboHeat + 1 / COMBO_CLICKS_TO_FULL);
     lastQuestAt = now;
@@ -150,13 +156,16 @@ export const game = {
     robotic = verdict.robotic;
     if (!verdict.earned || state.raid === null) return null;
     const phase = state.raid.phase;
+    const hitsBefore = state.raid.hitsLeft;
     state = commands.fightRaid(state);
     if (state.raid === null) {
       playSound('prestige');
+      vibrate([30, 40, 30]);
       nextRaidAtActive = activeSeconds + RAID_SPAWN_MIN_S + Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
       return phase === 'incoming' ? 'won' : 'hit';
     }
-    playSound('click');
+    // het gevecht klinkt steeds hoger naarmate de barbaren wankelen
+    playSound('click', 1 + (1 - hitsBefore / commands.RAID_HITS) * 0.4);
     return 'hit';
   },
 
@@ -185,6 +194,7 @@ export const game = {
     const next = commands.doPrestige(state, Date.now());
     if (next !== state) {
       playSound('prestige');
+      vibrate([40, 60, 100]);
       state = next;
       comboHeat = 0;
       persist();

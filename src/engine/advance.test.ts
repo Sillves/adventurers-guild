@@ -108,3 +108,48 @@ describe('raids and frenzy in the passage of time', () => {
     expect(after.raid?.phase).toBe('incoming');
   });
 });
+
+describe('offline report breakdown', () => {
+  it('splits heroes and staff, and heroes-only means zero staff', () => {
+    const staffed = { ...producing, upgrades: ['quest-herald'], lastSavedAt: 0 };
+    const { report } = applyOffline(staffed, 600_000);
+    expect(report?.staffGold).toBeCloseTo(600); // 1 auto-quest/s à 1 goud
+    expect(report?.heroGold).toBeCloseTo(6.25 * 600);
+    expect(report?.plundered).toBe(false);
+
+    const heroesOnly = applyOffline({ ...producing, lastSavedAt: 0 }, 600_000).report;
+    expect(heroesOnly?.staffGold).toBe(0);
+    expect(heroesOnly?.heroGold).toBeCloseTo(6.25 * 600);
+  });
+
+  it('the split stays exact across a frenzy expiry, synergy included', () => {
+    // joint-quests koppelt de klikwaarde aan de productie: tijdens de frenzy
+    // klikt het personeel dus ook harder (1.25/s) dan erna (1.125/s)
+    const state = {
+      ...producing,
+      upgrades: ['quest-herald', 'joint-quests'],
+      frenzySeconds: 4,
+      lastSavedAt: 0,
+    };
+    const { report } = applyOffline(state, 600_000);
+    expect(report?.staffGold).toBeCloseTo(4 * 1.25 + 596 * 1.125);
+    expect(report?.heroGold).toBeCloseTo(4 * 12.5 + 596 * 6.25);
+    expect((report?.staffGold ?? 0) + (report?.heroGold ?? 0)).toBeCloseTo(report?.earned.gold ?? -1);
+  });
+
+  it('reports the plundering and keeps the split exact across the deadline', () => {
+    const state = {
+      ...producing,
+      upgrades: ['quest-herald'],
+      balances: { gold: 1000, fame: 0 },
+      raid: { phase: 'incoming' as const, deadlineAt: 100_000, hitsLeft: 25 },
+      lastSavedAt: 0,
+    };
+    const { report } = applyOffline(state, 600_000);
+    expect(report?.plundered).toBe(true);
+    // het personeel klikt onverstoorbaar door (geen synergy): 1/s × 600s
+    expect(report?.staffGold).toBeCloseTo(600);
+    // helden: 100s vol (6.25/s) + 500s op halve kracht (3.125/s)
+    expect(report?.heroGold).toBeCloseTo(625 + 1562.5);
+  });
+});
