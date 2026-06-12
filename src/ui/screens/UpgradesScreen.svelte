@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { HEROES } from '../../content/heroes';
   import type { UpgradeDef } from '../../content/types';
   import { UPGRADES } from '../../content/upgrades';
   import { clickGain, critParams, incomePerSecond } from '../../engine/formulas';
@@ -62,6 +63,12 @@
     if (perSecond > 0) return `+${formatNumber(perSecond)} gold/s`;
     const perQuest = expectedQuest(after) - expectedQuest(game.state);
     if (perQuest > 0) return `+${formatNumber(perQuest)} gold per quest`;
+    // held-upgrade zonder die held: vertel wat hij zou doen i.p.v. "no effect yet"
+    if ('multiplier' in upgrade.effect && upgrade.effect.target.startsWith('hero:')) {
+      const heroId = upgrade.effect.target.slice('hero:'.length);
+      const hero = HEROES.find((h) => h.id === heroId);
+      return `×${upgrade.effect.multiplier} ${hero?.name ?? heroId}s — recruit one first`;
+    }
     return 'no effect yet';
   }
 </script>
