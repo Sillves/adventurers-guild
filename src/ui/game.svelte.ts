@@ -121,10 +121,10 @@ export const game = {
     return robotic;
   },
 
-  quest(point: { x: number; y: number } | null = null): ClickOutcome | null {
+  quest(): ClickOutcome | null {
     startMusic();
     const now = performance.now();
-    const verdict = guard.record(now, point?.x ?? null, point?.y ?? null);
+    const verdict = guard.record(now);
     lastGuardedAt = now;
     robotic = verdict.robotic;
     // boven de cap of robotisch: de klik bestaat gewoon niet voor de guild
@@ -142,10 +142,10 @@ export const game = {
    * Eén mep op de barbaren. Zelfde guard als quests: autoclickers vechten niet
    * mee. Retourneert 'won' bij de beslissende mep (de UI viert dat).
    */
-  fight(point: { x: number; y: number } | null = null): 'hit' | 'won' | null {
+  fight(): 'hit' | 'won' | null {
     startMusic();
     const now = performance.now();
-    const verdict = guard.record(now, point?.x ?? null, point?.y ?? null);
+    const verdict = guard.record(now);
     lastGuardedAt = now;
     robotic = verdict.robotic;
     if (!verdict.earned || state.raid === null) return null;
