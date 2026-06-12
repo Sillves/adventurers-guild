@@ -1,5 +1,20 @@
 const SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
 
+/** Legenda voor de spelers: welk achtervoegsel is hoeveel? (volgorde = oplopend) */
+export const NUMBER_SCALE: ReadonlyArray<{ suffix: string; name: string }> = [
+  { suffix: 'K', name: 'Thousand' },
+  { suffix: 'M', name: 'Million' },
+  { suffix: 'B', name: 'Billion' },
+  { suffix: 'T', name: 'Trillion' },
+  { suffix: 'Qa', name: 'Quadrillion' },
+  { suffix: 'Qi', name: 'Quintillion' },
+  { suffix: 'Sx', name: 'Sextillion' },
+  { suffix: 'Sp', name: 'Septillion' },
+  { suffix: 'Oc', name: 'Octillion' },
+  { suffix: 'No', name: 'Nonillion' },
+  { suffix: 'Dc', name: 'Decillion' },
+];
+
 // Overal afkappen, nooit afronden: het scherm mag nooit méér tonen dan je
 // echt hebt, anders lijkt een betaalbare knop onverklaarbaar disabled
 // (tester had "1.1K" op het scherm — 1.149 afgerond — en kon niets van 1.1K kopen).
