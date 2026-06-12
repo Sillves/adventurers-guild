@@ -2,7 +2,7 @@
   import { HEROES } from '../../content/heroes';
   import type { UpgradeDef } from '../../content/types';
   import { UPGRADES } from '../../content/upgrades';
-  import { clickGain, critParams, incomePerSecond } from '../../engine/formulas';
+  import { clickGain, critParams, incomePerSecond, isHeroRevealed, isUpgradeUnlocked } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import type { GameState } from '../../engine/state';
   import { formatNumber } from '../format';
@@ -38,10 +38,17 @@
     return level;
   }
 
+  /** Held-keten van een nog niet onthulde held: kaart verklapt anders de naam. */
+  function hiddenHeroChain(head: UpgradeDef): boolean {
+    if (!('multiplier' in head.effect) || !head.effect.target.startsWith('hero:')) return false;
+    return !isHeroRevealed(head.effect.target.slice('hero:'.length), game.state);
+  }
+
   // vaste volgorde op de prijs van de eerste tier: kaarten verspringen nooit,
   // ook niet na een aankoop of op max level
   const sorted = $derived(
-    [...chains].sort((a, b) => (a[0].cost.gold ?? 0) - (b[0].cost.gold ?? 0)),
+    chains.filter((tiers) => !hiddenHeroChain(tiers[0]))
+      .sort((a, b) => (a[0].cost.gold ?? 0) - (b[0].cost.gold ?? 0)),
   );
 
   /** Gemiddelde quest-opbrengst inclusief crit-verwachtingswaarde. */
@@ -80,7 +87,8 @@
       {@const level = levelOf(tiers)}
       {@const maxed = level >= tiers.length}
       {@const shown = maxed ? tiers[tiers.length - 1] : tiers[level]}
-      {@const affordable = !maxed && canAfford(game.state.balances, shown.cost)}
+      {@const locked = !maxed && !isUpgradeUnlocked(shown, game.state)}
+      {@const affordable = !maxed && !locked && canAfford(game.state.balances, shown.cost)}
       <button
         class="tile"
         class:purchased={maxed}
