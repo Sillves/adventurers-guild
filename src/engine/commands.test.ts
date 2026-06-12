@@ -134,7 +134,7 @@ describe('barbarian raids', () => {
   const veteran = () => ({
     ...createInitialState(0),
     balances: { gold: 10_000, fame: 50 },
-    heroes: { farmhand: 10 }, // 5 gold/s productie × fame-bonus 2 = 10/s
+    heroes: { farmhand: 10 }, // 5 gold/s × fame-bonus 2 × mijlpaal ×1.25 = 12.5/s
   });
 
   it('startRaid requires 50 fame and no running raid', () => {
@@ -153,8 +153,8 @@ describe('barbarian raids', () => {
     state = fightRaid(state);
     expect(state.raid).toBeNull();
     expect(state.frenzySeconds).toBe(60);
-    // farmhands: 10 × 0.5 × famebonus(50)=2 → 10/s × 300s = 3000 buit
-    expect((state.balances['gold'] ?? 0) - before).toBeCloseTo(3000);
+    // 12.5/s × 300s = 3750 buit
+    expect((state.balances['gold'] ?? 0) - before).toBeCloseTo(3750);
   });
 
   it('paying mercenaries clears the raid for 5 min income, no loot', () => {
@@ -162,7 +162,7 @@ describe('barbarian raids', () => {
     const paid = payMercenaries(state);
     expect(paid.raid).toBeNull();
     expect(paid.frenzySeconds).toBe(0);
-    expect(paid.balances['gold']).toBeCloseTo(10_000 - 3000);
+    expect(paid.balances['gold']).toBeCloseTo(10_000 - 3750);
     // niet betaalbaar → raid blijft staan
     const broke = { ...state, balances: { ...state.balances, gold: 100 } };
     expect(payMercenaries(broke)).toBe(broke);

@@ -109,6 +109,36 @@ export function fameBonus(fame: number): number {
   return bonus;
 }
 
+// Mijlpalen per heldentype (idee van Lorenz uit de groepschat): elke 10
+// helden onder de 100, elke 100 onder de 1000, elke 1000 daarboven — elke
+// bereikte mijlpaal vermenigvuldigt de productie van dát type met ×1.25.
+// Elke tiende rekruut is zo een klein feestje, en de fame-ETA's krimpen.
+export const MILESTONE_FACTOR = 1.25;
+
+/** Aantal bereikte mijlpalen: 10, 20, …, 90, 100, 200, …, 900, 1000, … */
+export function heroMilestones(owned: number): number {
+  let count = 0;
+  let threshold = 10;
+  while (threshold <= owned) {
+    count += 1;
+    threshold += Math.pow(10, Math.floor(Math.log10(threshold)));
+  }
+  return count;
+}
+
+/** Eerstvolgende mijlpaal-drempel voor dit aantal helden. */
+export function nextMilestone(owned: number): number {
+  let threshold = 10;
+  while (threshold <= owned) {
+    threshold += Math.pow(10, Math.floor(Math.log10(threshold)));
+  }
+  return threshold;
+}
+
+export function milestoneMultiplier(owned: number): number {
+  return Math.pow(MILESTONE_FACTOR, heroMilestones(owned));
+}
+
 // Raids en hun nasleep schalen de heldenproductie: plunderende barbaren
 // halveren haar, de overwinningsroes verdubbelt haar.
 export const RAID_PRODUCTION_FACTOR = 0.5;
@@ -126,7 +156,7 @@ export function productionPerSecond(state: GameState): CurrencyMap {
   for (const hero of HEROES) {
     const count = state.heroes[hero.id] ?? 0;
     if (count === 0) continue;
-    const factor = count * heroMultiplier(hero.id, state.upgrades) * bonus;
+    const factor = count * heroMultiplier(hero.id, state.upgrades) * bonus * milestoneMultiplier(count);
     total = addMaps(total, scaleMap(hero.production, factor));
   }
   return total;

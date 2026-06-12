@@ -2,7 +2,7 @@
   import { HEROES } from '../../content/heroes';
   // de knop-gain is het échte inkomensverschil (incl. synergy → auto-quests):
   // pure productie loog tot ~10× te laag bij volle synergy/crit/marshal-stacks
-  import { bulkHeroCost, fameBonus, heroCost, heroMultiplier, incomePerSecond, maxAffordableHeroes } from '../../engine/formulas';
+  import { bulkHeroCost, fameBonus, heroCost, heroMultiplier, incomePerSecond, maxAffordableHeroes, milestoneMultiplier, nextMilestone } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -75,6 +75,11 @@
       <div class="info">
         <strong>{hero.name} <span class="count">×{owned}</span></strong>
         <span class="dim">{owned > 0 ? `+${formatNumber(production)} gold/s` : `produces ${formatNumber(hero.production.gold ?? 0)} gold/s`}</span>
+        {#if owned >= 10}
+          <span class="stars">⭐ ×{formatNumber(milestoneMultiplier(owned))} · next boost at {nextMilestone(owned)}</span>
+        {:else if owned > 0}
+          <span class="stars">⭐ ×1.25 boost at {nextMilestone(owned)}</span>
+        {/if}
       </div>
       <button disabled={!canAfford(game.state.balances, cost)} onclick={() => game.buyHero(hero.id, buyCount)}>
         Recruit{#if buyCount > 1}&nbsp;×{buyCount}{/if}<br />
@@ -115,6 +120,7 @@
   .info { display: grid; flex: 1; }
   .count { color: var(--text-dim); font-weight: 400; }
   .dim { color: var(--text-dim); font-size: 0.85rem; }
+  .stars { color: var(--gold); font-size: 0.75rem; }
   button { padding: 8px 16px; background: var(--accent); color: white; display: block; text-align: center; }
   .gain { color: #bbf7d0; }
 </style>

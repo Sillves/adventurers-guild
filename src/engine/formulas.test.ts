@@ -3,7 +3,7 @@ import { HEROES } from '../content/heroes';
 import {
   autoClickPerSecond, autoClickRate, bulkHeroCost, clickGain, clickMultiplier, clickOutcome,
   clickSynergyPercent, comboCap, critParams, fameBonus, fameGain, fameTargetGold, heroCost,
-  heroMultiplier, incomePerSecond, isRealmUnlocked, maxAffordableHeroes, productionPerSecond,
+  heroMilestones, heroMultiplier, incomePerSecond, isRealmUnlocked, maxAffordableHeroes, milestoneMultiplier, nextMilestone, productionPerSecond,
   PRESTIGE_THRESHOLD_GOLD, totalFameFor,
 } from './formulas';
 import { createInitialState } from './state';
@@ -56,8 +56,8 @@ describe('production and clicking', () => {
       heroes: { farmhand: 10 },
       upgrades: ['iron-pitchforks'],
     };
-    // 10 * 0.5 * 2 (upgrade) * 2 (fame) = 20
-    expect(productionPerSecond(state)).toEqual({ gold: 20 });
+    // 10 × 0.5 × 2 (upgrade) × 2 (fame) × 1.25 (mijlpaal) = 25
+    expect(productionPerSecond(state)).toEqual({ gold: 25 });
   });
 
   it('click gain applies click multiplier and fame bonus', () => {
@@ -265,5 +265,37 @@ describe('realms', () => {
     const locked = { id: 'x', name: 'X', accentColor: '#fff', unlock: { minFame: 10 } };
     expect(isRealmUnlocked(locked, state)).toBe(false);
     expect(isRealmUnlocked(locked, { ...state, balances: { gold: 0, fame: 10 } })).toBe(true);
+  });
+});
+
+describe('hero milestones', () => {
+  it('counts per-10 under 100, per-100 under 1000, per-1000 beyond', () => {
+    expect(heroMilestones(0)).toBe(0);
+    expect(heroMilestones(9)).toBe(0);
+    expect(heroMilestones(10)).toBe(1);
+    expect(heroMilestones(99)).toBe(9);
+    expect(heroMilestones(100)).toBe(10);
+    expect(heroMilestones(999)).toBe(18);
+    expect(heroMilestones(1000)).toBe(19);
+    expect(heroMilestones(3000)).toBe(21);
+  });
+
+  it('tells you where the next celebration is', () => {
+    expect(nextMilestone(0)).toBe(10);
+    expect(nextMilestone(10)).toBe(20);
+    expect(nextMilestone(95)).toBe(100);
+    expect(nextMilestone(100)).toBe(200);
+    expect(nextMilestone(1000)).toBe(2000);
+  });
+
+  it('multiplies production per hero type by 1.25 per milestone', () => {
+    expect(milestoneMultiplier(9)).toBe(1);
+    expect(milestoneMultiplier(10)).toBe(1.25);
+    const state = {
+      ...createInitialState(0),
+      heroes: { farmhand: 10 },
+    };
+    // 10 farmhands × 0.5 × mijlpaal ×1.25 = 6.25
+    expect(productionPerSecond(state).gold).toBeCloseTo(6.25);
   });
 });
