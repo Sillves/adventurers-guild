@@ -10,7 +10,29 @@
 
   const AMOUNTS = [1, 5, 10, 15, 20, 'max'] as const;
   type BuyAmount = (typeof AMOUNTS)[number];
-  let buyAmount = $state<BuyAmount>(1);
+  const BUY_AMOUNT_KEY = 'ag.buyAmount';
+
+  // de gekozen bulk-stand overleeft tabwissels én sessies
+  function savedBuyAmount(): BuyAmount {
+    try {
+      const raw = localStorage.getItem(BUY_AMOUNT_KEY);
+      const parsed = raw === 'max' ? 'max' : Number(raw);
+      return (AMOUNTS as readonly (string | number)[]).includes(parsed) ? (parsed as BuyAmount) : 1;
+    } catch {
+      return 1;
+    }
+  }
+
+  let buyAmount = $state<BuyAmount>(savedBuyAmount());
+
+  function setBuyAmount(amount: BuyAmount): void {
+    buyAmount = amount;
+    try {
+      localStorage.setItem(BUY_AMOUNT_KEY, String(amount));
+    } catch {
+      // best-effort
+    }
+  }
 
   const realmHeroes = $derived(HEROES.filter((h) => h.realmId === realmId));
 
@@ -30,7 +52,7 @@
     <h2>Heroes</h2>
     <div class="amounts">
       {#each AMOUNTS as amount (amount)}
-        <button class="amount" class:active={buyAmount === amount} onclick={() => (buyAmount = amount)}>
+        <button class="amount" class:active={buyAmount === amount} onclick={() => setBuyAmount(amount)}>
           {amount === 'max' ? 'Max' : `${amount}×`}
         </button>
       {/each}
