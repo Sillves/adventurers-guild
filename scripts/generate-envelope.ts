@@ -57,7 +57,7 @@ function simulate(shouldPrestige: PrestigePolicy, startFame = 0): number[] {
       }
       for (const upgrade of UPGRADES) {
         if (state.upgrades.includes(upgrade.id)) continue;
-        if (!isUpgradeUnlocked(upgrade, state.upgrades)) continue;
+        if (!isUpgradeUnlocked(upgrade, state)) continue;
         const cost = upgrade.cost['gold'] ?? Infinity;
         if (cost < bestCost) {
           bestCost = cost;

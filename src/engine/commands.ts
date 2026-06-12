@@ -36,7 +36,7 @@ export function buyUpgrade(state: GameState, upgradeId: string): GameState {
   const def = UPGRADES.find((u) => u.id === upgradeId);
   if (def === undefined) return state;
   if (state.upgrades.includes(upgradeId)) return state;
-  if (!isUpgradeUnlocked(def, state.upgrades)) return state;
+  if (!isUpgradeUnlocked(def, state)) return state;
   if (!canAfford(state.balances, def.cost)) return state;
   return {
     ...state,
