@@ -5,6 +5,7 @@ import { parseSave, serializeSave } from '../engine/save';
 import { leaderboard } from './leaderboard.svelte';
 import { createInitialState, type GameState } from '../engine/state';
 import { localStorageStore, RotatingSaveStorage } from '../engine/storage';
+import { ClickGuard, ROBOTIC_LABEL_MS } from './clickguard';
 import { playSound, startMusic } from './sound';
 
 const storage = new RotatingSaveStorage(localStorageStore);
@@ -25,6 +26,11 @@ let lastQuestAt = 0;
 // zodat de UI kan tonen wat je vingers per seconde waard zijn.
 const CLICK_WINDOW_MS = 5000;
 let clickWindow = $state.raw<ReadonlyArray<{ readonly t: number; readonly gold: number }>>([]);
+
+// autoclicker-verdediging: cap op 15 kliks/s + ritmedetectie (zie clickguard.ts)
+const guard = new ClickGuard();
+let robotic = $state(false);
+let lastGuardedAt = 0;
 
 function persist(): void {
   state = { ...state, lastSavedAt: Date.now() };
@@ -59,6 +65,8 @@ export const game = {
       if (clickWindow.length > 0 && clickWindow[0].t < now - CLICK_WINDOW_MS) {
         clickWindow = clickWindow.filter((c) => c.t >= now - CLICK_WINDOW_MS);
       }
+      // de 🤖-banner dooft vanzelf zodra het robotische geklik stopt
+      if (robotic && now - lastGuardedAt > ROBOTIC_LABEL_MS) robotic = false;
       lastTick = now;
       requestAnimationFrame(tick);
     };
@@ -84,15 +92,25 @@ export const game = {
     return sum / (CLICK_WINDOW_MS / 1000);
   },
 
-  quest(): ClickOutcome {
+  get robotic(): boolean {
+    return robotic;
+  },
+
+  quest(point: { x: number; y: number } | null = null): ClickOutcome | null {
     startMusic();
+    const now = performance.now();
+    const verdict = guard.record(now, point?.x ?? null, point?.y ?? null);
+    lastGuardedAt = now;
+    robotic = verdict.robotic;
+    // boven de cap of robotisch: de klik bestaat gewoon niet voor de guild
+    if (!verdict.earned) return null;
     const roll = Math.random();
     const outcome = clickOutcome(state, roll, this.comboMultiplier);
     playSound(outcome.crit ? 'buy' : 'click');
     state = commands.performQuest(state, roll, this.comboMultiplier);
     comboHeat = Math.min(1, comboHeat + 1 / COMBO_CLICKS_TO_FULL);
-    lastQuestAt = performance.now();
-    clickWindow = [...clickWindow, { t: lastQuestAt, gold: outcome.gain.gold ?? 0 }];
+    lastQuestAt = now;
+    clickWindow = [...clickWindow, { t: now, gold: outcome.gain.gold ?? 0 }];
     return outcome;
   },
   buyHero(heroId: string, count = 1): void {
