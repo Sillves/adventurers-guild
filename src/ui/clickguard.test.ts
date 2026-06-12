@@ -80,4 +80,52 @@ describe('ClickGuard', () => {
     expect(v.robotic).toBe(false);
     expect(v.earned).toBe(true);
   });
+
+  it("catches Sam's randomized autoclicker on endurance — no human clicks 4 minutes without a breather", () => {
+    // ~8/s met 0-40ms random jitter: CV ~10%, glipt netjes door de ritmecheck…
+    const guard = new ClickGuard();
+    let t = 0;
+    let flaggedAt = -1;
+    for (let i = 0; i < 2600; i++) {
+      t += 100 + ((i * 37) % 41);
+      const v = guard.record(t);
+      if (t < 240_000) {
+        expect(v.robotic, `klik ${i} (t=${t}ms) te vroeg geflagd`).toBe(false);
+      } else if (flaggedAt < 0 && v.robotic) {
+        flaggedAt = t;
+        expect(v.earned).toBe(false);
+      }
+    }
+    // …maar wie nooit ademt, valt door de mand zodra de 4 minuten vol zijn
+    expect(flaggedAt).toBeGreaterThanOrEqual(240_000);
+    expect(flaggedAt).toBeLessThan(241_000);
+    expect(guard.robotic).toBe(true);
+  });
+
+  it('an honest spammer who pauses to breathe is never endurance-flagged', () => {
+    // 20 minuten lang hard klikken (~6/s, 20% jitter), maar elke ~90 s een
+    // adempauze van 2,5 s — upgrades checken, scrollen, mens zijn
+    const guard = new ClickGuard();
+    let t = 0;
+    let sinceBreak = 0;
+    for (let i = 0; i < 7000 && t < 1_200_000; i++) {
+      t += 160 + ((i * 37) % 60);
+      sinceBreak += 1;
+      if (sinceBreak >= 500) {
+        t += 2500;
+        sinceBreak = 0;
+      }
+      expect(guard.record(t).robotic, `klik ${i} (t=${t}ms)`).toBe(false);
+    }
+  });
+
+  it('slow continuous tapping is not endurance — the rate floor protects casual clickers', () => {
+    // 10 minuten elke ~1,1 s een tik zonder pauze: traag genoeg om mens te zijn
+    const guard = new ClickGuard();
+    let t = 0;
+    for (let i = 0; i < 550; i++) {
+      t += 1000 + ((i * 53) % 200);
+      expect(guard.record(t).robotic, `klik ${i}`).toBe(false);
+    }
+  });
 });
