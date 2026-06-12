@@ -10,7 +10,7 @@
 
   let { realmId }: { realmId: string } = $props();
 
-  const AMOUNTS = [1, 5, 10, 15, 20, 'max'] as const;
+  const AMOUNTS = [1, 5, 10, 15, 20, 'boost', 'max'] as const;
   type BuyAmount = (typeof AMOUNTS)[number];
   const BUY_AMOUNT_KEY = 'ag.buyAmount';
 
@@ -54,8 +54,8 @@
     <h2>Heroes</h2>
     <div class="amounts">
       {#each AMOUNTS as amount (amount)}
-        <button class="amount" class:active={buyAmount === amount} onclick={() => setBuyAmount(amount)}>
-          {amount === 'max' ? 'Max' : `${amount}×`}
+        <button class="amount" class:active={buyAmount === amount} title={amount === 'boost' ? 'Buy up to the next ⭐ boost' : amount === 'max' ? 'Buy as many as you can afford' : undefined} onclick={() => setBuyAmount(amount)}>
+          {amount === 'max' ? 'Max' : amount === 'boost' ? '⭐' : `${amount}×`}
         </button>
       {/each}
     </div>
@@ -64,7 +64,9 @@
     {@const owned = ownedCount(hero.id)}
     {@const buyCount = buyAmount === 'max'
       ? Math.max(maxAffordableHeroes(hero, owned, game.state.balances), 1)
-      : buyAmount}
+      : buyAmount === 'boost'
+        ? nextMilestone(owned) - owned
+        : buyAmount}
     {@const cost = buyCount === 1 ? heroCost(hero, owned) : bulkHeroCost(hero, owned, buyCount)}
     {@const perHero = (hero.production.gold ?? 0) * heroMultiplier(hero.id, game.state.upgrades) * fameBonus(game.state.balances['fame'] ?? 0)}
     {@const production = perHero * Math.max(owned, 1)}
