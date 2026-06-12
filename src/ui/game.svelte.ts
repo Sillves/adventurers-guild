@@ -77,6 +77,8 @@ export const game = {
       if (robotic && now - lastGuardedAt > ROBOTIC_LABEL_MS) robotic = false;
       if (!document.hidden) {
         activeSeconds += dt;
+        // levenslange speeltijd: alleen mét de tab zichtbaar, net als de spawner
+        state = { ...state, stats: { ...state.stats, playSeconds: state.stats.playSeconds + dt } };
         if (state.raid === null && activeSeconds >= nextRaidAtActive) {
           const raided = commands.startRaid(state, Date.now());
           if (raided !== state) {

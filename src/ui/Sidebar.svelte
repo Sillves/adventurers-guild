@@ -14,6 +14,7 @@
   import Changelog from './Changelog.svelte';
   import Icon from './Icon.svelte';
   import NumberScale from './NumberScale.svelte';
+  import Stats from './Stats.svelte';
   import { getMusicVolume, getSfxVolume, isSilent, setMusicVolume, setSfxVolume, toggleSilence } from './sound';
   import { isKeepAwake, toggleKeepAwake, wakeLockSupported } from './wakelock';
 
@@ -75,6 +76,7 @@
   let keepAwake = $state(isKeepAwake());
   let showSettings = $state(false);
   let showNumbers = $state(false);
+  let showStats = $state(false);
 
   // "What's new": entries komen vooraan de lijst bij; we onthouden hoeveel je
   // er al zag, dus (lengte − gezien) = ongelezen. Nooit entries verwijderen.
@@ -149,6 +151,7 @@
         </div>
       {/if}
     {/each}
+    <button class="scale-hint" onclick={() => (showStats = true)}>📊 Stats</button>
     <button class="scale-hint" onclick={() => (showNumbers = true)}>What's a Qa? ℹ️</button>
     <button class="scale-hint" onclick={openChangelog}>
       📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
@@ -198,6 +201,7 @@
       <button onclick={openChangelog}>
         📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
       </button>
+      <button onclick={() => { showSettings = false; showStats = true; }}>📊 Stats</button>
       <button onclick={() => { showSettings = false; showNumbers = true; }}>What's a Qa? ℹ️</button>
       <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
       <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
@@ -217,6 +221,10 @@
 
 {#if showChangelog}
   <Changelog unseen={changelogUnseenAtOpen} onclose={() => (showChangelog = false)} />
+{/if}
+
+{#if showStats}
+  <Stats onclose={() => (showStats = false)} />
 {/if}
 
 <style>
