@@ -71,7 +71,8 @@
     main {
       overflow-y: visible;
       overscroll-behavior: auto;
-      padding-top: 48px;
+      /* standalone op iPhone: de statusbalk overlapt de pagina (viewport-fit=cover) */
+      padding-top: calc(48px + env(safe-area-inset-top));
       padding-bottom: calc(72px + env(safe-area-inset-bottom));
     }
   }

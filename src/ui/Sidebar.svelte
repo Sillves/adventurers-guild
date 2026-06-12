@@ -250,8 +250,9 @@
       left: 0;
       right: 0;
       margin: 0;
-      height: 44px;
-      padding: 0 92px 0 14px;
+      /* iPhone-standalone: balk groeit mee met de statusbalk (safe area) */
+      height: calc(44px + env(safe-area-inset-top));
+      padding: env(safe-area-inset-top) 92px 0 14px;
       display: flex;
       align-items: center;
       gap: 18px;
@@ -267,7 +268,7 @@
     .mute,
     .settings-toggle {
       position: fixed;
-      top: 0;
+      top: env(safe-area-inset-top);
       height: 44px;
       display: flex;
       align-items: center;
@@ -283,7 +284,7 @@
       display: grid;
       gap: 8px;
       position: fixed;
-      top: 48px;
+      top: calc(48px + env(safe-area-inset-top));
       right: 8px;
       z-index: 12;
       background: var(--panel-raised);
