@@ -11,6 +11,7 @@
   import { formatNumber } from './format';
   import { game } from './game.svelte';
   import Icon from './Icon.svelte';
+  import NumberScale from './NumberScale.svelte';
   import { getMusicVolume, getSfxVolume, isSilent, setMusicVolume, setSfxVolume, toggleSilence } from './sound';
   import { isKeepAwake, toggleKeepAwake, wakeLockSupported } from './wakelock';
 
@@ -71,6 +72,7 @@
 
   let keepAwake = $state(isKeepAwake());
   let showSettings = $state(false);
+  let showNumbers = $state(false);
 
   // Alleen zichtbare heroes tellen mee: na de eerste niet-gekochte hero stopt de reveal.
   const heroAffordable = $derived.by(() => {
@@ -119,6 +121,7 @@
         </div>
       {/if}
     {/each}
+    <button class="scale-hint" onclick={() => (showNumbers = true)}>What's a Qa? ℹ️</button>
   </div>
   <!-- mobiel: snelle mute in de topbalk; desktop toont sliders -->
   <button class="mute" aria-label={silent ? 'Unmute' : 'Mute'} onclick={onToggleSilence}>
@@ -159,6 +162,7 @@
           ><span class="knob"></span></button>
         </div>
       {/if}
+      <button onclick={() => { showSettings = false; showNumbers = true; }}>What's a Qa? ℹ️</button>
       <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
       <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
       <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
@@ -170,6 +174,10 @@
     <button onclick={importSave}>Import save</button>
   </div>
 </nav>
+
+{#if showNumbers}
+  <NumberScale onclose={() => (showNumbers = false)} />
+{/if}
 
 <style>
   nav {
@@ -207,6 +215,14 @@
   .settings-toggle,
   .settings-panel { display: none; }
   .balances { margin-top: auto; padding: 12px 4px; display: grid; gap: 6px; }
+  .scale-hint {
+    justify-self: start;
+    padding: 2px 0;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    background: transparent;
+    text-decoration: underline;
+  }
   .balance { display: flex; align-items: center; gap: 6px; color: var(--gold); }
   /* cijfers met vaste breedte, anders verspringt de balk bij elke tick */
   .balance strong, .rate { font-variant-numeric: tabular-nums; }
@@ -318,8 +334,9 @@
     }
     .mute { right: 44px; }
     .settings-toggle { right: 4px; }
-    /* sliders zitten op mobiel in het instellingenpaneel, niet in de navbalk */
+    /* sliders en de getallenlegenda zitten op mobiel in het instellingenpaneel */
     nav > .volumes { display: none; }
+    .balances .scale-hint { display: none; }
     .settings-panel .vol { padding: 4px 12px; }
     .settings-panel {
       display: grid;
