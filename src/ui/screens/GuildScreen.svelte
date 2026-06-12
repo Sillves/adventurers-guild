@@ -53,13 +53,12 @@
   function quest(e: MouseEvent): void {
     // synthetische kliks (console-loops, goedkope extensies) bestaan niet
     if (!e.isTrusted) return;
-    const point = { x: e.clientX, y: e.clientY };
     // tijdens een raid vecht de grote knop in plaats van te questen
     if (game.state.raid !== null) {
-      if (game.fight(point) === 'won') addFloat('⚔️ VICTORY! War spoils claimed!', true);
+      if (game.fight() === 'won') addFloat('⚔️ VICTORY! War spoils claimed!', true);
       return;
     }
-    const outcome = game.quest(point);
+    const outcome = game.quest();
     if (outcome === null) return; // boven de cap of robotisch — stil negeren
     addFloat(`${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`, outcome.crit);
   }
