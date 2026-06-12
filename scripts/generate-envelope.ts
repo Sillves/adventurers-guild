@@ -24,8 +24,11 @@ const SAFETY_FACTOR = 4;
 
 type PrestigePolicy = (gain: number, fame: number) => boolean;
 
-function simulate(shouldPrestige: PrestigePolicy): number[] {
+function simulate(shouldPrestige: PrestigePolicy, startFame = 0): number[] {
   let state: GameState = createInitialState(0);
+  if (startFame > 0) {
+    state = { ...state, balances: { ...state.balances, fame: startFame } };
+  }
   const hourly: number[] = [];
   let t = 0;
   const maxSeconds = DAYS * 86400;
@@ -78,14 +81,17 @@ function simulate(shouldPrestige: PrestigePolicy): number[] {
   return hourly;
 }
 
-const strategies: Record<string, PrestigePolicy> = {
-  'nooit prestigen': () => false,
-  'prestige bij verdubbeling': (gain, fame) => gain >= Math.max(1, fame),
-  'prestige zodra mogelijk': () => true,
+const strategies: Record<string, { policy: PrestigePolicy; startFame?: number }> = {
+  'nooit prestigen': { policy: () => false },
+  'prestige bij verdubbeling': { policy: (gain, fame) => gain >= Math.max(1, fame) },
+  'prestige zodra mogelijk': { policy: () => true },
+  // veteranen van vóór de fame-knie spelen met een gebankte ×61-multiplier door;
+  // zonder deze curve zou de envelope hen na de balanswijziging vals flaggen
+  'veteraan (3000 fame gebankt), nooit prestigen': { policy: () => false, startFame: 3000 },
 };
 
-const curves = Object.entries(strategies).map(([label, policy]) => {
-  const curve = simulate(policy);
+const curves = Object.entries(strategies).map(([label, { policy, startFame }]) => {
+  const curve = simulate(policy, startFame ?? 0);
   console.log(`${label}: 24h ${curve[24]?.toExponential(2)}, eind ${curve.at(-1)?.toExponential(2)}`);
   return curve;
 });

@@ -4,7 +4,7 @@ import {
   autoClickPerSecond, autoClickRate, bulkHeroCost, clickGain, clickMultiplier, clickOutcome,
   clickSynergyPercent, comboCap, critParams, fameBonus, fameGain, fameTargetGold, heroCost,
   heroMultiplier, incomePerSecond, isRealmUnlocked, maxAffordableHeroes, productionPerSecond,
-  PRESTIGE_THRESHOLD_GOLD,
+  PRESTIGE_THRESHOLD_GOLD, totalFameFor,
 } from './formulas';
 import { createInitialState } from './state';
 import { REALMS } from '../content/realms';
@@ -205,6 +205,40 @@ describe('prestige', () => {
   it('computes the lifetime gold target for the nth fame point', () => {
     expect(fameTargetGold(1)).toBe(1_000_000);
     expect(fameTargetGold(4)).toBe(16_000_000);
+  });
+
+  it('steepens to n^2.5 past the knee at 300 fame', () => {
+    expect(fameTargetGold(300)).toBe(300 * 300 * 1_000_000);
+    expect(fameTargetGold(301)).toBe(Math.pow(301, 2.5) * 1_000_000);
+    // de muur: punt 301 kost ineens ~17× meer dan punt 300
+    expect(fameTargetGold(301) / fameTargetGold(300)).toBeGreaterThan(17);
+  });
+
+  it('round-trips targets through totalFameFor on both branches', () => {
+    for (const n of [1, 299, 300, 301, 500, 1466, 3000]) {
+      expect(totalFameFor(fameTargetGold(n)), `n=${n}`).toBe(n);
+    }
+    // onder de knie is 1 goud minder exact één punt minder; boven de knie valt
+    // 1 goud onder de float-resolutie van pow — daar testen we met 0.01% minder
+    expect(totalFameFor(fameTargetGold(300) - 1)).toBe(299);
+    for (const n of [301, 1466, 3000]) {
+      expect(totalFameFor(fameTargetGold(n) * 0.9999), `n=${n} − 0.01%`).toBe(n - 1);
+    }
+  });
+
+  it('holds at 300 in the gap between the knee and the first late target', () => {
+    expect(totalFameFor(fameTargetGold(300) + 1)).toBe(300);
+    expect(totalFameFor(5e11)).toBe(300);
+  });
+
+  it('veterans above the new curve gain nothing but lose nothing', () => {
+    // 1466 fame gebankt op 2.15T lifetime (oude curve): gain klemt op 0
+    const state = {
+      ...createInitialState(0),
+      balances: { gold: 0, fame: 1466 },
+      lifetimeEarned: { gold: 2.15e12 },
+    };
+    expect(fameGain(state)).toBe(0);
   });
 });
 
