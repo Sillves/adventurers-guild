@@ -1,10 +1,13 @@
-// Autoclicker-verdediging voor de quest-knop. Drie lagen, allemaal UI-niveau
+// Autoclicker-verdediging voor de quest-knop. Vier lagen, allemaal UI-niveau
 // (de engine blijft puur en de leaderboard-envelope heeft zijn eigen check):
 //   1. untrusted events weren gebeurt in de handler (e.isTrusted);
 //   2. een harde cap: meer dan 15 kliks/s verdient niets — sneller dan het
 //      menselijke wereldrecord, dus eerlijke spelers merken er nooit iets van;
 //   3. ritmedetectie: metronoom-timing is geen vinger. Mensen jitteren 10-30%
-//      tussen kliks (op topsnelheid nog altijd ~5-8%); bots zitten op ~0%.
+//      tussen kliks (op topsnelheid nog altijd ~5-8%); bots zitten op ~0%;
+//   4. uithouding: random jitter verslaat de ritmecheck, maar geen mens klikt
+//      4+ minuten aan 4+/s zonder één adempauze van 2 s. Bots wel ("Random
+//      noise, you will never catch me 😉" — Sam, 12 juni 2026).
 //
 // Bewust GEEN pixel-regel meer: een muis geparkeerd op de knop en een duim
 // verankerd op een telefoonscherm klikken allebei eerlijk pixel-perfect —
@@ -21,6 +24,12 @@ const RHYTHM_SAMPLE = WINDOW_SIZE;
 const ROBOTIC_MAX_CV = 0.02;
 const ROBOTIC_MAX_INTERVAL_MS = 400;
 export const ROBOTIC_LABEL_MS = 4000;
+// uithoudingsregel: een "reeks" breekt op elke pauze van 2 s. Wie 4 minuten
+// lang gemiddeld 4+/s klikt zonder ooit zo'n pauze, is een machine — een
+// frenzy duurt maar 60 s, dus eerlijk los gaan komt hier nooit in de buurt.
+const ENDURANCE_BREAK_MS = 2000;
+const ENDURANCE_MIN_SECONDS = 240;
+const ENDURANCE_MIN_RATE = 4;
 
 export interface ClickVerdict {
   /** Telt deze klik mee voor goud/combo? */
@@ -32,12 +41,22 @@ export interface ClickVerdict {
 export class ClickGuard {
   private times: number[] = [];
   private roboticUntil = 0;
+  private streakStart = -1;
+  private streakClicks = 0;
+  private lastClickAt = -1;
 
   record(t: number): ClickVerdict {
     this.times.push(t);
     if (this.times.length > WINDOW_SIZE) this.times.shift();
 
-    if (this.looksRobotic()) this.roboticUntil = t + ROBOTIC_LABEL_MS;
+    if (this.lastClickAt < 0 || t - this.lastClickAt >= ENDURANCE_BREAK_MS) {
+      this.streakStart = t;
+      this.streakClicks = 0;
+    }
+    this.lastClickAt = t;
+    this.streakClicks += 1;
+
+    if (this.looksRobotic() || this.looksTireless(t)) this.roboticUntil = t + ROBOTIC_LABEL_MS;
     const robotic = t < this.roboticUntil;
 
     const inLastSecond = this.times.filter((s) => s > t - 1000).length;
@@ -47,6 +66,11 @@ export class ClickGuard {
 
   get robotic(): boolean {
     return this.times.length > 0 && this.times[this.times.length - 1] < this.roboticUntil;
+  }
+
+  private looksTireless(t: number): boolean {
+    const seconds = (t - this.streakStart) / 1000;
+    return seconds >= ENDURANCE_MIN_SECONDS && this.streakClicks / seconds >= ENDURANCE_MIN_RATE;
   }
 
   private looksRobotic(): boolean {
