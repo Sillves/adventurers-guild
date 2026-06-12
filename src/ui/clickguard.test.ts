@@ -33,6 +33,18 @@ describe('ClickGuard', () => {
     expect(guard.robotic).toBe(false);
   });
 
+  it('a steady human spamming for a long stretch never gets flagged — frenzy fingers', () => {
+    // Johans geval: raid winnen en de hele ×2-frenzy doorklikken op topsnelheid.
+    // ~6,5 kliks/s met maar ~3% jitter, honderden vensters lang: geen 🤖.
+    const guard = new ClickGuard();
+    let t = 0;
+    for (let i = 0; i < 400; i++) {
+      t += 150 + ((i * 13) % 16);
+      const v = guard.record(t);
+      expect(v.robotic, `klik ${i}`).toBe(false);
+    }
+  });
+
   it('caps earnings above 15 clicks per second', () => {
     const guard = new ClickGuard();
     const earned: boolean[] = [];
@@ -50,7 +62,7 @@ describe('ClickGuard', () => {
     const guard = new ClickGuard();
     let verdictRobotic = false;
     let lastEarned = true;
-    for (let i = 1; i <= 25; i++) {
+    for (let i = 1; i <= 35; i++) {
       const v = guard.record(i * 200); // perfect 200ms-ritme
       verdictRobotic = v.robotic;
       lastEarned = v.earned;
@@ -61,10 +73,10 @@ describe('ClickGuard', () => {
 
   it('the robotic label expires once the pattern stops', () => {
     const guard = new ClickGuard();
-    for (let i = 1; i <= 25; i++) guard.record(i * 100);
+    for (let i = 1; i <= 35; i++) guard.record(i * 100);
     expect(guard.robotic).toBe(true);
     // 5 s later, één eerlijke klik: label is verlopen en de klik telt weer
-    const v = guard.record(25 * 100 + 5000);
+    const v = guard.record(35 * 100 + 5000);
     expect(v.robotic).toBe(false);
     expect(v.earned).toBe(true);
   });
