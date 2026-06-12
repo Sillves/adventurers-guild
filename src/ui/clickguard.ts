@@ -4,7 +4,7 @@
 //   2. een harde cap: meer dan 15 kliks/s verdient niets — sneller dan het
 //      menselijke wereldrecord, dus eerlijke spelers merken er nooit iets van;
 //   3. ritmedetectie: metronoom-timing is geen vinger. Mensen jitteren 10-30%
-//      tussen kliks, ook op topsnelheid; bots zitten op ~0%.
+//      tussen kliks (op topsnelheid nog altijd ~5-8%); bots zitten op ~0%.
 //
 // Bewust GEEN pixel-regel meer: een muis geparkeerd op de knop en een duim
 // verankerd op een telefoonscherm klikken allebei eerlijk pixel-perfect —
@@ -12,9 +12,13 @@
 
 const WINDOW_SIZE = 30;
 const RATE_CAP_PER_SECOND = 15;
-const RHYTHM_SAMPLE = 20;
-// menselijke kliks jitteren ~10-30%; onder de 4% variatie zit een machine
-const ROBOTIC_MAX_CV = 0.04;
+// Het volledige venster: bij 20 kliks was de CV-schatting zo ruizig dat een
+// mens die lang genoeg spamt (raid + frenzy) vrijwel zeker één keer onder de
+// drempel dook — Johan kreeg zo de 🤖 midden in zijn ×2-frenzy.
+const RHYTHM_SAMPLE = WINDOW_SIZE;
+// op topsnelheid jittert een mens nog ~5-8%; autoclickers (ook setInterval
+// met event-loop-ruis) zitten op 0-1,5%. De 2% laat geen eerlijke vinger door.
+const ROBOTIC_MAX_CV = 0.02;
 const ROBOTIC_MAX_INTERVAL_MS = 400;
 export const ROBOTIC_LABEL_MS = 4000;
 
