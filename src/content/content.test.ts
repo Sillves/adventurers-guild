@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CHANGELOG } from './changelog';
 import { CURRENCIES } from './currencies';
 import { HEROES } from './heroes';
 import { REALMS } from './realms';
@@ -77,5 +78,23 @@ describe('content integrity', () => {
       expect(HEROES[i].baseCost.gold).toBeGreaterThan(HEROES[i - 1].baseCost.gold);
       expect(HEROES[i].production.gold).toBeGreaterThan(HEROES[i - 1].production.gold);
     }
+  });
+
+  it('changelog entries are well-formed and newest-first', () => {
+    // de ongelezen-teller telt vanaf het begin van de lijst: volgorde is heilig
+    expect(CHANGELOG.length).toBeGreaterThan(0);
+    for (let i = 0; i < CHANGELOG.length; i++) {
+      const entry = CHANGELOG[i];
+      expect(entry.date, `${entry.title} date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(entry.title.length, `entry ${i} title`).toBeGreaterThan(0);
+      expect(entry.description.length, `${entry.title} description`).toBeGreaterThan(0);
+      expect(entry.prs.length, `${entry.title} prs`).toBeGreaterThan(0);
+      for (const pr of entry.prs) expect(pr, `${entry.title} pr`).toBeGreaterThan(0);
+      if (i > 0) {
+        expect(entry.date <= CHANGELOG[i - 1].date, `${entry.title} is older than the entry above it`).toBe(true);
+      }
+    }
+    const keys = new Set(CHANGELOG.map((e) => e.date + e.title));
+    expect(keys.size).toBe(CHANGELOG.length);
   });
 });

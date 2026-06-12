@@ -3,6 +3,7 @@
 </script>
 
 <script lang="ts">
+  import { CHANGELOG } from '../content/changelog';
   import { CURRENCIES } from '../content/currencies';
   import { HEROES } from '../content/heroes';
   import { UPGRADES } from '../content/upgrades';
@@ -10,6 +11,7 @@
   import { addMaps, canAfford } from '../engine/maps';
   import { formatNumber } from './format';
   import { game } from './game.svelte';
+  import Changelog from './Changelog.svelte';
   import Icon from './Icon.svelte';
   import NumberScale from './NumberScale.svelte';
   import { getMusicVolume, getSfxVolume, isSilent, setMusicVolume, setSfxVolume, toggleSilence } from './sound';
@@ -74,6 +76,32 @@
   let showSettings = $state(false);
   let showNumbers = $state(false);
 
+  // "What's new": entries komen vooraan de lijst bij; we onthouden hoeveel je
+  // er al zag, dus (lengte − gezien) = ongelezen. Nooit entries verwijderen.
+  const CHANGELOG_SEEN_KEY = 'ag.changelogSeen';
+  function seenChangelogCount(): number {
+    try {
+      return Number(localStorage.getItem(CHANGELOG_SEEN_KEY)) || 0;
+    } catch {
+      return 0;
+    }
+  }
+  let changelogUnseen = $state(Math.max(0, CHANGELOG.length - seenChangelogCount()));
+  let showChangelog = $state(false);
+  let changelogUnseenAtOpen = 0;
+
+  function openChangelog(): void {
+    showSettings = false;
+    changelogUnseenAtOpen = changelogUnseen;
+    showChangelog = true;
+    changelogUnseen = 0;
+    try {
+      localStorage.setItem(CHANGELOG_SEEN_KEY, String(CHANGELOG.length));
+    } catch {
+      // best-effort
+    }
+  }
+
   // Alleen zichtbare heroes tellen mee: na de eerste niet-gekochte hero stopt de reveal.
   const heroAffordable = $derived.by(() => {
     for (const hero of HEROES.filter((h) => h.realmId === realmId)) {
@@ -122,6 +150,9 @@
       {/if}
     {/each}
     <button class="scale-hint" onclick={() => (showNumbers = true)}>What's a Qa? ℹ️</button>
+    <button class="scale-hint" onclick={openChangelog}>
+      📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
+    </button>
   </div>
   <!-- mobiel: snelle mute in de topbalk; desktop toont sliders -->
   <button class="mute" aria-label={silent ? 'Unmute' : 'Mute'} onclick={onToggleSilence}>
@@ -144,7 +175,9 @@
       ><span class="knob"></span></button>
     </div>
   {/if}
-  <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>⚙️</button>
+  <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>
+    ⚙️{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
+  </button>
   {#if showSettings}
     <div class="settings-panel">
       <label class="vol"><span>🎵</span><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
@@ -162,6 +195,9 @@
           ><span class="knob"></span></button>
         </div>
       {/if}
+      <button onclick={openChangelog}>
+        📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
+      </button>
       <button onclick={() => { showSettings = false; showNumbers = true; }}>What's a Qa? ℹ️</button>
       <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
       <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
@@ -177,6 +213,10 @@
 
 {#if showNumbers}
   <NumberScale onclose={() => (showNumbers = false)} />
+{/if}
+
+{#if showChangelog}
+  <Changelog unseen={changelogUnseenAtOpen} onclose={() => (showChangelog = false)} />
 {/if}
 
 <style>
@@ -222,6 +262,15 @@
     color: var(--text-dim);
     background: transparent;
     text-decoration: underline;
+  }
+  .news-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-left: 6px;
+    vertical-align: 1px;
   }
   .balance { display: flex; align-items: center; gap: 6px; color: var(--gold); }
   /* cijfers met vaste breedte, anders verspringt de balk bij elke tick */
