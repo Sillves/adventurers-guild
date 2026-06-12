@@ -35,9 +35,16 @@ describe('multipliers', () => {
     expect(clickMultiplier(['stronger-grip', 'quest-board'])).toBe(4);
   });
 
-  it('fame bonus is +2% per fame point', () => {
+  it('fame bonus is +2% per point up to 300, then diminishing tiers', () => {
     expect(fameBonus(0)).toBe(1);
     expect(fameBonus(50)).toBe(2);
+    expect(fameBonus(300)).toBe(7);
+    // 7 + 700×1% = 14, + 2000×0.5% = 24, + 721×0.25% ≈ 25.8
+    expect(fameBonus(1000)).toBe(14);
+    expect(fameBonus(3000)).toBe(24);
+    expect(fameBonus(3721)).toBeCloseTo(25.8, 1);
+    // blijft strikt stijgen, ook ver voorbij de laatste schijf
+    expect(fameBonus(100000)).toBeGreaterThan(fameBonus(99999));
   });
 });
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fameGain, fameTargetGold, FAME_BONUS_PER_POINT } from '../../engine/formulas';
+  import { fameBonus, fameGain, fameTargetGold } from '../../engine/formulas';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
 
@@ -19,11 +19,11 @@
   <h2>👑 Refound the Guild</h2>
   <p class="dim">
     Refounding resets your gold, heroes and upgrades — but earns permanent <strong>Fame</strong>.
-    Each Fame point boosts all production and quests by {FAME_BONUS_PER_POINT * 100}%, forever.
+    Every Fame point boosts all production and quests, forever — early points count the heaviest.
   </p>
 
   <div class="panel">
-    <div>Current Fame: <strong>🏆 {formatNumber(currentFame)}</strong> (+{formatNumber(currentFame * FAME_BONUS_PER_POINT * 100)}% production)</div>
+    <div>Current Fame: <strong>🏆 {formatNumber(currentFame)}</strong> (+{formatNumber((fameBonus(currentFame) - 1) * 100)}% production)</div>
     <div>Lifetime gold: <strong>🪙 {formatNumber(lifetimeGold)}</strong></div>
     <div>Fame on refound: <strong class="success">+{formatNumber(gain)}</strong></div>
     <p class="dim">

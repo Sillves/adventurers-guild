@@ -12,4 +12,6 @@ export const HEROES: readonly HeroDef[] = [
   // eindgame-grind: bewust véél duurder per gold/s dan de ladder ervoor
   { id: 'titan',       name: 'Titan',        icon: 'sprites/titan.png', realmId: 'verdant', baseCost: { gold: 400000000000 },    production: { gold: 40000000 },  costGrowth: 1.15 },
   { id: 'demigod',     name: 'Demigod',      icon: 'sprites/demigod.png', realmId: 'verdant', baseCost: { gold: 10000000000000 }, production: { gold: 500000000 }, costGrowth: 1.15 },
+  // geprijsd op JJ's gemeten inkomen (4.5T/s): ~5 dagen idle voor de allereerste
+  { id: 'celestial',   name: 'Celestial',    icon: 'sprites/celestial.png', realmId: 'verdant', baseCost: { gold: 2000000000000000000 }, production: { gold: 75000000000 }, costGrowth: 1.15 },
 ] as const;

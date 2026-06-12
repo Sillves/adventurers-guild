@@ -6,7 +6,6 @@ import { addMaps, canAfford, scaleMap } from './maps';
 import type { GameState } from './state';
 
 export const PRESTIGE_THRESHOLD_GOLD = 1_000_000;
-export const FAME_BONUS_PER_POINT = 0.02;
 
 export function heroCost(def: HeroDef, owned: number): CurrencyMap {
   const result: Record<string, number> = {};
@@ -89,8 +88,25 @@ export function comboCap(purchased: readonly string[]): number {
   return cap;
 }
 
+// Aflopende schijven: fame × inkomen × fame is een superexponentiële lus —
+// JJ haalde 845T lifetime in één era en versloeg de n^2.5-muur binnen een dag.
+// De bonus blijft eeuwig groeien, maar elke schijf telt half zo zwaar.
+const FAME_BONUS_TIERS: ReadonlyArray<{ upTo: number; perPoint: number }> = [
+  { upTo: 300, perPoint: 0.02 },
+  { upTo: 1000, perPoint: 0.01 },
+  { upTo: 3000, perPoint: 0.005 },
+  { upTo: Infinity, perPoint: 0.0025 },
+];
+
 export function fameBonus(fame: number): number {
-  return 1 + FAME_BONUS_PER_POINT * fame;
+  let bonus = 1;
+  let prev = 0;
+  for (const tier of FAME_BONUS_TIERS) {
+    if (fame <= prev) break;
+    bonus += (Math.min(fame, tier.upTo) - prev) * tier.perPoint;
+    prev = tier.upTo;
+  }
+  return bonus;
 }
 
 export function productionPerSecond(state: GameState): CurrencyMap {
