@@ -41,6 +41,12 @@
 
 <div class="app">
   <Sidebar {screen} onswitch={switchScreen} {realmId} />
+  {#if game.state.raid !== null && screen !== 'guild'}
+    <!-- raid-alarm op elk ander scherm: één klik en je staat in het gevecht -->
+    <button class="raid-alert" onclick={() => switchScreen('guild')}>
+      🪓 {game.state.raid.phase === 'incoming' ? 'Barbarians approach!' : 'Barbarians are plundering!'} — defend the guild
+    </button>
+  {/if}
   <main bind:this={main}>
     {#if screen === 'guild'}
       <GuildScreen />
@@ -65,6 +71,30 @@
      bij de elastische bounce aan het einde van de scroll (macOS). */
   .app { display: flex; height: 100vh; }
   main { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+  .raid-alert {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    background: var(--danger);
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 999px;
+    box-shadow: 0 4px 20px rgb(248 113 113 / 0.5);
+    animation: alert-pulse 1s ease-in-out infinite;
+    white-space: nowrap;
+    max-width: calc(100vw - 24px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @keyframes alert-pulse {
+    50% { transform: translateX(-50%) scale(1.04); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .raid-alert { animation: none; }
+  }
   @media (max-width: 700px) {
     /* Mobiel scrolt het venster zelf; de navbar is daar fixed onderaan. */
     .app { flex-direction: column; height: auto; min-height: 100vh; }
@@ -75,5 +105,7 @@
       padding-top: calc(48px + env(safe-area-inset-top));
       padding-bottom: calc(72px + env(safe-area-inset-bottom));
     }
+    /* mobiel: onder de vaste topbalk, niet eroverheen */
+    .raid-alert { top: calc(52px + env(safe-area-inset-top)); }
   }
 </style>

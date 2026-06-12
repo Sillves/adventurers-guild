@@ -1,4 +1,4 @@
-export type SoundName = 'click' | 'buy' | 'prestige';
+export type SoundName = 'click' | 'buy' | 'prestige' | 'raid';
 
 const MUSIC_VOL_KEY = 'ag.musicVol';
 const SFX_VOL_KEY = 'ag.sfxVol';
@@ -71,8 +71,8 @@ export function toggleSilence(): boolean {
   return isSilent();
 }
 
-const SFX_VOLUME: Record<SoundName, number> = { click: 0.5, buy: 0.5, prestige: 0.8 };
-const SFX_NAMES: readonly SoundName[] = ['click', 'buy', 'prestige'];
+const SFX_VOLUME: Record<SoundName, number> = { click: 0.5, buy: 0.5, prestige: 0.8, raid: 0.7 };
+const SFX_NAMES: readonly SoundName[] = ['click', 'buy', 'prestige', 'raid'];
 
 // SFX via Web Audio: een enkel <audio>-element kan niet snel genoeg herstarten,
 // waardoor bij snel tikken de meeste kliks geluidloos bleven.

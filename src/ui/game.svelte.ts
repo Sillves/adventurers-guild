@@ -81,6 +81,7 @@ export const game = {
           const raided = commands.startRaid(state, Date.now());
           if (raided !== state) {
             state = raided;
+            playSound('raid');
           } else {
             // nog geen 50 fame: probeer het over een paar minuten opnieuw
             nextRaidAtActive = activeSeconds + RAID_SPAWN_MIN_S / 2;
@@ -88,6 +89,7 @@ export const game = {
         }
         if (state.raid?.phase === 'incoming' && Date.now() >= state.raid.deadlineAt) {
           state = commands.raidDeadline(state, Date.now());
+          playSound('raid'); // de hoorn klinkt opnieuw: nu wordt er geplunderd
         }
       }
       lastTick = now;
