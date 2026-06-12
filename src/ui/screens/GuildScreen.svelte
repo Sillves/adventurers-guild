@@ -34,8 +34,11 @@
     setTimeout(() => (floats = floats.filter((f) => f.id !== id)), 900);
   }
 
-  function quest(): void {
-    const outcome = game.quest();
+  function quest(e: MouseEvent): void {
+    // synthetische kliks (console-loops, goedkope extensies) bestaan niet
+    if (!e.isTrusted) return;
+    const outcome = game.quest({ x: e.clientX, y: e.clientY });
+    if (outcome === null) return; // boven de cap of robotisch — stil negeren
     addFloat(`${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`, outcome.crit);
   }
 
@@ -49,11 +52,13 @@
   // spatiebalk = quest, waar de focus ook staat. !e.repeat: ingedrukt houden
   // is geen klikken — anders wordt de toets een gratis autoclicker.
   function onKeydown(e: KeyboardEvent): void {
-    if (e.code !== 'Space' || e.repeat) return;
+    if (!e.isTrusted || e.code !== 'Space' || e.repeat) return;
     const target = e.target as HTMLElement | null;
     if (target !== null && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
     e.preventDefault();
-    quest();
+    const outcome = game.quest();
+    if (outcome === null) return;
+    addFloat(`${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`, outcome.crit);
   }
 
 </script>
@@ -79,6 +84,10 @@
       <div class="combo-bar"><div class="combo-fill" style="width: {game.comboHeat * 100}%"></div></div>
       <span class="combo-label">Combo ×{comboMult.toFixed(1)}</span>
     </div>
+  {/if}
+
+  {#if game.robotic}
+    <div class="robot">🤖 Suspiciously mechanical fingers — the guild ignores robots.</div>
   {/if}
 
   <GuildYard />
@@ -136,6 +145,14 @@
     text-align: left;
   }
   .combo.hot .combo-label { color: var(--gold); font-weight: 600; }
+  .robot {
+    background: var(--panel-raised);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 0.9rem;
+  }
   .quest-area { position: relative; }
   .float {
     position: absolute;
