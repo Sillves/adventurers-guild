@@ -89,7 +89,7 @@
       (u) =>
         u.realmId === realmId &&
         !game.state.upgrades.includes(u.id) &&
-        isUpgradeUnlocked(u, game.state.upgrades) &&
+        isUpgradeUnlocked(u, game.state) &&
         canAfford(game.state.balances, u.cost),
     ),
   );

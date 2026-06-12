@@ -216,7 +216,25 @@ export function isRealmUnlocked(realm: RealmDef, state: GameState): boolean {
   return (state.balances['fame'] ?? 0) >= realm.unlock.minFame;
 }
 
-/** Een upgrade is pas koopbaar als zijn vereiste upgrade al gekocht is. */
-export function isUpgradeUnlocked(def: UpgradeDef, purchased: readonly string[]): boolean {
-  return def.requires === undefined || purchased.includes(def.requires);
+/** Een held is zichtbaar zodra zijn voorganger in de ladder gerekruteerd is. */
+export function isHeroRevealed(heroId: string, state: GameState): boolean {
+  const realmId = HEROES.find((h) => h.id === heroId)?.realmId;
+  const ladder = HEROES.filter((h) => h.realmId === realmId);
+  const index = ladder.findIndex((h) => h.id === heroId);
+  if (index <= 0) return index === 0;
+  return (state.heroes[ladder[index - 1].id] ?? 0) > 0;
+}
+
+/**
+ * Een upgrade is pas koopbaar als zijn vereiste upgrade gekocht is en — voor
+ * held-upgrades — je minstens een van die held bezit: x2 op nul helden is
+ * weggegooid goud en verraadt bovendien verborgen heldnamen.
+ */
+export function isUpgradeUnlocked(def: UpgradeDef, state: GameState): boolean {
+  if (def.requires !== undefined && !state.upgrades.includes(def.requires)) return false;
+  if ('multiplier' in def.effect && def.effect.target.startsWith('hero:')) {
+    const heroId = def.effect.target.slice('hero:'.length);
+    return (state.heroes[heroId] ?? 0) > 0;
+  }
+  return true;
 }

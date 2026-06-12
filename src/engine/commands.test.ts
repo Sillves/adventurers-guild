@@ -62,11 +62,20 @@ describe('buyHero', () => {
 
 describe('buyUpgrade', () => {
   it('refuses an upgrade whose prerequisite is not yet purchased', () => {
-    const rich = { ...createInitialState(0), balances: { gold: 1_000_000, fame: 0 } };
+    const rich = { ...createInitialState(0), balances: { gold: 1_000_000, fame: 0 }, heroes: { farmhand: 1 } };
     expect(buyUpgrade(rich, 'steel-pitchforks')).toBe(rich);
     const withTier1 = { ...rich, upgrades: ['iron-pitchforks'] };
     const after = buyUpgrade(withTier1, 'steel-pitchforks');
     expect(after.upgrades).toContain('steel-pitchforks');
+  });
+
+  it('refuses a hero upgrade until you own at least one of that hero', () => {
+    const rich = { ...createInitialState(0), balances: { gold: 1_000_000, fame: 0 } };
+    expect(buyUpgrade(rich, 'iron-pitchforks')).toBe(rich);
+    const withHero = { ...rich, heroes: { farmhand: 1 } };
+    expect(buyUpgrade(withHero, 'iron-pitchforks').upgrades).toContain('iron-pitchforks');
+    // niet-held-upgrades blijven gewoon koopbaar zonder helden
+    expect(buyUpgrade(rich, 'stronger-grip').upgrades).toContain('stronger-grip');
   });
 
   it('deducts cost and records the upgrade', () => {
