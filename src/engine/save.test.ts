@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseSave, serializeSave } from './save';
-import { createInitialState, SAVE_VERSION } from './state';
+import { createInitialState, SAVE_VERSION, zeroStats } from './state';
 
 describe('save round-trip', () => {
   it('serializes and parses back to an equal state', () => {
@@ -116,5 +116,34 @@ describe('migration v2 → v3', () => {
     const v3 = { version: 3, balances: {}, runEarned: {}, lifetimeEarned: {}, heroes: {}, upgrades: [], prestiges: 7, lastSavedAt: 0 };
     expect(parseSave(JSON.stringify(v3))?.prestiges).toBe(7);
     expect(parseSave(JSON.stringify({ ...v3, prestiges: 1.5 }))?.prestiges).toBe(0);
+  });
+});
+
+describe('migration v4 → v5', () => {
+  const v4 = {
+    version: 4,
+    balances: { gold: 5, fame: 60 },
+    runEarned: {},
+    lifetimeEarned: { gold: 9_000_000 },
+    heroes: {},
+    upgrades: [],
+    prestiges: 2,
+    raid: null,
+    frenzySeconds: 0,
+    lastSavedAt: 0,
+  };
+
+  it('starts every lifetime counter at zero for a v4 save', () => {
+    const parsed = parseSave(JSON.stringify(v4));
+    expect(parsed?.version).toBe(SAVE_VERSION);
+    expect(parsed?.stats).toEqual(zeroStats());
+  });
+
+  it('keeps existing v5 stats and degrades invalid fields to zero', () => {
+    const stats = { clicks: 120, crits: 7, raidsWon: 3, raidsLost: 1, mercsPaid: 2, playSeconds: 3600 };
+    const v5 = { ...v4, version: 5, stats };
+    expect(parseSave(JSON.stringify(v5))?.stats).toEqual(stats);
+    expect(parseSave(JSON.stringify({ ...v5, stats: { clicks: -4, crits: 'veel' } }))?.stats).toEqual(zeroStats());
+    expect(parseSave(JSON.stringify({ ...v5, stats: 'kapot' }))?.stats).toEqual(zeroStats());
   });
 });

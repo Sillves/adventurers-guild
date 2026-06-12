@@ -1,7 +1,22 @@
 import { CURRENCIES } from '../content/currencies';
 import type { CurrencyMap } from '../content/types';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
+
+/** Levenslange tellers voor de statistiekenpagina; overleven prestige. */
+export interface GameStats {
+  readonly clicks: number;
+  readonly crits: number;
+  readonly raidsWon: number;
+  readonly raidsLost: number;
+  readonly mercsPaid: number;
+  /** Actieve speeltijd in seconden (tab zichtbaar); offline telt niet mee. */
+  readonly playSeconds: number;
+}
+
+export function zeroStats(): GameStats {
+  return { clicks: 0, crits: 0, raidsWon: 0, raidsLost: 0, mercsPaid: 0, playSeconds: 0 };
+}
 
 /**
  * Een barbarenraid: 'incoming' heeft een absolute deadline (verstrijkt die,
@@ -24,6 +39,7 @@ export interface GameState {
   readonly raid: RaidState | null;
   /** Resterende seconden ×2-productie na een gewonnen raid. */
   readonly frenzySeconds: number;
+  readonly stats: GameStats;
   readonly lastSavedAt: number;
 }
 
@@ -42,6 +58,7 @@ export function createInitialState(now: number): GameState {
     prestiges: 0,
     raid: null,
     frenzySeconds: 0,
+    stats: zeroStats(),
     lastSavedAt: now,
   };
 }

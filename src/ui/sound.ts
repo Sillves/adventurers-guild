@@ -88,7 +88,11 @@ if (typeof document !== 'undefined') {
   for (const name of SFX_NAMES) void fetchSfx(name).catch(() => {});
 }
 
-export function playSound(name: SoundName): void {
+/**
+ * @param pitch playbackRate: 1 = normaal. De klikcombo rampt 1 → ~1.5, zodat
+ * je een frenzy niet alleen ziet maar ook hóórt opbouwen.
+ */
+export function playSound(name: SoundName, pitch = 1): void {
   if (sfxVol === 0) return;
   try {
     ctx ??= new AudioContext();
@@ -97,6 +101,7 @@ export function playSound(name: SoundName): void {
       if (ctx === null) return;
       const source = ctx.createBufferSource();
       source.buffer = buffer;
+      source.playbackRate.value = pitch;
       const gain = ctx.createGain();
       gain.gain.value = SFX_VOLUME[name] * (sfxVol / 100);
       source.connect(gain).connect(ctx.destination);
@@ -118,6 +123,20 @@ export function playSound(name: SoundName): void {
       .catch(() => {});
   } catch {
     // audiobestand ontbreekt of geen Web Audio-ondersteuning — stil doorgaan
+  }
+}
+
+/**
+ * Trilpuls voor de grote momenten (crit, raid). iOS Safari kent geen
+ * navigator.vibrate — daar is dit stilletjes een no-op; Android voelt het wel.
+ * De SFX-slider op 0 zet ook de haptiek uit: stil is stil.
+ */
+export function vibrate(pattern: number | number[]): void {
+  if (sfxVol === 0) return;
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    // geen ondersteuning — prima
   }
 }
 
