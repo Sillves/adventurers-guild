@@ -1,28 +1,74 @@
 export type SoundName = 'click' | 'buy' | 'prestige';
 
-const MUTE_KEY = 'ag.muted';
+const MUSIC_VOL_KEY = 'ag.musicVol';
+const SFX_VOL_KEY = 'ag.sfxVol';
+const LEGACY_MUTE_KEY = 'ag.muted';
+// hoorbaar maximum van de muziek; 100% op de slider = de oude vaste 0.25
+const MUSIC_CEILING = 0.25;
+
 let music: HTMLAudioElement | null = null;
-let muted = false;
 
-try {
-  muted = localStorage.getItem(MUTE_KEY) === '1';
-} catch {
-  muted = false;
-}
-
-export function isMuted(): boolean {
-  return muted;
-}
-
-export function toggleMuted(): boolean {
-  muted = !muted;
+function readVolume(key: string, fallback: number): number {
   try {
-    localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
+    const raw = localStorage.getItem(key);
+    if (raw === null) {
+      // migratie: wie vroeger op mute stond, start met alles op 0
+      return localStorage.getItem(LEGACY_MUTE_KEY) === '1' ? 0 : fallback;
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 0), 100) : fallback;
   } catch {
-    // persistentie van mute is best-effort
+    return fallback;
   }
-  if (music !== null) music.muted = muted;
-  return muted;
+}
+
+let musicVol = readVolume(MUSIC_VOL_KEY, 100);
+let sfxVol = readVolume(SFX_VOL_KEY, 100);
+// onthouden wat er stond vóór de snelle mute, zodat die omkeerbaar is
+let volumesBeforeSilence: { music: number; sfx: number } = { music: 100, sfx: 100 };
+
+function persist(key: string, value: number): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // persistentie is best-effort
+  }
+}
+
+export function getMusicVolume(): number {
+  return musicVol;
+}
+
+export function getSfxVolume(): number {
+  return sfxVol;
+}
+
+export function setMusicVolume(value: number): void {
+  musicVol = Math.min(Math.max(Math.round(value), 0), 100);
+  persist(MUSIC_VOL_KEY, musicVol);
+  if (music !== null) music.volume = MUSIC_CEILING * (musicVol / 100);
+}
+
+export function setSfxVolume(value: number): void {
+  sfxVol = Math.min(Math.max(Math.round(value), 0), 100);
+  persist(SFX_VOL_KEY, sfxVol);
+}
+
+export function isSilent(): boolean {
+  return musicVol === 0 && sfxVol === 0;
+}
+
+/** Snelle mute-knop: alles naar 0, of terug naar de stand van daarvoor. */
+export function toggleSilence(): boolean {
+  if (isSilent()) {
+    setMusicVolume(volumesBeforeSilence.music);
+    setSfxVolume(volumesBeforeSilence.sfx);
+  } else {
+    volumesBeforeSilence = { music: musicVol, sfx: sfxVol };
+    setMusicVolume(0);
+    setSfxVolume(0);
+  }
+  return isSilent();
 }
 
 const SFX_VOLUME: Record<SoundName, number> = { click: 0.5, buy: 0.5, prestige: 0.8 };
@@ -43,7 +89,7 @@ if (typeof document !== 'undefined') {
 }
 
 export function playSound(name: SoundName): void {
-  if (muted) return;
+  if (sfxVol === 0) return;
   try {
     ctx ??= new AudioContext();
     if (ctx.state === 'suspended') void ctx.resume();
@@ -52,7 +98,7 @@ export function playSound(name: SoundName): void {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       const gain = ctx.createGain();
-      gain.gain.value = SFX_VOLUME[name];
+      gain.gain.value = SFX_VOLUME[name] * (sfxVol / 100);
       source.connect(gain).connect(ctx.destination);
       source.start();
     };
@@ -80,8 +126,7 @@ export function startMusic(): void {
   try {
     music = new Audio('audio/music.mp3');
     music.loop = true;
-    music.volume = 0.25;
-    music.muted = muted;
+    music.volume = MUSIC_CEILING * (musicVol / 100);
     void music.play().catch(() => {
       music = null; // autoplay geweigerd — volgende interactie probeert opnieuw
     });

@@ -11,7 +11,7 @@
   import { formatNumber } from './format';
   import { game } from './game.svelte';
   import Icon from './Icon.svelte';
-  import { isMuted, toggleMuted } from './sound';
+  import { getMusicVolume, getSfxVolume, isSilent, setMusicVolume, setSfxVolume, toggleSilence } from './sound';
   import { isKeepAwake, toggleKeepAwake, wakeLockSupported } from './wakelock';
 
   let { screen, onswitch, realmId }: { screen: Screen; onswitch: (next: Screen) => void; realmId: string } = $props();
@@ -47,7 +47,28 @@
     const clicks = game.clickIncomeRate;
     return clicks > 0 ? addMaps(income, { gold: clicks }) : income;
   });
-  let muted = $state(isMuted());
+  let musicVol = $state(getMusicVolume());
+  let sfxVol = $state(getSfxVolume());
+  let silent = $state(isSilent());
+
+  function onMusicVol(e: Event): void {
+    musicVol = Number((e.currentTarget as HTMLInputElement).value);
+    setMusicVolume(musicVol);
+    silent = isSilent();
+  }
+
+  function onSfxVol(e: Event): void {
+    sfxVol = Number((e.currentTarget as HTMLInputElement).value);
+    setSfxVolume(sfxVol);
+    silent = isSilent();
+  }
+
+  function onToggleSilence(): void {
+    silent = toggleSilence();
+    musicVol = getMusicVolume();
+    sfxVol = getSfxVolume();
+  }
+
   let keepAwake = $state(isKeepAwake());
   let showSettings = $state(false);
 
@@ -99,9 +120,14 @@
       {/if}
     {/each}
   </div>
-  <button class="mute" onclick={() => (muted = toggleMuted())}>
-    {muted ? '🔇' : '🔊'}<span class="mute-label"> {muted ? 'Sound off' : 'Sound on'}</span>
+  <!-- mobiel: snelle mute in de topbalk; desktop toont sliders -->
+  <button class="mute" aria-label={silent ? 'Unmute' : 'Mute'} onclick={onToggleSilence}>
+    {silent ? '🔇' : '🔊'}
   </button>
+  <div class="volumes">
+    <label class="vol"><span>🎵</span><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
+    <label class="vol"><span>🔔</span><input type="range" min="0" max="100" value={sfxVol} oninput={onSfxVol} aria-label="Sound effects volume" /></label>
+  </div>
   {#if wakeLockSupported}
     <div class="awake switch-row">
       <span>Keep screen on</span>
@@ -118,6 +144,8 @@
   <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>⚙️</button>
   {#if showSettings}
     <div class="settings-panel">
+      <label class="vol"><span>🎵</span><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
+      <label class="vol"><span>🔔</span><input type="range" min="0" max="100" value={sfxVol} oninput={onSfxVol} aria-label="Sound effects volume" /></label>
       {#if wakeLockSupported}
         <div class="switch-row">
           <span>Keep screen on</span>
@@ -183,7 +211,18 @@
   /* cijfers met vaste breedte, anders verspringt de balk bij elke tick */
   .balance strong, .rate { font-variant-numeric: tabular-nums; }
   .rate { color: var(--text-dim); font-size: 0.8rem; }
-  .mute { font-size: 0.85rem; color: var(--text-dim); }
+  /* desktop: sliders in de kolom, de snelle mute-knop is mobiel-only */
+  .mute { display: none; font-size: 0.85rem; color: var(--text-dim); }
+  .volumes { display: grid; gap: 2px; }
+  .vol {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .vol input { flex: 1; min-width: 0; accent-color: var(--accent); }
   /* zelfde padding als de knoppen, zodat label en knopteksten uitlijnen */
   .switch-row {
     display: flex;
@@ -279,7 +318,9 @@
     }
     .mute { right: 44px; }
     .settings-toggle { right: 4px; }
-    .mute-label { display: none; }
+    /* sliders zitten op mobiel in het instellingenpaneel, niet in de navbalk */
+    nav > .volumes { display: none; }
+    .settings-panel .vol { padding: 4px 12px; }
     .settings-panel {
       display: grid;
       gap: 8px;

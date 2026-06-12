@@ -45,7 +45,20 @@
     const timer = setInterval(() => addFloat(`📯 +${formatNumber(autoRate)}`, false, true), 1000);
     return () => clearInterval(timer);
   });
+
+  // spatiebalk = quest, waar de focus ook staat. !e.repeat: ingedrukt houden
+  // is geen klikken — anders wordt de toets een gratis autoclicker.
+  function onKeydown(e: KeyboardEvent): void {
+    if (e.code !== 'Space' || e.repeat) return;
+    const target = e.target as HTMLElement | null;
+    if (target !== null && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+    e.preventDefault();
+    quest();
+  }
+
 </script>
+
+<svelte:window onkeydown={onKeydown} />
 
 <section>
   <h2>Adventurers Guild</h2>
