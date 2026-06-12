@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-12',
+    icon: '🌙',
+    title: 'Smarter welcome back',
+    description:
+      'The offline report now shows who earned what — heroes vs your auto-quest staff — and warns you when barbarians broke through while you were away.',
+    prs: [53],
+  },
+  {
+    date: '2026-06-12',
     icon: '📊',
     title: 'Guild statistics',
     description:
