@@ -18,7 +18,8 @@
   function savedBuyAmount(): BuyAmount {
     try {
       const raw = localStorage.getItem(BUY_AMOUNT_KEY);
-      const parsed = raw === 'max' ? 'max' : Number(raw);
+      // 'max' en 'boost' zijn strings; al de rest moet een getal uit AMOUNTS zijn
+      const parsed = raw === 'max' || raw === 'boost' ? raw : Number(raw);
       return (AMOUNTS as readonly (string | number)[]).includes(parsed) ? (parsed as BuyAmount) : 1;
     } catch {
       return 1;
