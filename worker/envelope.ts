@@ -14,15 +14,21 @@ export function maxGoldAfterHours(hours: number): number {
   return table[LAST] * Math.pow(TAIL_RATIO, i - LAST);
 }
 
+// Coulance op de frontier-positie. Ruim genomen (6 bot-uren) omdat een
+// content-drop het eerlijke inkomen van de ene op de andere dag ×8 kan doen:
+// een vers lid dat vlak na een merge groot inkoopt mag daar nooit een
+// permanente 🤡 aan overhouden. Cheats zitten ordes daarboven.
+const FRONTIER_LENIENCE_HOURS = 6;
+
 /**
- * Vroegst mogelijke uur waarop perfecte play `gold` bereikt (+1 uur coulance).
+ * Vroegst mogelijke uur waarop perfecte play `gold` bereikt (+coulance).
  * Gebruikt als frontier-positie voor een speler die met bestaande progressie
  * instapt (bv. save-import op een tweede toestel).
  */
 export function hoursToReach(gold: number): number {
   if (!Number.isFinite(gold) || gold <= table[0]) return 1;
   for (let i = 1; i <= LAST; i++) {
-    if (table[i] >= gold) return i + 1;
+    if (table[i] >= gold) return i + FRONTIER_LENIENCE_HOURS;
   }
   let hours = LAST;
   let value = table[LAST];
@@ -30,5 +36,5 @@ export function hoursToReach(gold: number): number {
     value *= TAIL_RATIO;
     hours += 1;
   }
-  return hours + 1;
+  return hours + FRONTIER_LENIENCE_HOURS;
 }
