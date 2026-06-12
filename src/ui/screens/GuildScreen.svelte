@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { MERC_COST_SECONDS } from '../../engine/commands';
   import { autoClickPerSecond, clickGain, comboCap, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -24,6 +25,14 @@
     Math.min(Math.max((lifetimeGold - prevTarget) / (nextTarget - prevTarget), 0), 1),
   );
 
+  const raid = $derived(game.state.raid);
+  // game.state verandert elke frame (rAF-advance), dus deze countdown tikt live
+  const raidSecondsLeft = $derived(
+    raid?.phase === 'incoming' ? Math.max(0, Math.ceil((raid.deadlineAt - Date.now()) / 1000)) : 0,
+  );
+  const mercCost = $derived((incomePerSecond(game.state)['gold'] ?? 0) * MERC_COST_SECONDS);
+  const frenzySeconds = $derived(Math.ceil(game.state.frenzySeconds));
+
   interface FloatingGain {
     readonly id: number;
     readonly x: number;
@@ -44,7 +53,13 @@
   function quest(e: MouseEvent): void {
     // synthetische kliks (console-loops, goedkope extensies) bestaan niet
     if (!e.isTrusted) return;
-    const outcome = game.quest({ x: e.clientX, y: e.clientY });
+    const point = { x: e.clientX, y: e.clientY };
+    // tijdens een raid vecht de grote knop in plaats van te questen
+    if (game.state.raid !== null) {
+      if (game.fight(point) === 'won') addFloat('⚔️ VICTORY! War spoils claimed!', true);
+      return;
+    }
+    const outcome = game.quest(point);
     if (outcome === null) return; // boven de cap of robotisch — stil negeren
     addFloat(`${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`, outcome.crit);
   }
@@ -63,6 +78,10 @@
     const target = e.target as HTMLElement | null;
     if (target !== null && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
     e.preventDefault();
+    if (game.state.raid !== null) {
+      if (game.fight() === 'won') addFloat('⚔️ VICTORY! War spoils claimed!', true);
+      return;
+    }
     const outcome = game.quest();
     if (outcome === null) return;
     addFloat(`${outcome.crit ? 'CRIT! ' : ''}+${formatNumber(outcome.gain.gold ?? 0)}`, outcome.crit);
@@ -76,15 +95,37 @@
   <h2>Adventurers Guild</h2>
   <p class="dim">Send your guild on quests and recruit heroes to earn gold for you.</p>
 
+  {#if raid !== null}
+    <div class="raid-banner" class:plundering={raid.phase === 'plundering'}>
+      {#if raid.phase === 'incoming'}
+        🪓 <strong>Barbarians approach!</strong> Drive them off — {raid.hitsLeft} hits · {Math.floor(raidSecondsLeft / 60)}:{String(raidSecondsLeft % 60).padStart(2, '0')} left
+      {:else}
+        🔥 <strong>Barbarians are plundering your guild!</strong> Production halved — fight them off ({raid.hitsLeft} hits)
+      {/if}
+    </div>
+  {:else if frenzySeconds > 0}
+    <div class="frenzy-banner">⚔️ War spoils! ×2 production — {frenzySeconds}s</div>
+  {/if}
+
   <div class="quest-area">
-    <button class="quest" class:frenzy={game.comboHeat >= 1} onclick={quest}>
-      <span class="quest-icon">⚔️</span>
-      <span>Run quest<br /><small>+{formatNumber(gain * comboMult)} gold</small></span>
+    <button class="quest" class:frenzy={game.comboHeat >= 1} class:battle={raid !== null} onclick={quest}>
+      <span class="quest-icon">{raid !== null ? '🪓' : '⚔️'}</span>
+      {#if raid !== null}
+        <span>FIGHT!<br /><small>{raid.hitsLeft} hits left</small></span>
+      {:else}
+        <span>Run quest<br /><small>+{formatNumber(gain * comboMult)} gold</small></span>
+      {/if}
     </button>
     {#each floats as f (f.id)}
       <span class="float" class:crit={f.crit} class:auto={f.auto} style="left: calc(50% + {f.x}px)">{f.text}</span>
     {/each}
   </div>
+
+  {#if raid?.phase === 'incoming' && mercCost > 0}
+    <button class="mercs" onclick={() => game.payMercenaries()} disabled={(game.state.balances['gold'] ?? 0) < mercCost}>
+      💰 Pay mercenaries to handle it — 🪙 {formatNumber(mercCost)}
+    </button>
+  {/if}
 
   {#if maxCombo > 1}
     <div class="combo" class:hot={game.comboHeat >= 1}>
@@ -160,6 +201,40 @@
     padding: 8px 14px;
     font-size: 0.9rem;
   }
+  .raid-banner {
+    background: var(--panel-raised);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    animation: raid-pulse 1s ease-in-out infinite;
+  }
+  .raid-banner.plundering { border-color: var(--danger); color: var(--danger); animation: none; }
+  @keyframes raid-pulse {
+    50% { border-color: var(--danger); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .raid-banner { animation: none; }
+  }
+  .frenzy-banner {
+    background: var(--panel-raised);
+    border: 1px solid var(--success);
+    color: var(--success);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+  }
+  .quest.battle {
+    background: var(--danger);
+    box-shadow: 0 4px 20px rgb(248 113 113 / 0.5);
+  }
+  .mercs {
+    background: var(--panel-raised);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+  }
+  .mercs:disabled { opacity: 0.5; }
   .quest-area { position: relative; }
   .float {
     position: absolute;

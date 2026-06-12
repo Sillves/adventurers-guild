@@ -109,8 +109,19 @@ export function fameBonus(fame: number): number {
   return bonus;
 }
 
+// Raids en hun nasleep schalen de heldenproductie: plunderende barbaren
+// halveren haar, de overwinningsroes verdubbelt haar.
+export const RAID_PRODUCTION_FACTOR = 0.5;
+export const FRENZY_FACTOR = 2;
+
+export function raidModifier(state: GameState): number {
+  const plunder = state.raid?.phase === 'plundering' ? RAID_PRODUCTION_FACTOR : 1;
+  const frenzy = state.frenzySeconds > 0 ? FRENZY_FACTOR : 1;
+  return plunder * frenzy;
+}
+
 export function productionPerSecond(state: GameState): CurrencyMap {
-  const bonus = fameBonus(state.balances['fame'] ?? 0);
+  const bonus = fameBonus(state.balances['fame'] ?? 0) * raidModifier(state);
   let total: CurrencyMap = {};
   for (const hero of HEROES) {
     const count = state.heroes[hero.id] ?? 0;

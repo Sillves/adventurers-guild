@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseSave, serializeSave } from './save';
-import { createInitialState } from './state';
+import { createInitialState, SAVE_VERSION } from './state';
 
 describe('save round-trip', () => {
   it('serializes and parses back to an equal state', () => {
@@ -73,7 +73,7 @@ describe('migration v1 → v2', () => {
       lastSavedAt: 0,
     };
     const parsed = parseSave(JSON.stringify(raw));
-    expect(parsed?.version).toBe(3);
+    expect(parsed?.version).toBe(SAVE_VERSION);
     expect(parsed?.lifetimeEarned).toEqual({ gold: 11_000_000 }); // 3² × 1M + 2M
   });
 
@@ -95,7 +95,7 @@ describe('migration v2 → v3', () => {
       lastSavedAt: 0,
     };
     const parsed = parseSave(JSON.stringify(raw));
-    expect(parsed?.version).toBe(3);
+    expect(parsed?.version).toBe(SAVE_VERSION);
     expect(parsed?.prestiges).toBe(1);
   });
 

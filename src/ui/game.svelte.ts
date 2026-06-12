@@ -32,6 +32,14 @@ const guard = new ClickGuard();
 let robotic = $state(false);
 let lastGuardedAt = 0;
 
+// Raid-spawner: alleen tijdens actieve speeltijd (tab zichtbaar), elke 10-20
+// minuten. De teller is ephemeral — de tab sluiten pauzeert hem, een lopende
+// raid zelf staat wél in de save (en lost offline op via applyOffline).
+const RAID_SPAWN_MIN_S = 600;
+const RAID_SPAWN_MAX_S = 1200;
+let activeSeconds = 0;
+let nextRaidAtActive = RAID_SPAWN_MIN_S + Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
+
 function persist(): void {
   state = { ...state, lastSavedAt: Date.now() };
   storage.save(serializeSave(state));
@@ -67,6 +75,23 @@ export const game = {
       }
       // de 🤖-banner dooft vanzelf zodra het robotische geklik stopt
       if (robotic && now - lastGuardedAt > ROBOTIC_LABEL_MS) robotic = false;
+      if (!document.hidden) {
+        activeSeconds += dt;
+        if (state.raid === null && activeSeconds >= nextRaidAtActive) {
+          const raided = commands.startRaid(state, Date.now());
+          if (raided !== state) {
+            state = raided;
+            playSound('raid');
+          } else {
+            // nog geen 50 fame: probeer het over een paar minuten opnieuw
+            nextRaidAtActive = activeSeconds + RAID_SPAWN_MIN_S / 2;
+          }
+        }
+        if (state.raid?.phase === 'incoming' && Date.now() >= state.raid.deadlineAt) {
+          state = commands.raidDeadline(state, Date.now());
+          playSound('raid'); // de hoorn klinkt opnieuw: nu wordt er geplunderd
+        }
+      }
       lastTick = now;
       requestAnimationFrame(tick);
     };
@@ -113,6 +138,37 @@ export const game = {
     clickWindow = [...clickWindow, { t: now, gold: outcome.gain.gold ?? 0 }];
     return outcome;
   },
+  /**
+   * Eén mep op de barbaren. Zelfde guard als quests: autoclickers vechten niet
+   * mee. Retourneert 'won' bij de beslissende mep (de UI viert dat).
+   */
+  fight(point: { x: number; y: number } | null = null): 'hit' | 'won' | null {
+    startMusic();
+    const now = performance.now();
+    const verdict = guard.record(now, point?.x ?? null, point?.y ?? null);
+    lastGuardedAt = now;
+    robotic = verdict.robotic;
+    if (!verdict.earned || state.raid === null) return null;
+    const phase = state.raid.phase;
+    state = commands.fightRaid(state);
+    if (state.raid === null) {
+      playSound('prestige');
+      nextRaidAtActive = activeSeconds + RAID_SPAWN_MIN_S + Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
+      return phase === 'incoming' ? 'won' : 'hit';
+    }
+    playSound('click');
+    return 'hit';
+  },
+
+  payMercenaries(): void {
+    const next = commands.payMercenaries(state);
+    if (next !== state) {
+      playSound('buy');
+      nextRaidAtActive = activeSeconds + RAID_SPAWN_MIN_S + Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
+    }
+    state = next;
+  },
+
   buyHero(heroId: string, count = 1): void {
     startMusic();
     const next = commands.buyHero(state, heroId, count);

@@ -1,7 +1,15 @@
 import { CURRENCIES } from '../content/currencies';
 import type { CurrencyMap } from '../content/types';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
+
+/**
+ * Een barbarenraid: 'incoming' heeft een absolute deadline (verstrijkt die,
+ * dan plunderen ze); 'plundering' halveert de productie tot hij weggeslagen is.
+ */
+export type RaidState =
+  | { readonly phase: 'incoming'; readonly deadlineAt: number; readonly hitsLeft: number }
+  | { readonly phase: 'plundering'; readonly hitsLeft: number };
 
 export interface GameState {
   readonly version: number;
@@ -13,6 +21,9 @@ export interface GameState {
   readonly upgrades: readonly string[];
   /** Aantal refounds ooit; overleeft prestige. */
   readonly prestiges: number;
+  readonly raid: RaidState | null;
+  /** Resterende seconden ×2-productie na een gewonnen raid. */
+  readonly frenzySeconds: number;
   readonly lastSavedAt: number;
 }
 
@@ -29,6 +40,8 @@ export function createInitialState(now: number): GameState {
     heroes: {},
     upgrades: [],
     prestiges: 0,
+    raid: null,
+    frenzySeconds: 0,
     lastSavedAt: now,
   };
 }
