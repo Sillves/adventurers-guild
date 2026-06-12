@@ -11,7 +11,7 @@ import { HEROES } from '../src/content/heroes';
 import { UPGRADES } from '../src/content/upgrades';
 import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
-import { clickGain, comboCap, critParams, fameGain, heroCost, isUpgradeUnlocked } from '../src/engine/formulas';
+import { clickGain, comboCap, critParams, fameGain, heroCost, incomePerSecond, isUpgradeUnlocked } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
 import { createInitialState, type GameState } from '../src/engine/state';
 
@@ -44,6 +44,12 @@ function simulate(shouldPrestige: PrestigePolicy, startFame = 0): number[] {
       scaleMap(clickGain(state), CLICKS_PER_SECOND * STEP_SECONDS * avgCrit * comboCap(state.upgrades)),
     );
     t += STEP_SECONDS;
+
+    // raid-buit: een verdediger op maximale cadans (elke 10 min) wint 5 min
+    // inkomen plus ~1 min frenzy-extra
+    if (t % 600 === 0 && (state.balances['fame'] ?? 0) >= 50) {
+      state = commands.earn(state, scaleMap(incomePerSecond(state), 360));
+    }
 
     for (;;) {
       let bestCost = Infinity;

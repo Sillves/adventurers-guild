@@ -7,7 +7,7 @@ import { HEROES } from '../src/content/heroes';
 import { UPGRADES } from '../src/content/upgrades';
 import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
-import { clickGain, comboCap, critParams, fameGain, heroCost, isUpgradeUnlocked } from '../src/engine/formulas';
+import { clickGain, comboCap, critParams, fameGain, heroCost, incomePerSecond, isUpgradeUnlocked } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
 import { createInitialState, type GameState } from '../src/engine/state';
 import { formatNumber } from '../src/ui/format';
@@ -66,6 +66,12 @@ function simulate(
       state = commands.earn(state, scaleMap(clickGain(state), clicksPerSecond * avgCrit * combo));
     }
     t += 1;
+
+    // actieve spelers verdedigen barbarenraids (gemiddeld elke 15 min): 5 min
+    // inkomen buit + ~1 min frenzy-extra
+    if (clicksPerSecond >= 1 && t % 900 === 0 && (state.balances['fame'] ?? 0) >= 50) {
+      state = commands.earn(state, scaleMap(incomePerSecond(state), 360));
+    }
 
     // koop greedy de goedkoopste optie zolang er iets betaalbaar is
     for (;;) {

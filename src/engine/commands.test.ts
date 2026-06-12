@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buyHero, buyUpgrade, doPrestige, performQuest } from './commands';
+import { buyHero, buyUpgrade, doPrestige, fightRaid, payMercenaries, performQuest, raidDeadline, startRaid } from './commands';
 import { createInitialState } from './state';
 
 describe('performQuest', () => {
@@ -127,5 +127,71 @@ describe('doPrestige', () => {
     expect(after.lifetimeEarned).toEqual({ gold: 25_000_000 });
     expect(after.prestiges).toBe(1);
     expect(after.lastSavedAt).toBe(123);
+  });
+});
+
+describe('barbarian raids', () => {
+  const veteran = () => ({
+    ...createInitialState(0),
+    balances: { gold: 10_000, fame: 50 },
+    heroes: { farmhand: 10 }, // 5 gold/s productie × fame-bonus 2 = 10/s
+  });
+
+  it('startRaid requires 50 fame and no running raid', () => {
+    const fresh = createInitialState(0);
+    expect(startRaid(fresh, 1000)).toBe(fresh);
+    const state = startRaid(veteran(), 1000);
+    expect(state.raid).toEqual({ phase: 'incoming', deadlineAt: 121_000, hitsLeft: 25 });
+    expect(startRaid(state, 5000)).toBe(state);
+  });
+
+  it('25 hits during incoming wins loot (5 min income) plus a 60s frenzy', () => {
+    let state = startRaid(veteran(), 0);
+    for (let i = 0; i < 24; i++) state = fightRaid(state);
+    expect(state.raid?.hitsLeft).toBe(1);
+    const before = state.balances['gold'] ?? 0;
+    state = fightRaid(state);
+    expect(state.raid).toBeNull();
+    expect(state.frenzySeconds).toBe(60);
+    // farmhands: 10 × 0.5 × famebonus(50)=2 → 10/s × 300s = 3000 buit
+    expect((state.balances['gold'] ?? 0) - before).toBeCloseTo(3000);
+  });
+
+  it('paying mercenaries clears the raid for 5 min income, no loot', () => {
+    const state = startRaid(veteran(), 0);
+    const paid = payMercenaries(state);
+    expect(paid.raid).toBeNull();
+    expect(paid.frenzySeconds).toBe(0);
+    expect(paid.balances['gold']).toBeCloseTo(10_000 - 3000);
+    // niet betaalbaar → raid blijft staan
+    const broke = { ...state, balances: { ...state.balances, gold: 100 } };
+    expect(payMercenaries(broke)).toBe(broke);
+  });
+
+  it('a missed deadline plunders 20% of gold and starts the plundering phase', () => {
+    const state = startRaid(veteran(), 0);
+    expect(raidDeadline(state, 119_999)).toBe(state);
+    const plundered = raidDeadline(state, 120_000);
+    expect(plundered.balances['gold']).toBeCloseTo(8000);
+    expect(plundered.raid).toEqual({ phase: 'plundering', hitsLeft: 25 });
+  });
+
+  it('beating off plunderers restores production but pays nothing', () => {
+    let state = raidDeadline(startRaid(veteran(), 0), 120_000);
+    const goldAfterPlunder = state.balances['gold'] ?? 0;
+    for (let i = 0; i < 25; i++) state = fightRaid(state);
+    expect(state.raid).toBeNull();
+    expect(state.frenzySeconds).toBe(0);
+    expect(state.balances['gold']).toBeCloseTo(goldAfterPlunder);
+  });
+
+  it('prestige clears any raid and frenzy with the era', () => {
+    const raided = {
+      ...startRaid(veteran(), 0),
+      lifetimeEarned: { gold: 90_000_000_000 },
+    };
+    const after = doPrestige(raided, 123);
+    expect(after.raid).toBeNull();
+    expect(after.frenzySeconds).toBe(0);
   });
 });

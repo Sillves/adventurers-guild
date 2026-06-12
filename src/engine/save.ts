@@ -3,7 +3,7 @@ import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap } from '../content/types';
 import { fameTargetGold } from './formulas';
-import { SAVE_VERSION, zeroBalances, type GameState } from './state';
+import { SAVE_VERSION, zeroBalances, type GameState, type RaidState } from './state';
 
 type RawObject = Record<string, unknown>;
 
@@ -29,6 +29,8 @@ const MIGRATIONS: Record<number, (raw: RawObject) => RawObject> = {
     const fame = asObject(raw.balances).fame;
     return { ...raw, prestiges: isValidAmount(fame) && fame >= 1 ? 1 : 0 };
   },
+  // v3 kende geen barbarenraids: niemand wordt beroofd tijdens een update
+  3: (raw) => ({ ...raw, raid: null, frenzySeconds: 0 }),
 };
 
 export function serializeSave(state: GameState): string {
@@ -51,6 +53,20 @@ function sanitizeNumberMap(raw: unknown, knownIds: ReadonlySet<string>, label: s
     result[key] = value;
   }
   return result;
+}
+
+/** Ongeldige raid-data degradeert naar "geen raid" — nooit een corrupte save weigeren. */
+function parseRaid(raw: unknown): RaidState | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const o = raw as RawObject;
+  const hitsValid = isValidAmount(o.hitsLeft) && Number.isInteger(o.hitsLeft) && o.hitsLeft >= 1;
+  if (o.phase === 'incoming' && hitsValid && isValidAmount(o.deadlineAt)) {
+    return { phase: 'incoming', deadlineAt: o.deadlineAt as number, hitsLeft: o.hitsLeft as number };
+  }
+  if (o.phase === 'plundering' && hitsValid) {
+    return { phase: 'plundering', hitsLeft: o.hitsLeft as number };
+  }
+  return null;
 }
 
 export function parseSave(json: string): GameState | null {
@@ -87,8 +103,10 @@ export function parseSave(json: string): GameState | null {
       : [];
     const lastSavedAt = isValidAmount(raw.lastSavedAt) ? raw.lastSavedAt : 0;
     const prestiges = isValidAmount(raw.prestiges) && Number.isInteger(raw.prestiges) ? raw.prestiges : 0;
+    const raid = parseRaid(raw.raid);
+    const frenzySeconds = isValidAmount(raw.frenzySeconds) ? raw.frenzySeconds : 0;
 
-    return { version: SAVE_VERSION, balances, runEarned, lifetimeEarned, heroes, upgrades, prestiges, lastSavedAt };
+    return { version: SAVE_VERSION, balances, runEarned, lifetimeEarned, heroes, upgrades, prestiges, raid, frenzySeconds, lastSavedAt };
   } catch {
     return null;
   }
