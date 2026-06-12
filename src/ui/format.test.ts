@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatNumber } from './format';
+import { formatDuration, formatEta, formatNumber } from './format';
 
 describe('formatNumber', () => {
   it('shows small integers plainly', () => {
@@ -43,5 +43,29 @@ describe('formatDuration', () => {
     expect(formatDuration(45)).toBe('45s');
     expect(formatDuration(150)).toBe('2m 30s');
     expect(formatDuration(8 * 3600)).toBe('8h 0m');
+  });
+});
+
+describe('formatEta', () => {
+  it('uses seconds/minutes/hours for short waits', () => {
+    expect(formatEta(45)).toBe('45s');
+    expect(formatEta(150)).toBe('2m 30s');
+    expect(formatEta(7300)).toBe('2h 1m');
+  });
+
+  it('uses days below a year', () => {
+    expect(formatEta(3 * 86400 + 5 * 3600)).toBe('3d 5h');
+    expect(formatEta(364 * 86400)).toBe('364d 0h');
+  });
+
+  it('uses years for absurd horizons, Sam-style', () => {
+    expect(formatEta(2 * 365 * 86400)).toBe('2.0 years');
+    // het getal uit de groepschat moet er letterlijk uit kunnen rollen
+    expect(formatEta(21_480 * 365 * 86400)).toBe('21,480 years');
+  });
+
+  it('handles broken input gracefully', () => {
+    expect(formatEta(Infinity)).toBe('∞');
+    expect(formatEta(-5)).toBe('∞');
   });
 });

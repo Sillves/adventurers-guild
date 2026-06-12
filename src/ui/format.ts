@@ -39,3 +39,18 @@ export function formatDuration(totalSeconds: number): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
 }
+
+/**
+ * Verwachte wachttijd, ook voor absurde horizonten: "21,480 years" is een
+ * eerlijker (en leuker) antwoord dan een kale fractie. Sam rekende het toch.
+ */
+export function formatEta(totalSeconds: number): string {
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return '∞';
+  const seconds = Math.floor(totalSeconds);
+  if (seconds < 3600) return formatDuration(seconds);
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  const days = seconds / 86400;
+  if (days < 365) return `${Math.floor(days)}d ${Math.floor((seconds % 86400) / 3600)}h`;
+  const years = days / 365;
+  return years < 10 ? `${(Math.floor(years * 10) / 10).toFixed(1)} years` : `${Math.floor(years).toLocaleString('en-US')} years`;
+}
