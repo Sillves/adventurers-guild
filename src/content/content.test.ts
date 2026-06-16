@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ACHIEVEMENTS } from './achievements';
 import { CHANGELOG } from './changelog';
 import { CURRENCIES } from './currencies';
 import { HEROES } from './heroes';
@@ -15,6 +16,21 @@ describe('content integrity', () => {
     expect(realmIds.size).toBe(REALMS.length);
     expect(heroIds.size).toBe(HEROES.length);
     expect(new Set(UPGRADES.map((u) => u.id)).size).toBe(UPGRADES.length);
+    expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
+  });
+
+  it('achievements have positive thresholds and reference existing heroes', () => {
+    for (const achievement of ACHIEVEMENTS) {
+      const c = achievement.condition;
+      if (c.kind === 'heroCount') {
+        expect(heroIds.has(c.heroId), `${achievement.id} targets unknown hero ${c.heroId}`).toBe(true);
+        expect(c.count, `${achievement.id} count`).toBeGreaterThan(0);
+      } else if (c.kind === 'lifetimeGold') {
+        expect(c.amount, `${achievement.id} amount`).toBeGreaterThan(0);
+      } else {
+        expect(c.count, `${achievement.id} count`).toBeGreaterThan(0);
+      }
+    }
   });
 
   it('heroes reference existing realms and currencies, with positive numbers', () => {

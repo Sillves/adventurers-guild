@@ -23,19 +23,23 @@ export interface HeroDef {
   readonly costGrowth: number;
 }
 
-export type UpgradeTarget = `hero:${string}` | 'click';
+export type UpgradeTarget = `hero:${string}` | "click";
 
 export type UpgradeEffect =
   /** Vermenigvuldigt klik- of held-opbrengst. */
   | { readonly target: UpgradeTarget; readonly multiplier: number }
   /** Kliks leveren extra een percentage van de productie per seconde op. */
-  | { readonly target: 'click-synergy'; readonly percentOfProduction: number }
+  | { readonly target: "click-synergy"; readonly percentOfProduction: number }
   /** Kans per klik op een critical die de opbrengst vermenigvuldigt. */
-  | { readonly target: 'click-crit'; readonly chance: number; readonly critMultiplier: number }
+  | {
+      readonly target: "click-crit";
+      readonly chance: number;
+      readonly critMultiplier: number;
+    }
   /** Snel doorklikken bouwt een combo op die de klikopbrengst tot dit maximum vermenigvuldigt. */
-  | { readonly target: 'click-combo'; readonly maxMultiplier: number }
+  | { readonly target: "click-combo"; readonly maxMultiplier: number }
   /** Personeel dat zelf quests draait: zoveel kliks per seconde, ook offline. */
-  | { readonly target: 'auto-click'; readonly clicksPerSecond: number };
+  | { readonly target: "auto-click"; readonly clicksPerSecond: number };
 
 export interface UpgradeDef {
   readonly id: string;
@@ -47,4 +51,28 @@ export interface UpgradeDef {
   readonly effect: UpgradeEffect;
   /** Optionele vereiste: deze upgrade moet eerst gekocht zijn. */
   readonly requires?: string;
+}
+
+export type AchievementCondition =
+  /** Bezit minstens `count` exemplaren van één specifieke held. */
+  | {
+      readonly kind: "heroCount";
+      readonly heroId: string;
+      readonly count: number;
+    }
+  | {
+      readonly kind: "totalHeroes";
+      readonly count: number;
+    }
+  | { readonly kind: "prestiges"; readonly count: number }
+  | { readonly kind: "clicks"; readonly count: number }
+  | { readonly kind: "raidsWon"; readonly count: number }
+  | { readonly kind: "lifetimeGold"; readonly amount: number };
+
+export interface AchievementDef {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly icon: string;
+  readonly condition: AchievementCondition;
 }

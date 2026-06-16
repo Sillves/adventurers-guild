@@ -9,6 +9,7 @@
   import PrestigeScreen from './screens/PrestigeScreen.svelte';
   import UpgradesScreen from './screens/UpgradesScreen.svelte';
   import WelcomeBack from './WelcomeBack.svelte';
+  import AchievementToast from './AchievementToast.svelte';
   import { leaderboard } from './leaderboard.svelte';
 
   let screen = $state<Screen>('guild');
@@ -63,6 +64,13 @@
   {#if game.offlineReport !== null}
     <WelcomeBack report={game.offlineReport} onclose={() => game.dismissOffline()} />
   {/if}
+  {#if game.achievementToasts.length > 0}
+    <div class="toasts">
+      {#each game.achievementToasts as id (id)}
+        <AchievementToast {id} ondismiss={() => game.dismissAchievementToast(id)} />
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -71,6 +79,20 @@
      bij de elastische bounce aan het einde van de scroll (macOS). */
   .app { display: flex; height: 100vh; }
   main { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+  /* unlock-toasts stapelen rechtsboven, los van het raid-alarm dat midden staat */
+  .toasts {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 16;
+    display: grid;
+    gap: 8px;
+    justify-items: end;
+    max-width: calc(100vw - 24px);
+  }
+  @media (max-width: 700px) {
+    .toasts { top: calc(52px + env(safe-area-inset-top)); }
+  }
   .raid-alert {
     position: fixed;
     top: 12px;

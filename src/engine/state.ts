@@ -1,7 +1,7 @@
-import { CURRENCIES } from '../content/currencies';
-import type { CurrencyMap } from '../content/types';
+import { CURRENCIES } from "../content/currencies";
+import type { CurrencyMap } from "../content/types";
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /** Levenslange tellers voor de statistiekenpagina; overleven prestige. */
 export interface GameStats {
@@ -15,7 +15,14 @@ export interface GameStats {
 }
 
 export function zeroStats(): GameStats {
-  return { clicks: 0, crits: 0, raidsWon: 0, raidsLost: 0, mercsPaid: 0, playSeconds: 0 };
+  return {
+    clicks: 0,
+    crits: 0,
+    raidsWon: 0,
+    raidsLost: 0,
+    mercsPaid: 0,
+    playSeconds: 0,
+  };
 }
 
 /**
@@ -23,8 +30,12 @@ export function zeroStats(): GameStats {
  * dan plunderen ze); 'plundering' halveert de productie tot hij weggeslagen is.
  */
 export type RaidState =
-  | { readonly phase: 'incoming'; readonly deadlineAt: number; readonly hitsLeft: number }
-  | { readonly phase: 'plundering'; readonly hitsLeft: number };
+  | {
+      readonly phase: "incoming";
+      readonly deadlineAt: number;
+      readonly hitsLeft: number;
+    }
+  | { readonly phase: "plundering"; readonly hitsLeft: number };
 
 export interface GameState {
   readonly version: number;
@@ -34,6 +45,7 @@ export interface GameState {
   readonly lifetimeEarned: CurrencyMap;
   readonly heroes: Readonly<Record<string, number>>;
   readonly upgrades: readonly string[];
+  readonly achievements: readonly string[];
   /** Aantal refounds ooit; overleeft prestige. */
   readonly prestiges: number;
   readonly raid: RaidState | null;
@@ -55,6 +67,7 @@ export function createInitialState(now: number): GameState {
     lifetimeEarned: {},
     heroes: {},
     upgrades: [],
+    achievements: [],
     prestiges: 0,
     raid: null,
     frenzySeconds: 0,
