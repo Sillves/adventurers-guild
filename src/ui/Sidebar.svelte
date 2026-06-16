@@ -17,6 +17,7 @@
   import Stats from './Stats.svelte';
   import { getMusicVolume, getSfxVolume, isSilent, setMusicVolume, setSfxVolume, toggleSilence } from './sound';
   import { isKeepAwake, toggleKeepAwake, wakeLockSupported } from './wakelock';
+  import Achievements from "./Achievements.svelte";
 
   let { screen, onswitch, realmId }: { screen: Screen; onswitch: (next: Screen) => void; realmId: string } = $props();
 
@@ -77,6 +78,7 @@
   let showSettings = $state(false);
   let showNumbers = $state(false);
   let showStats = $state(false);
+  let showAchievements = $state(false);
 
   // "What's new": entries komen vooraan de lijst bij; we onthouden hoeveel je
   // er al zag, dus (lengte − gezien) = ongelezen. Nooit entries verwijderen.
@@ -152,6 +154,7 @@
       {/if}
     {/each}
     <button class="scale-hint" onclick={() => (showStats = true)}>📊 Stats</button>
+    <button class="scale-hint" onclick={() => (showAchievements = true)}>🏅 Achievements</button>
     <button class="scale-hint" onclick={() => (showNumbers = true)}>What's a Qa? ℹ️</button>
     <button class="scale-hint" onclick={openChangelog}>
       📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
@@ -202,6 +205,7 @@
         📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
       </button>
       <button onclick={() => { showSettings = false; showStats = true; }}>📊 Stats</button>
+      <button onclick={() => { showSettings = false; showAchievements = true; }}>🏅 Achievements</button>
       <button onclick={() => { showSettings = false; showNumbers = true; }}>What's a Qa? ℹ️</button>
       <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
       <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
@@ -225,6 +229,10 @@
 
 {#if showStats}
   <Stats onclose={() => (showStats = false)} />
+{/if}
+
+{#if showAchievements}
+  <Achievements onclose={() => (showAchievements = false)} />
 {/if}
 
 <style>

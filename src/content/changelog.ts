@@ -13,6 +13,14 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    date: '2026-06-16',
+    icon: '🏅',
+    title: 'Achievements',
+    description:
+      'Earn badges for milestones — your first recruit, a farmhand army, your first million gold, surviving raids and more. Find them under 🏅 Achievements; a toast pops the moment you unlock one, and they survive every refound.',
+    prs: [55],
+  },
+  {
     date: '2026-06-12',
     icon: '✈️',
     title: 'Plays without internet',
