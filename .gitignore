@@ -3,3 +3,4 @@ dist/
 .superpowers/
 .wrangler/
 .playwright-mcp/
+graphify-out/
