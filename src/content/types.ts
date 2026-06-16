@@ -76,3 +76,26 @@ export interface AchievementDef {
   readonly icon: string;
   readonly condition: AchievementCondition;
 }
+
+/**
+ * Effect van een prestige-perk, gekocht met Fame. De engine matcht generiek op
+ * `kind` en plugt het in de bestaande formules (zie engine/perks.ts). Een nieuw
+ * soort = één variant hier + één case daar + één inplugpunt in de formule.
+ */
+export type PerkEffect =
+  /** Vermenigvuldigt de klik-opbrengst. */
+  | { readonly kind: "clickPower"; readonly multiplier: number }
+  /** Vermenigvuldigt alle heldenproductie. */
+  | { readonly kind: "production"; readonly multiplier: number }
+  /** Extra uren bovenop de offline-cap van 8u. */
+  | { readonly kind: "offlineCapHours"; readonly hours: number };
+
+export interface PerkDef {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly icon: string;
+  /** Kost in Fame (en in principe elke valuta) — permanent afgerekend. */
+  readonly cost: CurrencyMap;
+  readonly effect: PerkEffect;
+}

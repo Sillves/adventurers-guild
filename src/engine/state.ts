@@ -1,7 +1,7 @@
 import { CURRENCIES } from "../content/currencies";
 import type { CurrencyMap } from "../content/types";
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /** Levenslange tellers voor de statistiekenpagina; overleven prestige. */
 export interface GameStats {
@@ -46,6 +46,10 @@ export interface GameState {
   readonly heroes: Readonly<Record<string, number>>;
   readonly upgrades: readonly string[];
   readonly achievements: readonly string[];
+  /** Ids van gekochte prestige-perks; overleeft prestige, nooit verwijderd. */
+  readonly perks: readonly string[];
+  /** Levenslang aan perks uitgegeven Fame; overleeft prestige (permanente kost). */
+  readonly fameSpent: number;
   /** Aantal refounds ooit; overleeft prestige. */
   readonly prestiges: number;
   readonly raid: RaidState | null;
@@ -68,6 +72,8 @@ export function createInitialState(now: number): GameState {
     heroes: {},
     upgrades: [],
     achievements: [],
+    perks: [],
+    fameSpent: 0,
     prestiges: 0,
     raid: null,
     frenzySeconds: 0,

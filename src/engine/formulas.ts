@@ -2,6 +2,7 @@ import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap, HeroDef, RealmDef, UpgradeDef } from '../content/types';
 import { addMaps, canAfford, scaleMap } from './maps';
+import { clickPerkMultiplier, productionPerkMultiplier } from './perks';
 
 import type { GameState } from './state';
 
@@ -151,7 +152,7 @@ export function raidModifier(state: GameState): number {
 }
 
 export function productionPerSecond(state: GameState): CurrencyMap {
-  const bonus = fameBonus(state.balances['fame'] ?? 0) * raidModifier(state);
+  const bonus = fameBonus(state.balances['fame'] ?? 0) * raidModifier(state) * productionPerkMultiplier(state.perks);
   let total: CurrencyMap = {};
   for (const hero of HEROES) {
     const count = state.heroes[hero.id] ?? 0;
@@ -164,7 +165,7 @@ export function productionPerSecond(state: GameState): CurrencyMap {
 
 export function clickGain(state: GameState): CurrencyMap {
   const bonus = fameBonus(state.balances['fame'] ?? 0);
-  const base = clickMultiplier(state.upgrades) * bonus;
+  const base = clickMultiplier(state.upgrades) * bonus * clickPerkMultiplier(state.perks);
   const synergy = clickSynergyPercent(state.upgrades);
   // productie/s bevat de fame-bonus al, dus die niet dubbel toepassen
   const production = synergy > 0 ? (productionPerSecond(state)['gold'] ?? 0) : 0;
@@ -249,8 +250,10 @@ export function fameTargetGold(famePoints: number): number {
 }
 
 export function fameGain(state: GameState): number {
+  // Permanent uitgegeven Fame (aan perks) telt niet meer mee: anders zou een
+  // refound je uitgegeven Fame teruggeven en was de kost niet permanent.
   const earnedFame = totalFameFor(state.lifetimeEarned['gold'] ?? 0);
-  return Math.max(0, earnedFame - (state.balances['fame'] ?? 0));
+  return Math.max(0, earnedFame - state.fameSpent - (state.balances['fame'] ?? 0));
 }
 
 export function isRealmUnlocked(realm: RealmDef, state: GameState): boolean {

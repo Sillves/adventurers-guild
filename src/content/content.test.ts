@@ -3,6 +3,7 @@ import { ACHIEVEMENTS } from './achievements';
 import { CHANGELOG } from './changelog';
 import { CURRENCIES } from './currencies';
 import { HEROES } from './heroes';
+import { PERKS } from './perks';
 import { REALMS } from './realms';
 import { UPGRADES } from './upgrades';
 
@@ -17,6 +18,24 @@ describe('content integrity', () => {
     expect(heroIds.size).toBe(HEROES.length);
     expect(new Set(UPGRADES.map((u) => u.id)).size).toBe(UPGRADES.length);
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
+    expect(new Set(PERKS.map((p) => p.id)).size).toBe(PERKS.length);
+  });
+
+  it('perks cost a positive amount of known currency and have a sane effect', () => {
+    for (const perk of PERKS) {
+      const entries = Object.entries(perk.cost);
+      expect(entries.length, `${perk.id} has no cost`).toBeGreaterThan(0);
+      for (const [cur, amount] of entries) {
+        expect(currencyIds.has(cur), `${perk.id} cost currency ${cur}`).toBe(true);
+        expect(amount, `${perk.id} cost amount`).toBeGreaterThan(0);
+      }
+      const e = perk.effect;
+      if (e.kind === 'offlineCapHours') {
+        expect(e.hours, `${perk.id} hours`).toBeGreaterThan(0);
+      } else {
+        expect(e.multiplier, `${perk.id} multiplier`).toBeGreaterThan(1);
+      }
+    }
   });
 
   it('achievements have positive thresholds and reference existing heroes', () => {

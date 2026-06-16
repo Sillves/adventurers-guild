@@ -2,8 +2,10 @@ import type { CurrencyMap } from '../content/types';
 import { earn, raidDeadline } from './commands';
 import { autoClickPerSecond, incomePerSecond } from './formulas';
 import { scaleMap } from './maps';
+import { offlinePerkHours } from './perks';
 import type { GameState } from './state';
 
+/** Basis offline-cap; prestige-perks kunnen er uren bovenop leggen. */
 export const OFFLINE_CAP_SECONDS = 8 * 3600;
 const OFFLINE_REPORT_MIN_SECONDS = 60;
 
@@ -53,7 +55,8 @@ export function applyOffline(
   state: GameState,
   now: number,
 ): { state: GameState; report: OfflineReport | null } {
-  const elapsed = Math.min(Math.max((now - state.lastSavedAt) / 1000, 0), OFFLINE_CAP_SECONDS);
+  const capSeconds = OFFLINE_CAP_SECONDS + offlinePerkHours(state.perks) * 3600;
+  const elapsed = Math.min(Math.max((now - state.lastSavedAt) / 1000, 0), capSeconds);
   // de tab sluiten tijdens een raid is geen ontsnapping: verstrijkt de
   // deadline offline, dan wordt er op precies dat moment geplunderd
   const crossed = state.raid?.phase === 'incoming' && now >= state.raid.deadlineAt;

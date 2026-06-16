@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { PERKS } from '../../content/perks';
   import { fameBonus, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
+  import { canAfford } from '../../engine/maps';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
 
@@ -48,6 +50,32 @@
       Refound the guild
     </button>
   {/if}
+
+  <div class="shop">
+    <h3>🏆 Fame Shop</h3>
+    <p class="dim">
+      Spend Fame on permanent perks. Fame spent here is gone for good — it no longer counts toward
+      your production bonus, so weigh each perk against the boost you give up.
+    </p>
+    {#each PERKS as perk (perk.id)}
+      {@const owned = game.state.perks.includes(perk.id)}
+      {@const affordable = canAfford(game.state.balances, perk.cost)}
+      <div class="perk" class:owned>
+        <span class="icon">{perk.icon}</span>
+        <div class="info">
+          <strong>{perk.name}</strong>
+          <span class="dim">{perk.description}</span>
+        </div>
+        {#if owned}
+          <span class="bought">✓ Owned</span>
+        {:else}
+          <button disabled={!affordable} onclick={() => game.buyPerk(perk.id)}>
+            🏆 {formatNumber(perk.cost['fame'] ?? 0)}
+          </button>
+        {/if}
+      </div>
+    {/each}
+  </div>
 </section>
 
 <style>
@@ -57,4 +85,13 @@
   .panel { background: var(--panel); border-radius: var(--radius); padding: 16px; display: grid; gap: 8px; }
   .confirm { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; }
   .danger { background: #b45309; color: white; padding: 12px 18px; }
+  .shop { display: grid; gap: 8px; margin-top: 8px; }
+  .shop h3 { font-size: 1rem; margin: 0; }
+  .perk { display: flex; align-items: center; gap: 12px; background: var(--panel); border-radius: var(--radius); padding: 12px 14px; }
+  .perk.owned { opacity: 0.7; }
+  .perk .icon { font-size: 22px; line-height: 1; flex: none; width: 28px; text-align: center; }
+  .perk .info { display: grid; flex: 1; gap: 2px; }
+  .perk button { background: var(--accent); color: white; padding: 8px 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .perk button:disabled { opacity: 0.4; }
+  .bought { color: var(--success); font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
 </style>

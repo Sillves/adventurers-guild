@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-16',
+    icon: '🏆',
+    title: 'Fame shop',
+    description:
+      'Spend your Fame on permanent prestige perks under 👑 Refound: stronger quest clicks, fatter hero production, and longer offline progress. Fame spent is gone for good, so each perk is a real trade-off against the production bonus your Fame would otherwise give.',
+    prs: [57],
+  },
+  {
+    date: '2026-06-16',
     icon: '🏅',
     title: 'Achievements',
     description:

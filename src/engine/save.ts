@@ -2,6 +2,7 @@ import { CURRENCIES } from "../content/currencies";
 import { HEROES } from "../content/heroes";
 import { UPGRADES } from "../content/upgrades";
 import { ACHIEVEMENTS } from "../content/achievements";
+import { PERKS } from "../content/perks";
 import type { CurrencyMap } from "../content/types";
 import { fameTargetGold } from "./formulas";
 import {
@@ -47,6 +48,8 @@ const MIGRATIONS: Record<number, (raw: RawObject) => RawObject> = {
   // v5 kende geen achievements; begin leeg. De game vult bij het laden stil aan
   // wat al verdiend is, dus oude spelers verliezen niets (dat doen we in stap 5).
   5: (raw) => ({ ...raw, achievements: [] }),
+  // v6 kende geen prestige-perks: nog niks gekocht, nog niks aan Fame uitgegeven.
+  6: (raw) => ({ ...raw, perks: [], fameSpent: 0 }),
 };
 
 export function serializeSave(state: GameState): string {
@@ -132,6 +135,7 @@ export function parseSave(json: string): GameState | null {
     const heroIds = new Set(HEROES.map((h) => h.id));
     const upgradeIds = new Set(UPGRADES.map((u) => u.id));
     const achievementIds = new Set(ACHIEVEMENTS.map((a) => a.id));
+    const perkIds = new Set(PERKS.map((p) => p.id));
 
     const balances: CurrencyMap = {
       ...zeroBalances(),
@@ -162,6 +166,15 @@ export function parseSave(json: string): GameState | null {
           return known;
         })
       : [];
+    const perks = Array.isArray(raw.perks)
+      ? raw.perks.filter((id): id is string => {
+          const known = typeof id === "string" && perkIds.has(id);
+          if (!known)
+            console.warn(`save: dropping unknown perk id "${String(id)}"`);
+          return known;
+        })
+      : [];
+    const fameSpent = isValidAmount(raw.fameSpent) ? raw.fameSpent : 0;
     const lastSavedAt = isValidAmount(raw.lastSavedAt) ? raw.lastSavedAt : 0;
     const prestiges =
       isValidAmount(raw.prestiges) && Number.isInteger(raw.prestiges)
@@ -181,6 +194,8 @@ export function parseSave(json: string): GameState | null {
       heroes,
       upgrades,
       achievements,
+      perks,
+      fameSpent,
       prestiges,
       raid,
       frenzySeconds,
