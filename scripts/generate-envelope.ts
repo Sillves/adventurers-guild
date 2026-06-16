@@ -8,11 +8,13 @@
 //
 import { writeFileSync } from 'node:fs';
 import { HEROES } from '../src/content/heroes';
+import { PERKS } from '../src/content/perks';
 import { UPGRADES } from '../src/content/upgrades';
 import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
 import { clickGain, comboCap, critParams, fameGain, heroCost, incomePerSecond, isUpgradeUnlocked } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
+import { perkCost } from '../src/engine/perks';
 import { createInitialState, type GameState } from '../src/engine/state';
 
 const DAYS = 60;
@@ -24,7 +26,7 @@ const SAFETY_FACTOR = 4;
 
 type PrestigePolicy = (gain: number, fame: number) => boolean;
 
-function simulate(shouldPrestige: PrestigePolicy, startFame = 0): number[] {
+function simulate(shouldPrestige: PrestigePolicy, startFame = 0, buyPerks = false): number[] {
   let state: GameState = createInitialState(0);
   if (startFame > 0) {
     state = { ...state, balances: { ...state.balances, fame: startFame } };
@@ -74,6 +76,28 @@ function simulate(shouldPrestige: PrestigePolicy, startFame = 0): number[] {
       state = buy();
     }
 
+    // perk-spelers spenderen Fame aan permanente boosts. Niet greedy (dat sloopt
+    // de passieve Fame-bonus en onderschat de echte max), maar gedisciplineerd:
+    // koop een niveau alleen als het ≤5% van je huidige Fame kost. Dat is de
+    // (bijna) optimale strategie uit de balanssimulatie — zo dekt de envelope
+    // een sláimme perk-speler, niet alleen een naïeve.
+    if (buyPerks) {
+      for (;;) {
+        let bought = false;
+        const fame = state.balances['fame'] ?? 0;
+        for (const perk of PERKS) {
+          const level = state.perks[perk.id] ?? 0;
+          if (level >= perk.maxLevel || perkCost(perk, level) > fame * 0.05) continue;
+          const next = commands.buyPerk(state, perk.id);
+          if (next !== state) {
+            state = next;
+            bought = true;
+          }
+        }
+        if (!bought) break;
+      }
+    }
+
     const gain = fameGain(state);
     if (gain >= 1 && shouldPrestige(gain, state.balances['fame'] ?? 0)) {
       state = commands.doPrestige(state, t * 1000);
@@ -87,17 +111,23 @@ function simulate(shouldPrestige: PrestigePolicy, startFame = 0): number[] {
   return hourly;
 }
 
-const strategies: Record<string, { policy: PrestigePolicy; startFame?: number }> = {
+const strategies: Record<string, { policy: PrestigePolicy; startFame?: number; buyPerks?: boolean }> = {
   'nooit prestigen': { policy: () => false },
   'prestige bij verdubbeling': { policy: (gain, fame) => gain >= Math.max(1, fame) },
   'prestige zodra mogelijk': { policy: () => true },
   // veteranen van vóór de fame-knie spelen met een gebankte ×61-multiplier door;
   // zonder deze curve zou de envelope hen na de balanswijziging vals flaggen
   'veteraan (3000 fame gebankt), nooit prestigen': { policy: () => false, startFame: 3000 },
+  // perk-maxers: dezelfde policies maar mét gekochte Fame-perks. De productie- en
+  // klik-perks tillen het haalbare lifetime goud lategame ver omhoog (×15 op dag 30);
+  // zonder deze curves flagt de envelope een eerlijke perk-speler na ~1 week.
+  'prestige bij verdubbeling + perks': { policy: (gain, fame) => gain >= Math.max(1, fame), buyPerks: true },
+  'prestige zodra mogelijk + perks': { policy: () => true, buyPerks: true },
+  'veteraan (3000 fame) + perks': { policy: () => false, startFame: 3000, buyPerks: true },
 };
 
-const curves = Object.entries(strategies).map(([label, { policy, startFame }]) => {
-  const curve = simulate(policy, startFame ?? 0);
+const curves = Object.entries(strategies).map(([label, { policy, startFame, buyPerks }]) => {
+  const curve = simulate(policy, startFame ?? 0, buyPerks ?? false);
   console.log(`${label}: 24h ${curve[24]?.toExponential(2)}, eind ${curve.at(-1)?.toExponential(2)}`);
   return curve;
 });

@@ -76,3 +76,30 @@ export interface AchievementDef {
   readonly icon: string;
   readonly condition: AchievementCondition;
 }
+
+/**
+ * Effect van een prestige-perk, per gekocht niveau. De engine matcht generiek op
+ * `kind` en plugt het in de bestaande formules (zie engine/perks.ts). `perLevel`
+ * is de bijdrage van één niveau: voor click/production een fractie die optelt in
+ * de multiplier (1 + perLevel × niveau), voor offline het aantal extra uren.
+ */
+export type PerkEffect =
+  /** +perLevel op de klik-multiplier per niveau (0.25 = +25% per niveau). */
+  | { readonly kind: "clickPower"; readonly perLevel: number }
+  /** +perLevel op de productie-multiplier per niveau. */
+  | { readonly kind: "production"; readonly perLevel: number }
+  /** Extra offline-uren per niveau, bovenop de cap van 8u. */
+  | { readonly kind: "offlineCapHours"; readonly perLevel: number };
+
+export interface PerkDef {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly icon: string;
+  /** Fame-kost van het eerste niveau; schaalt met costGrowth^huidigNiveau. */
+  readonly baseCost: number;
+  readonly costGrowth: number;
+  /** Maximaal aantal niveaus — houdt de totale boost begrensd (en de envelope eerlijk). */
+  readonly maxLevel: number;
+  readonly effect: PerkEffect;
+}

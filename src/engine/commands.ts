@@ -1,5 +1,6 @@
 import { HEROES } from "../content/heroes";
 import { UPGRADES } from "../content/upgrades";
+import { PERKS } from "../content/perks";
 import type { CurrencyMap } from "../content/types";
 import {
   bulkHeroCost,
@@ -8,6 +9,7 @@ import {
   incomePerSecond,
   isUpgradeUnlocked,
 } from "./formulas";
+import { perkCost } from "./perks";
 import { addMaps, canAfford, scaleMap, subtractMaps } from "./maps";
 import { createInitialState, type GameState } from "./state";
 
@@ -72,6 +74,26 @@ export function buyUpgrade(state: GameState, upgradeId: string): GameState {
     ...state,
     balances: subtractMaps(state.balances, def.cost),
     upgrades: [...state.upgrades, upgradeId],
+  };
+}
+
+/**
+ * Koop één niveau van een prestige-perk met Fame. De Fame gaat van de balans áf
+ * én wordt bij `fameSpent` opgeteld, zodat een refound het niet teruggeeft (zie
+ * fameGain) — een echte, permanente afweging tegen de passieve Fame-bonus.
+ */
+export function buyPerk(state: GameState, perkId: string): GameState {
+  const def = PERKS.find((p) => p.id === perkId);
+  if (def === undefined) return state;
+  const level = state.perks[perkId] ?? 0;
+  if (level >= def.maxLevel) return state;
+  const cost = perkCost(def, level);
+  if ((state.balances["fame"] ?? 0) < cost) return state;
+  return {
+    ...state,
+    balances: subtractMaps(state.balances, { fame: cost }),
+    fameSpent: state.fameSpent + cost,
+    perks: { ...state.perks, [perkId]: level + 1 },
   };
 }
 
@@ -153,5 +175,8 @@ export function doPrestige(state: GameState, now: number): GameState {
     // de tellers zijn levenslang: een refound wist je geschiedenis niet
     achievements: state.achievements,
     stats: state.stats,
+    // gekochte perks en de daaraan uitgegeven Fame blijven over refounds heen
+    perks: state.perks,
+    fameSpent: state.fameSpent,
   };
 }

@@ -147,3 +147,34 @@ describe('migration v4 → v5', () => {
     expect(parseSave(JSON.stringify({ ...v5, stats: 'kapot' }))?.stats).toEqual(zeroStats());
   });
 });
+
+describe('migration v6 → v7', () => {
+  const v6 = {
+    version: 6,
+    balances: { gold: 5, fame: 60 },
+    runEarned: {},
+    lifetimeEarned: { gold: 9_000_000 },
+    heroes: {},
+    upgrades: [],
+    achievements: [],
+    prestiges: 2,
+    raid: null,
+    frenzySeconds: 0,
+    stats: zeroStats(),
+    lastSavedAt: 0,
+  };
+
+  it('gives a v6 save empty perks and zero fameSpent', () => {
+    const parsed = parseSave(JSON.stringify(v6));
+    expect(parsed?.version).toBe(SAVE_VERSION);
+    expect(parsed?.perks).toEqual({});
+    expect(parsed?.fameSpent).toBe(0);
+  });
+
+  it('keeps known v7 perk levels and drops unknown perk ids', () => {
+    const v7 = { ...v6, version: 7, perks: { 'mighty-quests': 3, 'ghost-perk': 9 }, fameSpent: 7 };
+    const parsed = parseSave(JSON.stringify(v7));
+    expect(parsed?.perks).toEqual({ 'mighty-quests': 3 });
+    expect(parsed?.fameSpent).toBe(7);
+  });
+});

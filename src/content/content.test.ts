@@ -3,6 +3,7 @@ import { ACHIEVEMENTS } from './achievements';
 import { CHANGELOG } from './changelog';
 import { CURRENCIES } from './currencies';
 import { HEROES } from './heroes';
+import { PERKS } from './perks';
 import { REALMS } from './realms';
 import { UPGRADES } from './upgrades';
 
@@ -17,6 +18,16 @@ describe('content integrity', () => {
     expect(heroIds.size).toBe(HEROES.length);
     expect(new Set(UPGRADES.map((u) => u.id)).size).toBe(UPGRADES.length);
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
+    expect(new Set(PERKS.map((p) => p.id)).size).toBe(PERKS.length);
+  });
+
+  it('perks have a positive cost curve, a cap and a positive per-level effect', () => {
+    for (const perk of PERKS) {
+      expect(perk.baseCost, `${perk.id} baseCost`).toBeGreaterThan(0);
+      expect(perk.costGrowth, `${perk.id} costGrowth`).toBeGreaterThan(1);
+      expect(perk.maxLevel, `${perk.id} maxLevel`).toBeGreaterThan(0);
+      expect(perk.effect.perLevel, `${perk.id} perLevel`).toBeGreaterThan(0);
+    }
   });
 
   it('achievements have positive thresholds and reference existing heroes', () => {

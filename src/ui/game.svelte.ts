@@ -227,6 +227,12 @@ export const game = {
     if (next !== state) playSound("buy");
     state = next;
   },
+  buyPerk(perkId: string): void {
+    startMusic();
+    const next = commands.buyPerk(state, perkId);
+    if (next !== state) playSound("prestige");
+    state = next;
+  },
   prestige(): void {
     const next = commands.doPrestige(state, Date.now());
     if (next !== state) {
