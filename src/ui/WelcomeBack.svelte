@@ -23,6 +23,17 @@
         </div>
       {/if}
     {/each}
+    {#if report.heroGold > 0 && report.staffGold > 0}
+      <div class="breakdown">
+        <span>🧙 Heroes +{formatNumber(report.heroGold)}</span>
+        <span>📯 Staff +{formatNumber(report.staffGold)}</span>
+      </div>
+    {/if}
+    {#if report.plundered}
+      <div class="plundered">
+        🪓 Barbarians broke through while you were away — they took 20% of your gold and are still plundering. Fight them off!
+      </div>
+    {/if}
     <button onclick={onclose}>Collect</button>
   </div>
 </div>
@@ -43,5 +54,15 @@
   }
   .dim { color: var(--text-dim); }
   .earned { font-size: 1.2rem; color: var(--gold); display: flex; justify-content: center; gap: 8px; }
+  .breakdown { display: flex; justify-content: center; gap: 16px; color: var(--text-dim); font-size: 0.85rem; }
+  .plundered {
+    max-width: 280px;
+    background: var(--panel-raised);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
   button { background: var(--accent); color: white; padding: 10px; }
 </style>
