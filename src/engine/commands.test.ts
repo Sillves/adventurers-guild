@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buyHero, buyUpgrade, doPrestige, fightRaid, payMercenaries, performQuest, raidDeadline, startRaid } from './commands';
-import { createInitialState } from './state';
+import { createInitialState, type GameState } from './state';
 
 describe('performQuest', () => {
   it('adds click gain to balances, runEarned and lifetimeEarned, immutably', () => {
@@ -193,5 +193,46 @@ describe('barbarian raids', () => {
     const after = doPrestige(raided, 123);
     expect(after.raid).toBeNull();
     expect(after.frenzySeconds).toBe(0);
+  });
+});
+
+describe('lifetime stats', () => {
+  const veteran = () => ({
+    ...createInitialState(0),
+    balances: { gold: 10_000, fame: 50 },
+    heroes: { farmhand: 10 },
+  });
+
+  it('performQuest counts clicks, and crits only when the roll crits', () => {
+    let state: GameState = { ...createInitialState(0), upgrades: ['lucky-strikes'] };
+    state = performQuest(state, 0.99); // geen crit
+    state = performQuest(state, 0); // crit
+    expect(state.stats.clicks).toBe(2);
+    expect(state.stats.crits).toBe(1);
+  });
+
+  it('raids count wins, losses and hired mercenaries', () => {
+    let won = startRaid(veteran(), 0);
+    for (let i = 0; i < 25; i++) won = fightRaid(won);
+    expect(won.stats.raidsWon).toBe(1);
+    expect(won.stats.raidsLost).toBe(0);
+
+    let lost = raidDeadline(startRaid(veteran(), 0), 120_000);
+    expect(lost.stats.raidsLost).toBe(1);
+    // plunderaars wegslaan is geen gewonnen raid — je was te laat
+    for (let i = 0; i < 25; i++) lost = fightRaid(lost);
+    expect(lost.stats.raidsWon).toBe(0);
+
+    const paid = payMercenaries(startRaid(veteran(), 0));
+    expect(paid.stats.mercsPaid).toBe(1);
+  });
+
+  it('prestige keeps the lifetime counters', () => {
+    const state = {
+      ...createInitialState(0),
+      lifetimeEarned: { gold: 90_000_000_000 },
+      stats: { clicks: 500, crits: 25, raidsWon: 3, raidsLost: 1, mercsPaid: 2, playSeconds: 7200 },
+    };
+    expect(doPrestige(state, 123).stats).toEqual(state.stats);
   });
 });

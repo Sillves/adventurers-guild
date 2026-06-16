@@ -3,7 +3,7 @@ import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap } from '../content/types';
 import { fameTargetGold } from './formulas';
-import { SAVE_VERSION, zeroBalances, type GameState, type RaidState } from './state';
+import { SAVE_VERSION, zeroBalances, zeroStats, type GameState, type GameStats, type RaidState } from './state';
 
 type RawObject = Record<string, unknown>;
 
@@ -31,6 +31,8 @@ const MIGRATIONS: Record<number, (raw: RawObject) => RawObject> = {
   },
   // v3 kende geen barbarenraids: niemand wordt beroofd tijdens een update
   3: (raw) => ({ ...raw, raid: null, frenzySeconds: 0 }),
+  // v4 telde nog niets; de levenslange statistieken beginnen vandaag op nul
+  4: (raw) => ({ ...raw, stats: zeroStats() }),
 };
 
 export function serializeSave(state: GameState): string {
@@ -69,6 +71,20 @@ function parseRaid(raw: unknown): RaidState | null {
   return null;
 }
 
+/** Ongeldige stats degraderen veldsgewijs naar 0 — nooit een save weigeren. */
+function parseStats(raw: unknown): GameStats {
+  const o = asObject(raw);
+  const num = (value: unknown): number => (isValidAmount(value) ? value : 0);
+  return {
+    clicks: num(o.clicks),
+    crits: num(o.crits),
+    raidsWon: num(o.raidsWon),
+    raidsLost: num(o.raidsLost),
+    mercsPaid: num(o.mercsPaid),
+    playSeconds: num(o.playSeconds),
+  };
+}
+
 export function parseSave(json: string): GameState | null {
   try {
     const parsed: unknown = JSON.parse(json);
@@ -105,8 +121,9 @@ export function parseSave(json: string): GameState | null {
     const prestiges = isValidAmount(raw.prestiges) && Number.isInteger(raw.prestiges) ? raw.prestiges : 0;
     const raid = parseRaid(raw.raid);
     const frenzySeconds = isValidAmount(raw.frenzySeconds) ? raw.frenzySeconds : 0;
+    const stats = parseStats(raw.stats);
 
-    return { version: SAVE_VERSION, balances, runEarned, lifetimeEarned, heroes, upgrades, prestiges, raid, frenzySeconds, lastSavedAt };
+    return { version: SAVE_VERSION, balances, runEarned, lifetimeEarned, heroes, upgrades, prestiges, raid, frenzySeconds, stats, lastSavedAt };
   } catch {
     return null;
   }
