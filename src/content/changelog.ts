@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-16',
+    icon: '📊',
+    title: 'Know your guild',
+    description:
+      'The Heroes screen now shows what share of your gold/s each hero pulls, so you can see who carries your income. And 📊 Stats shows your current offline cap — including any Night Watch perks.',
+    prs: [60],
+  },
+  {
+    date: '2026-06-16',
     icon: '🏆',
     title: 'Fame shop',
     description:

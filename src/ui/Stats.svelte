@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { OFFLINE_CAP_SECONDS } from '../engine/advance';
+  import { offlinePerkHours } from '../engine/perks';
   import { formatEta, formatNumber } from './format';
   import { game } from './game.svelte';
 
@@ -21,6 +23,7 @@
     { icon: '🪙', label: 'Lifetime gold', value: formatNumber(game.state.lifetimeEarned['gold'] ?? 0) },
     { icon: '🏆', label: 'Fame banked', value: formatNumber(game.state.balances['fame'] ?? 0) },
     { icon: '🕰️', label: 'Active playtime', value: stats.playSeconds < 1 ? '—' : formatEta(stats.playSeconds) },
+    { icon: '🌙', label: 'Offline cap', value: formatEta(OFFLINE_CAP_SECONDS + offlinePerkHours(game.state.perks) * 3600) },
   ]);
 </script>
 
