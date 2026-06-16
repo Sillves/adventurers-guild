@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-12',
+    icon: '✈️',
+    title: 'Plays without internet',
+    description:
+      'The installed app now boots offline — your guild works on the train, in the basement, wherever. Online play always loads the newest version.',
+    prs: [54],
+  },
+  {
+    date: '2026-06-12',
     icon: '🌙',
     title: 'Smarter welcome back',
     description:
