@@ -49,7 +49,7 @@ const MIGRATIONS: Record<number, (raw: RawObject) => RawObject> = {
   // wat al verdiend is, dus oude spelers verliezen niets (dat doen we in stap 5).
   5: (raw) => ({ ...raw, achievements: [] }),
   // v6 kende geen prestige-perks: nog niks gekocht, nog niks aan Fame uitgegeven.
-  6: (raw) => ({ ...raw, perks: [], fameSpent: 0 }),
+  6: (raw) => ({ ...raw, perks: {}, fameSpent: 0 }),
 };
 
 export function serializeSave(state: GameState): string {
@@ -166,14 +166,7 @@ export function parseSave(json: string): GameState | null {
           return known;
         })
       : [];
-    const perks = Array.isArray(raw.perks)
-      ? raw.perks.filter((id): id is string => {
-          const known = typeof id === "string" && perkIds.has(id);
-          if (!known)
-            console.warn(`save: dropping unknown perk id "${String(id)}"`);
-          return known;
-        })
-      : [];
+    const perks = sanitizeNumberMap(raw.perks, perkIds, "perk");
     const fameSpent = isValidAmount(raw.fameSpent) ? raw.fameSpent : 0;
     const lastSavedAt = isValidAmount(raw.lastSavedAt) ? raw.lastSavedAt : 0;
     const prestiges =

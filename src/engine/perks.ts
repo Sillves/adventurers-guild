@@ -1,33 +1,45 @@
 import { PERKS } from "../content/perks";
+import type { PerkDef } from "../content/types";
+
+type PerkLevels = Readonly<Record<string, number>>;
+
+/** Fame-kost van het volgende niveau (vanaf `level`): baseCost × growth^level. */
+export function perkCost(def: PerkDef, level: number): number {
+  return Math.ceil(def.baseCost * Math.pow(def.costGrowth, level));
+}
+
+/** Veilig huidig niveau: geheel getal, geklemd op [0, maxLevel] (ook bij geknoei). */
+function levelOf(perks: PerkLevels, def: PerkDef): number {
+  return Math.max(0, Math.min(def.maxLevel, Math.floor(perks[def.id] ?? 0)));
+}
 
 /**
- * Vouwt de gekochte perks samen per effect-soort. Elke functie loopt over de
- * perk-definities, neemt alleen de gekochte mee, en stapelt het effect:
- * multipliers vermenigvuldigen, uren tellen op. Spiegelt het patroon van de
- * upgrade-helpers in formulas.ts (clickMultiplier, comboCap, ...).
+ * Vouwt de gekochte perk-niveaus samen per effect-soort. Click/production tellen
+ * additief op in hun multiplier (1 + Σ perLevel × niveau); offline-uren tellen op.
+ * Spiegelt het patroon van de upgrade-helpers in formulas.ts.
  */
 
-export function clickPerkMultiplier(purchased: readonly string[]): number {
-  let mult = 1;
+export function clickPerkMultiplier(perks: PerkLevels): number {
+  let bonus = 0;
   for (const p of PERKS) {
-    if (purchased.includes(p.id) && p.effect.kind === "clickPower") mult *= p.effect.multiplier;
+    if (p.effect.kind === "clickPower") bonus += p.effect.perLevel * levelOf(perks, p);
   }
-  return mult;
+  return 1 + bonus;
 }
 
-export function productionPerkMultiplier(purchased: readonly string[]): number {
-  let mult = 1;
+export function productionPerkMultiplier(perks: PerkLevels): number {
+  let bonus = 0;
   for (const p of PERKS) {
-    if (purchased.includes(p.id) && p.effect.kind === "production") mult *= p.effect.multiplier;
+    if (p.effect.kind === "production") bonus += p.effect.perLevel * levelOf(perks, p);
   }
-  return mult;
+  return 1 + bonus;
 }
 
-/** Som van de extra offline-uren uit gekochte perks. */
-export function offlinePerkHours(purchased: readonly string[]): number {
+/** Som van de extra offline-uren uit gekochte perk-niveaus. */
+export function offlinePerkHours(perks: PerkLevels): number {
   let hours = 0;
   for (const p of PERKS) {
-    if (purchased.includes(p.id) && p.effect.kind === "offlineCapHours") hours += p.effect.hours;
+    if (p.effect.kind === "offlineCapHours") hours += p.effect.perLevel * levelOf(perks, p);
   }
   return hours;
 }

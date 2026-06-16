@@ -46,8 +46,8 @@ export interface GameState {
   readonly heroes: Readonly<Record<string, number>>;
   readonly upgrades: readonly string[];
   readonly achievements: readonly string[];
-  /** Ids van gekochte prestige-perks; overleeft prestige, nooit verwijderd. */
-  readonly perks: readonly string[];
+  /** Niveau per prestige-perk (id → niveau); overleeft prestige, nooit verlaagd. */
+  readonly perks: Readonly<Record<string, number>>;
   /** Levenslang aan perks uitgegeven Fame; overleeft prestige (permanente kost). */
   readonly fameSpent: number;
   /** Aantal refounds ooit; overleeft prestige. */
@@ -72,7 +72,7 @@ export function createInitialState(now: number): GameState {
     heroes: {},
     upgrades: [],
     achievements: [],
-    perks: [],
+    perks: {},
     fameSpent: 0,
     prestiges: 0,
     raid: null,

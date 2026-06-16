@@ -9,6 +9,7 @@ import {
   incomePerSecond,
   isUpgradeUnlocked,
 } from "./formulas";
+import { perkCost } from "./perks";
 import { addMaps, canAfford, scaleMap, subtractMaps } from "./maps";
 import { createInitialState, type GameState } from "./state";
 
@@ -77,21 +78,22 @@ export function buyUpgrade(state: GameState, upgradeId: string): GameState {
 }
 
 /**
- * Koop een prestige-perk met Fame. De Fame gaat van de balans áf én wordt bij
- * `fameSpent` opgeteld, zodat een refound het niet teruggeeft (zie fameGain) —
- * een echte, permanente afweging tegen de passieve Fame-bonus.
+ * Koop één niveau van een prestige-perk met Fame. De Fame gaat van de balans áf
+ * én wordt bij `fameSpent` opgeteld, zodat een refound het niet teruggeeft (zie
+ * fameGain) — een echte, permanente afweging tegen de passieve Fame-bonus.
  */
 export function buyPerk(state: GameState, perkId: string): GameState {
   const def = PERKS.find((p) => p.id === perkId);
   if (def === undefined) return state;
-  if (state.perks.includes(perkId)) return state;
-  if (!canAfford(state.balances, def.cost)) return state;
-  const fameCost = def.cost["fame"] ?? 0;
+  const level = state.perks[perkId] ?? 0;
+  if (level >= def.maxLevel) return state;
+  const cost = perkCost(def, level);
+  if ((state.balances["fame"] ?? 0) < cost) return state;
   return {
     ...state,
-    balances: subtractMaps(state.balances, def.cost),
-    fameSpent: state.fameSpent + fameCost,
-    perks: [...state.perks, perkId],
+    balances: subtractMaps(state.balances, { fame: cost }),
+    fameSpent: state.fameSpent + cost,
+    perks: { ...state.perks, [perkId]: level + 1 },
   };
 }
 

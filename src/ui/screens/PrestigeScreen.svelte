@@ -1,7 +1,7 @@
 <script lang="ts">
   import { PERKS } from '../../content/perks';
   import { fameBonus, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
-  import { canAfford } from '../../engine/maps';
+  import { perkCost } from '../../engine/perks';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
 
@@ -58,19 +58,21 @@
       your production bonus, so weigh each perk against the boost you give up.
     </p>
     {#each PERKS as perk (perk.id)}
-      {@const owned = game.state.perks.includes(perk.id)}
-      {@const affordable = canAfford(game.state.balances, perk.cost)}
-      <div class="perk" class:owned>
+      {@const level = game.state.perks[perk.id] ?? 0}
+      {@const maxed = level >= perk.maxLevel}
+      {@const cost = perkCost(perk, level)}
+      {@const affordable = (game.state.balances['fame'] ?? 0) >= cost}
+      <div class="perk" class:owned={maxed}>
         <span class="icon">{perk.icon}</span>
         <div class="info">
-          <strong>{perk.name}</strong>
+          <strong>{perk.name} <span class="lvl">Lv {level}/{perk.maxLevel}</span></strong>
           <span class="dim">{perk.description}</span>
         </div>
-        {#if owned}
-          <span class="bought">✓ Owned</span>
+        {#if maxed}
+          <span class="bought">✓ Max</span>
         {:else}
           <button disabled={!affordable} onclick={() => game.buyPerk(perk.id)}>
-            🏆 {formatNumber(perk.cost['fame'] ?? 0)}
+            🏆 {formatNumber(cost)}
           </button>
         {/if}
       </div>
@@ -91,6 +93,7 @@
   .perk.owned { opacity: 0.7; }
   .perk .icon { font-size: 22px; line-height: 1; flex: none; width: 28px; text-align: center; }
   .perk .info { display: grid; flex: 1; gap: 2px; }
+  .perk .lvl { color: var(--text-dim); font-weight: 400; font-size: 0.8rem; }
   .perk button { background: var(--accent); color: white; padding: 8px 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .perk button:disabled { opacity: 0.4; }
   .bought { color: var(--success); font-size: 0.85rem; font-weight: 600; white-space: nowrap; }

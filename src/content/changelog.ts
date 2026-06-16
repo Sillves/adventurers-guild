@@ -17,7 +17,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
     icon: '🏆',
     title: 'Fame shop',
     description:
-      'Spend your Fame on permanent prestige perks under 👑 Refound: stronger quest clicks, fatter hero production, and longer offline progress. Fame spent is gone for good, so each perk is a real trade-off against the production bonus your Fame would otherwise give.',
+      'Spend your Fame on permanent prestige perks under 👑 Refound, and level them up: stronger quest clicks, fatter hero production, and longer offline progress. Each level costs more Fame than the last, and spent Fame is gone for good — a real trade-off against the production bonus your Fame would otherwise give.',
     prs: [57],
   },
   {

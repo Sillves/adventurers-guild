@@ -13,7 +13,8 @@ import { UPGRADES } from '../src/content/upgrades';
 import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
 import { clickGain, comboCap, critParams, fameGain, heroCost, incomePerSecond, isUpgradeUnlocked } from '../src/engine/formulas';
-import { canAfford, scaleMap } from '../src/engine/maps';
+import { scaleMap } from '../src/engine/maps';
+import { perkCost } from '../src/engine/perks';
 import { createInitialState, type GameState } from '../src/engine/state';
 
 const DAYS = 60;
@@ -75,13 +76,25 @@ function simulate(shouldPrestige: PrestigePolicy, startFame = 0, buyPerks = fals
       state = buy();
     }
 
-    // perk-spelers spenderen Fame aan permanente boosts; modelleer ze zodat de
-    // envelope een eerlijke perk-maxer dekt (anders flagt de anti-cheat hem)
+    // perk-spelers spenderen Fame aan permanente boosts. Niet greedy (dat sloopt
+    // de passieve Fame-bonus en onderschat de echte max), maar gedisciplineerd:
+    // koop een niveau alleen als het ≤5% van je huidige Fame kost. Dat is de
+    // (bijna) optimale strategie uit de balanssimulatie — zo dekt de envelope
+    // een sláimme perk-speler, niet alleen een naïeve.
     if (buyPerks) {
-      for (const perk of PERKS) {
-        if (!state.perks.includes(perk.id) && canAfford(state.balances, perk.cost)) {
-          state = commands.buyPerk(state, perk.id);
+      for (;;) {
+        let bought = false;
+        const fame = state.balances['fame'] ?? 0;
+        for (const perk of PERKS) {
+          const level = state.perks[perk.id] ?? 0;
+          if (level >= perk.maxLevel || perkCost(perk, level) > fame * 0.05) continue;
+          const next = commands.buyPerk(state, perk.id);
+          if (next !== state) {
+            state = next;
+            bought = true;
+          }
         }
+        if (!bought) break;
       }
     }
 

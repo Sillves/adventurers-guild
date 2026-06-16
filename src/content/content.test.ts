@@ -21,20 +21,12 @@ describe('content integrity', () => {
     expect(new Set(PERKS.map((p) => p.id)).size).toBe(PERKS.length);
   });
 
-  it('perks cost a positive amount of known currency and have a sane effect', () => {
+  it('perks have a positive cost curve, a cap and a positive per-level effect', () => {
     for (const perk of PERKS) {
-      const entries = Object.entries(perk.cost);
-      expect(entries.length, `${perk.id} has no cost`).toBeGreaterThan(0);
-      for (const [cur, amount] of entries) {
-        expect(currencyIds.has(cur), `${perk.id} cost currency ${cur}`).toBe(true);
-        expect(amount, `${perk.id} cost amount`).toBeGreaterThan(0);
-      }
-      const e = perk.effect;
-      if (e.kind === 'offlineCapHours') {
-        expect(e.hours, `${perk.id} hours`).toBeGreaterThan(0);
-      } else {
-        expect(e.multiplier, `${perk.id} multiplier`).toBeGreaterThan(1);
-      }
+      expect(perk.baseCost, `${perk.id} baseCost`).toBeGreaterThan(0);
+      expect(perk.costGrowth, `${perk.id} costGrowth`).toBeGreaterThan(1);
+      expect(perk.maxLevel, `${perk.id} maxLevel`).toBeGreaterThan(0);
+      expect(perk.effect.perLevel, `${perk.id} perLevel`).toBeGreaterThan(0);
     }
   });
 

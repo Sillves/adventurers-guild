@@ -167,14 +167,14 @@ describe('migration v6 → v7', () => {
   it('gives a v6 save empty perks and zero fameSpent', () => {
     const parsed = parseSave(JSON.stringify(v6));
     expect(parsed?.version).toBe(SAVE_VERSION);
-    expect(parsed?.perks).toEqual([]);
+    expect(parsed?.perks).toEqual({});
     expect(parsed?.fameSpent).toBe(0);
   });
 
-  it('keeps known v7 perks/fameSpent and drops unknown perk ids', () => {
-    const v7 = { ...v6, version: 7, perks: ['mighty-quests-1', 'ghost-perk'], fameSpent: 3 };
+  it('keeps known v7 perk levels and drops unknown perk ids', () => {
+    const v7 = { ...v6, version: 7, perks: { 'mighty-quests': 3, 'ghost-perk': 9 }, fameSpent: 7 };
     const parsed = parseSave(JSON.stringify(v7));
-    expect(parsed?.perks).toEqual(['mighty-quests-1']);
-    expect(parsed?.fameSpent).toBe(3);
+    expect(parsed?.perks).toEqual({ 'mighty-quests': 3 });
+    expect(parsed?.fameSpent).toBe(7);
   });
 });
