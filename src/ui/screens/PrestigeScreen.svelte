@@ -1,6 +1,6 @@
 <script lang="ts">
   import { PERKS } from '../../content/perks';
-  import { fameBonus, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
+  import { fameBonus, fameGain, fameTargetGold, incomePerSecond, totalFameFor } from '../../engine/formulas';
   import { perkCost } from '../../engine/perks';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -8,7 +8,10 @@
   const currentFame = $derived(game.state.balances['fame'] ?? 0);
   const gain = $derived(fameGain(game.state));
   const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
-  const nextTarget = $derived(fameTargetGold(currentFame + gain + 1));
+  // op het totaal ooit VERDIENDE Fame baseren, niet op currentFame+gain: aan
+  // perks uitgegeven Fame (fameSpent) verlaagt gain, maar je lifetime goud staat
+  // er los van — anders wijst de "volgende" drempel onder je huidige goud
+  const nextTarget = $derived(fameTargetGold(totalFameFor(lifetimeGold) + 1));
   const etaSeconds = $derived.by(() => {
     const rate = (incomePerSecond(game.state)['gold'] ?? 0) + game.clickIncomeRate;
     if (rate <= 0) return null;
