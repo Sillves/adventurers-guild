@@ -13,6 +13,14 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    date: '2026-06-17',
+    icon: '🏆',
+    title: 'Honest Fame progress',
+    description:
+      "Fixed the Fame progress bar lying: after spending Fame in the shop (or with a big banked balance), it could read “ready” while a refound still gave +0. Both the Guild bar and the Prestige screen now count your total earned Fame, so the next-point target and ETA match what you'll actually get.",
+    prs: [61],
+  },
+  {
     date: '2026-06-16',
     icon: '📊',
     title: 'Know your guild',

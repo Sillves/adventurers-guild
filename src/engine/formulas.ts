@@ -258,6 +258,16 @@ export function fameTargetGold(famePoints: number): number {
   return Math.pow(famePoints, FAME_END_EXPONENT) * PRESTIGE_THRESHOLD_GOLD;
 }
 
+/**
+ * Totaal ooit verdiende Fame: wat je nog in bezit hebt plus wat je permanent aan
+ * perks uitgaf. Je volgende nieuwe punt komt pas als totalFameFor(lifetime) hier
+ * weer voorbij gaat — UI's moeten hierop rekenen, niet op de kale balans, anders
+ * tonen ze "klaar" terwijl fameGain nog 0 is (spenders + gebankte veteranen).
+ */
+export function fameEarnedTotal(state: GameState): number {
+  return (state.balances['fame'] ?? 0) + state.fameSpent;
+}
+
 export function fameGain(state: GameState): number {
   // Permanent uitgegeven Fame (aan perks) telt niet meer mee: anders zou een
   // refound je uitgegeven Fame teruggeven en was de kost niet permanent.

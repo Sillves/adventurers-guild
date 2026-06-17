@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PERKS } from "../content/perks";
 import { buyPerk } from "./commands";
-import { fameGain } from "./formulas";
+import { fameEarnedTotal, fameGain, fameTargetGold } from "./formulas";
 import { clickPerkMultiplier, offlinePerkHours, perkCost, productionPerkMultiplier } from "./perks";
 import { createInitialState, type GameState } from "./state";
 
@@ -66,5 +66,29 @@ describe("fameGain with permanently spent Fame", () => {
   it("subtracts fameSpent so a refound never refunds spent Fame", () => {
     const state = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 0 }, fameSpent: 1 });
     expect(fameGain(state)).toBe(2); // 3 verdiend − 1 uitgegeven − 0 in bezit
+  });
+});
+
+describe("fame progress consistency (spenders & veterans)", () => {
+  it("fameEarnedTotal = balance + permanently spent", () => {
+    expect(fameEarnedTotal(stateWith({ balances: { fame: 5 }, fameSpent: 3 }))).toBe(8);
+  });
+
+  it("a veteran banked above the current curve gets +0 and a next target ABOVE current gold", () => {
+    // 9M lifetime ⇒ totalFameFor = 3, maar deze speler heeft 50 Fame gebankt (oude curve)
+    const vet = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 50 }, fameSpent: 0 });
+    expect(fameGain(vet)).toBe(0);
+    // de UI-drempel moet boven het huidige goud liggen — anders liegt de balk "klaar"
+    const nextTarget = fameTargetGold(fameEarnedTotal(vet) + 1);
+    expect(nextTarget).toBeGreaterThan(9_000_000);
+  });
+
+  it("spent Fame raises the next target in lockstep with fameGain staying 0", () => {
+    // identieke lifetime, maar Fame uitgegeven ⇒ hogere drempel, geen valse "klaar"
+    const base = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 3 }, fameSpent: 0 });
+    const spent = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 0 }, fameSpent: 3 });
+    expect(fameGain(base)).toBe(0);
+    expect(fameGain(spent)).toBe(0);
+    expect(fameTargetGold(fameEarnedTotal(spent) + 1)).toBe(fameTargetGold(fameEarnedTotal(base) + 1));
   });
 });
