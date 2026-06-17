@@ -1,6 +1,6 @@
 <script lang="ts">
   import { MERC_COST_SECONDS } from '../../engine/commands';
-  import { autoClickPerSecond, clickGain, comboCap, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
+  import { autoClickPerSecond, clickGain, comboCap, fameEarnedTotal, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
   import GuildYard from '../GuildYard.svelte';
@@ -11,9 +11,11 @@
   const autoRate = $derived(autoClickPerSecond(game.state)['gold'] ?? 0);
   const runGold = $derived(game.state.runEarned['gold'] ?? 0);
   const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
-  const fame = $derived(game.state.balances['fame'] ?? 0);
-  const nextTarget = $derived(fameTargetGold(fame + 1));
-  const prevTarget = $derived(fameTargetGold(fame));
+  // op TOTAAL verdiende Fame (balans + uitgegeven), niet de kale balans: anders
+  // toont de balk "klaar" terwijl fameGain nog 0 is voor spenders/veteranen
+  const earnedFame = $derived(fameEarnedTotal(game.state));
+  const nextTarget = $derived(fameTargetGold(earnedFame + 1));
+  const prevTarget = $derived(fameTargetGold(earnedFame));
   // ETA op het huidige tempo, inclusief je gemeten klikinkomsten: hard klikken
   // ziet het getal live dalen
   const fameEtaSeconds = $derived.by(() => {
