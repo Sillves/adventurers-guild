@@ -163,6 +163,15 @@ export function productionPerSecond(state: GameState): CurrencyMap {
   return total;
 }
 
+/** Goud/s dat één heldtype bijdraagt — exact het aandeel van productionPerSecond. */
+export function heroGoldPerSecond(state: GameState, heroId: string): number {
+  const hero = HEROES.find((h) => h.id === heroId);
+  const count = state.heroes[heroId] ?? 0;
+  if (hero === undefined || count === 0) return 0;
+  const bonus = fameBonus(state.balances['fame'] ?? 0) * raidModifier(state) * productionPerkMultiplier(state.perks);
+  return (hero.production['gold'] ?? 0) * count * heroMultiplier(heroId, state.upgrades) * bonus * milestoneMultiplier(count);
+}
+
 export function clickGain(state: GameState): CurrencyMap {
   const bonus = fameBonus(state.balances['fame'] ?? 0);
   const base = clickMultiplier(state.upgrades) * bonus * clickPerkMultiplier(state.perks);

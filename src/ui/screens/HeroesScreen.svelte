@@ -2,7 +2,7 @@
   import { HEROES } from '../../content/heroes';
   // de knop-gain is het échte inkomensverschil (incl. synergy → auto-quests):
   // pure productie loog tot ~10× te laag bij volle synergy/crit/marshal-stacks
-  import { bulkHeroCost, fameBonus, heroCost, heroMultiplier, incomePerSecond, maxAffordableHeroes, milestoneMultiplier, nextMilestone } from '../../engine/formulas';
+  import { bulkHeroCost, heroCost, heroGoldPerSecond, incomePerSecond, maxAffordableHeroes, milestoneMultiplier, nextMilestone, productionPerSecond } from '../../engine/formulas';
   import { canAfford } from '../../engine/maps';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -48,6 +48,9 @@
     while (count < realmHeroes.length && ownedCount(realmHeroes[count - 1].id) > 0) count += 1;
     return count;
   });
+
+  // totale heldenproductie/s, voor het aandeel-percentage per held
+  const totalProd = $derived(productionPerSecond(game.state)['gold'] ?? 0);
 </script>
 
 <section>
@@ -69,15 +72,15 @@
         ? nextMilestone(owned) - owned
         : buyAmount}
     {@const cost = buyCount === 1 ? heroCost(hero, owned) : bulkHeroCost(hero, owned, buyCount)}
-    {@const perHero = (hero.production.gold ?? 0) * heroMultiplier(hero.id, game.state.upgrades) * fameBonus(game.state.balances['fame'] ?? 0)}
-    {@const production = perHero * Math.max(owned, 1)}
+    {@const production = heroGoldPerSecond(game.state, hero.id)}
+    {@const sharePct = totalProd > 0 ? (production / totalProd) * 100 : 0}
     {@const after = { ...game.state, heroes: { ...game.state.heroes, [hero.id]: owned + buyCount } }}
     {@const buyGain = (incomePerSecond(after)['gold'] ?? 0) - (incomePerSecond(game.state)['gold'] ?? 0)}
     <div class="row">
       <Icon icon={hero.icon} size={32} />
       <div class="info">
         <strong>{hero.name} <span class="count">×{owned}</span></strong>
-        <span class="dim">{owned > 0 ? `+${formatNumber(production)} gold/s` : `produces ${formatNumber(hero.production.gold ?? 0)} gold/s`}</span>
+        <span class="dim">{owned > 0 ? `+${formatNumber(production)} gold/s · ${sharePct.toFixed(1)}% of income` : `produces ${formatNumber(hero.production.gold ?? 0)} gold/s`}</span>
         {#if owned >= 10}
           <span class="stars">⭐ ×{formatNumber(milestoneMultiplier(owned))} · next boost at {nextMilestone(owned)}</span>
         {:else if owned > 0}
