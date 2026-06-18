@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-18',
+    icon: '💾',
+    title: 'Saves that stick',
+    description:
+      'Some browsers were throwing away your guild when you closed the app, dropping you back to zero. We now ask the browser to keep your save for good. For the most reliable saves, install the game to your home screen (Add to Home Screen) and play it from there — avoid opening it inside another app’s built-in browser.',
+    prs: [65],
+  },
+  {
+    date: '2026-06-18',
     icon: '🌙',
     title: 'Sleep counts now',
     description:
