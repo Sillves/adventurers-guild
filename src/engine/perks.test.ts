@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PERKS } from "../content/perks";
 import { buyPerk } from "./commands";
-import { fameEarnedTotal, fameGain, fameTargetGold } from "./formulas";
+import { fameEarnedTotal, fameGain, fameMilestoneBase, fameTargetGold } from "./formulas";
 import { clickPerkMultiplier, offlinePerkHours, perkCost, productionPerkMultiplier } from "./perks";
 import { createInitialState, type GameState } from "./state";
 
@@ -79,16 +79,15 @@ describe("fame progress consistency (spenders & veterans)", () => {
     const vet = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 50 }, fameSpent: 0 });
     expect(fameGain(vet)).toBe(0);
     // de UI-drempel moet boven het huidige goud liggen — anders liegt de balk "klaar"
-    const nextTarget = fameTargetGold(fameEarnedTotal(vet) + 1);
-    expect(nextTarget).toBeGreaterThan(9_000_000);
+    expect(fameTargetGold(fameMilestoneBase(vet) + 1)).toBeGreaterThan(9_000_000);
   });
 
-  it("spent Fame raises the next target in lockstep with fameGain staying 0", () => {
-    // identieke lifetime, maar Fame uitgegeven ⇒ hogere drempel, geen valse "klaar"
-    const base = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 3 }, fameSpent: 0 });
-    const spent = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 0 }, fameSpent: 3 });
-    expect(fameGain(base)).toBe(0);
-    expect(fameGain(spent)).toBe(0);
-    expect(fameTargetGold(fameEarnedTotal(spent) + 1)).toBe(fameTargetGold(fameEarnedTotal(base) + 1));
+  it("a normal player with unclaimed Fame still has the next target ABOVE current gold", () => {
+    // veel onclaimed Fame: totalFameFor(lifetime) ligt boven balans+uitgegeven.
+    // Op fameEarnedTotal mikken zou de drempel ONDER huidig goud leggen — fout.
+    const lifetime = 48_400_000_000_000_000_000; // 48.4Qi
+    const player = stateWith({ lifetimeEarned: { gold: lifetime }, balances: { fame: 1551 }, fameSpent: 448 });
+    expect(fameGain(player)).toBeGreaterThan(0); // heeft fame klaar
+    expect(fameTargetGold(fameMilestoneBase(player) + 1)).toBeGreaterThan(lifetime);
   });
 });

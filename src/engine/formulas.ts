@@ -275,6 +275,19 @@ export function fameGain(state: GameState): number {
   return Math.max(0, earnedFame - state.fameSpent - (state.balances['fame'] ?? 0));
 }
 
+/**
+ * Fame-niveau waarop de UI de "volgende punt"-drempel baseert: het hoogste van
+ * wat je lifetime nú oplevert (totalFameFor) en wat je al hebt vastgezet
+ * (fameEarnedTotal). Zo ligt fameTargetGold(base+1) altijd bóven je huidige goud
+ * én springt fameGain er precies overheen — zowel voor normale spelers met nog
+ * niet-geclaimde Fame als voor gebankte veteranen. Op één van de twee mikken
+ * gaat fout: alleen totalFameFor liegt voor veteranen, alleen fameEarnedTotal
+ * liegt voor wie onclaimed Fame heeft (drempel zou ónder huidig goud vallen).
+ */
+export function fameMilestoneBase(state: GameState): number {
+  return Math.max(totalFameFor(state.lifetimeEarned['gold'] ?? 0), fameEarnedTotal(state));
+}
+
 export function isRealmUnlocked(realm: RealmDef, state: GameState): boolean {
   return (state.balances['fame'] ?? 0) >= realm.unlock.minFame;
 }

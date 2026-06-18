@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PerkDef } from '../../content/types';
   import { PERKS } from '../../content/perks';
-  import { fameBonus, fameEarnedTotal, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
+  import { fameBonus, fameGain, fameMilestoneBase, fameTargetGold, incomePerSecond } from '../../engine/formulas';
   import { clickPerkMultiplier, perkCost, productionPerkMultiplier } from '../../engine/perks';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -9,10 +9,10 @@
   const currentFame = $derived(game.state.balances['fame'] ?? 0);
   const gain = $derived(fameGain(game.state));
   const lifetimeGold = $derived(game.state.lifetimeEarned['gold'] ?? 0);
-  // volgende drempel = lifetime goud nodig om voorbij je TOTAAL verdiende Fame
-  // (balans + uitgegeven) te komen. Consistent met de Guild-balk én met fameGain:
-  // toont nooit "klaar" terwijl er 0 fame komt (spenders + gebankte veteranen)
-  const nextTarget = $derived(fameTargetGold(fameEarnedTotal(game.state) + 1));
+  // volgende drempel op max(totalFameFor lifetime, balans+uitgegeven) + 1: ligt
+  // altijd boven huidig goud en beweegt mee met fameGain — klopt voor onclaimed
+  // Fame (normaal) én gebankte veteranen. Consistent met de Guild-balk.
+  const nextTarget = $derived(fameTargetGold(fameMilestoneBase(game.state) + 1));
   const etaSeconds = $derived.by(() => {
     const rate = (incomePerSecond(game.state)['gold'] ?? 0) + game.clickIncomeRate;
     if (rate <= 0) return null;
