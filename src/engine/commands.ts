@@ -8,6 +8,7 @@ import {
   fameGain,
   incomePerSecond,
   isUpgradeUnlocked,
+  totalFameFor,
 } from "./formulas";
 import { perkCost } from "./perks";
 import { addMaps, canAfford, scaleMap, subtractMaps } from "./maps";
@@ -25,11 +26,16 @@ export const FRENZY_SECONDS = 60;
 export const MERC_COST_SECONDS = 300;
 
 export function earn(state: GameState, amount: CurrencyMap): GameState {
+  const lifetimeEarned = addMaps(state.lifetimeEarned, amount);
+  // fameEarned stijgt monotoon mee met je lifetime goud — de enige plek waar
+  // lifetimeEarned groeit, dus de enige plek die fameEarned hoeft bij te werken.
+  const earned = totalFameFor(lifetimeEarned['gold'] ?? 0);
   return {
     ...state,
     balances: addMaps(state.balances, amount),
     runEarned: addMaps(state.runEarned, amount),
-    lifetimeEarned: addMaps(state.lifetimeEarned, amount),
+    lifetimeEarned,
+    fameEarned: earned > state.fameEarned ? earned : state.fameEarned,
   };
 }
 
@@ -178,5 +184,6 @@ export function doPrestige(state: GameState, now: number): GameState {
     // gekochte perks en de daaraan uitgegeven Fame blijven over refounds heen
     perks: state.perks,
     fameSpent: state.fameSpent,
+    fameEarned: state.fameEarned,
   };
 }

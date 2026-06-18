@@ -1,7 +1,7 @@
 import { CURRENCIES } from "../content/currencies";
 import type { CurrencyMap } from "../content/types";
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /** Levenslange tellers voor de statistiekenpagina; overleven prestige. */
 export interface GameStats {
@@ -48,6 +48,13 @@ export interface GameState {
   readonly achievements: readonly string[];
   /** Niveau per prestige-perk (id → niveau); overleeft prestige, nooit verlaagd. */
   readonly perks: Readonly<Record<string, number>>;
+  /**
+   * Totaal ooit verdiende Fame — de enige bron van waarheid voor Fame. Stijgt
+   * monotoon mee met je lifetime goud (max van totalFameFor), nooit omlaag, ook
+   * niet als de curve later steiler wordt. Balans + fameSpent + nog-te-claimen
+   * volgen hieruit; zo bestaan er geen twee uiteenlopende "fame-niveaus" meer.
+   */
+  readonly fameEarned: number;
   /** Levenslang aan perks uitgegeven Fame; overleeft prestige (permanente kost). */
   readonly fameSpent: number;
   /** Aantal refounds ooit; overleeft prestige. */
@@ -73,6 +80,7 @@ export function createInitialState(now: number): GameState {
     upgrades: [],
     achievements: [],
     perks: {},
+    fameEarned: 0,
     fameSpent: 0,
     prestiges: 0,
     raid: null,

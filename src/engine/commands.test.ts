@@ -104,7 +104,8 @@ describe('doPrestige', () => {
     const state = {
       ...createInitialState(0),
       balances: { gold: 2_000_000, fame: 2 },
-      lifetimeEarned: { gold: 5_000_000 }, // fame 3 vergt 9M lifetime
+      lifetimeEarned: { gold: 5_000_000 }, // 2 fame waard, al in bezit
+      fameEarned: 2,
     };
     expect(doPrestige(state, 123)).toBe(state);
   });
@@ -115,6 +116,7 @@ describe('doPrestige', () => {
       balances: { gold: 5_000_000, fame: 2 },
       runEarned: { gold: 9_000_000 },
       lifetimeEarned: { gold: 25_000_000 }, // totaal 5 fame waard
+      fameEarned: 5,
       heroes: { farmhand: 50 },
       upgrades: ['stronger-grip'],
     };
@@ -188,7 +190,8 @@ describe('barbarian raids', () => {
   it('prestige clears any raid and frenzy with the era', () => {
     const raided = {
       ...startRaid(veteran(), 0),
-      lifetimeEarned: { gold: 90_000_000_000 },
+      lifetimeEarned: { gold: 90_000_000_000 }, // 300 fame waard
+      fameEarned: 300,
     };
     const after = doPrestige(raided, 123);
     expect(after.raid).toBeNull();
@@ -231,8 +234,11 @@ describe('lifetime stats', () => {
     const state = {
       ...createInitialState(0),
       lifetimeEarned: { gold: 90_000_000_000 },
+      fameEarned: 300, // genoeg om daadwerkelijk te prestigen
       stats: { clicks: 500, crits: 25, raidsWon: 3, raidsLost: 1, mercsPaid: 2, playSeconds: 7200 },
     };
-    expect(doPrestige(state, 123).stats).toEqual(state.stats);
+    const after = doPrestige(state, 123);
+    expect(after).not.toBe(state); // prestige vond echt plaats
+    expect(after.stats).toEqual(state.stats);
   });
 });

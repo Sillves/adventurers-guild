@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { totalFameFor } from './formulas';
 import { parseSave, serializeSave } from './save';
 import { createInitialState, SAVE_VERSION, zeroStats } from './state';
 
@@ -10,6 +11,7 @@ describe('save round-trip', () => {
       runEarned: { gold: 500 },
       heroes: { farmhand: 3 },
       upgrades: ['stronger-grip'],
+      fameEarned: 2, // ≥ balans+uitgegeven, anders trekt parse het op (invariant)
     };
     expect(parseSave(serializeSave(state))).toEqual(state);
   });
@@ -176,5 +178,36 @@ describe('migration v6 → v7', () => {
     const parsed = parseSave(JSON.stringify(v7));
     expect(parsed?.perks).toEqual({ 'mighty-quests': 3 });
     expect(parsed?.fameSpent).toBe(7);
+  });
+});
+
+describe('migration v7 → v8 (fameEarned single source)', () => {
+  const v7 = {
+    version: 7,
+    balances: { gold: 5, fame: 60 },
+    runEarned: {},
+    lifetimeEarned: { gold: 9_000_000 }, // huidige curve geeft 3 Fame
+    heroes: {},
+    upgrades: [],
+    achievements: [],
+    perks: {},
+    fameSpent: 0,
+    prestiges: 2,
+    raid: null,
+    frenzySeconds: 0,
+    stats: zeroStats(),
+    lastSavedAt: 0,
+  };
+
+  it('reconstructs fameEarned as max(curve, balance + spent) — veterans keep banked Fame', () => {
+    // 60 gebankt ligt boven wat 9M lifetime nu geeft (3) → fameEarned blijft 60
+    const parsed = parseSave(JSON.stringify(v7));
+    expect(parsed?.version).toBe(SAVE_VERSION);
+    expect(parsed?.fameEarned).toBe(60);
+  });
+
+  it('uses the current curve when it exceeds balance + spent (unclaimed Fame)', () => {
+    const big = { ...v7, balances: { gold: 5, fame: 1 }, lifetimeEarned: { gold: 9_000_000_000_000 } };
+    expect(parseSave(JSON.stringify(big))?.fameEarned).toBe(totalFameFor(9_000_000_000_000));
   });
 });

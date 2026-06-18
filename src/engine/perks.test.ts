@@ -1,12 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { PERKS } from "../content/perks";
 import { buyPerk } from "./commands";
-import { fameEarnedTotal, fameGain, fameTargetGold } from "./formulas";
+import { fameGain, fameTargetGold, totalFameFor } from "./formulas";
 import { clickPerkMultiplier, offlinePerkHours, perkCost, productionPerkMultiplier } from "./perks";
 import { createInitialState, type GameState } from "./state";
 
 function stateWith(overrides: Partial<GameState>): GameState {
-  return { ...createInitialState(0), ...overrides };
+  const s = { ...createInitialState(0), ...overrides };
+  // fameEarned-invariant afdwingen zoals de engine: minstens wat je lifetime
+  // oplevert én wat je vasthoudt + uitgaf — zodat teststates realistisch zijn
+  const earned = Math.max(
+    s.fameEarned,
+    totalFameFor(s.lifetimeEarned["gold"] ?? 0),
+    (s.balances["fame"] ?? 0) + s.fameSpent,
+  );
+  return { ...s, fameEarned: earned };
 }
 
 const mighty = PERKS.find((p) => p.id === "mighty-quests")!;
@@ -62,33 +70,31 @@ describe("buyPerk", () => {
   });
 });
 
-describe("fameGain with permanently spent Fame", () => {
+describe("fameGain reads the monotone fameEarned source", () => {
   it("subtracts fameSpent so a refound never refunds spent Fame", () => {
+    // 9M lifetime ⇒ 3 verdiend; 1 uitgegeven, 0 in bezit ⇒ 2 te claimen
     const state = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 0 }, fameSpent: 1 });
-    expect(fameGain(state)).toBe(2); // 3 verdiend − 1 uitgegeven − 0 in bezit
-  });
-});
-
-describe("fame progress consistency (spenders & veterans)", () => {
-  it("fameEarnedTotal = balance + permanently spent", () => {
-    expect(fameEarnedTotal(stateWith({ balances: { fame: 5 }, fameSpent: 3 }))).toBe(8);
+    expect(fameGain(state)).toBe(2);
   });
 
   it("a veteran banked above the current curve gets +0 and a next target ABOVE current gold", () => {
-    // 9M lifetime ⇒ totalFameFor = 3, maar deze speler heeft 50 Fame gebankt (oude curve)
+    // 9M lifetime ⇒ curve geeft 3, maar deze speler bankte 50 Fame (oude curve)
     const vet = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 50 }, fameSpent: 0 });
+    expect(vet.fameEarned).toBe(50); // monotone bron behoudt het gebankte niveau
     expect(fameGain(vet)).toBe(0);
-    // de UI-drempel moet boven het huidige goud liggen — anders liegt de balk "klaar"
-    const nextTarget = fameTargetGold(fameEarnedTotal(vet) + 1);
-    expect(nextTarget).toBeGreaterThan(9_000_000);
+    expect(fameTargetGold(vet.fameEarned + 1)).toBeGreaterThan(9_000_000);
   });
 
-  it("spent Fame raises the next target in lockstep with fameGain staying 0", () => {
-    // identieke lifetime, maar Fame uitgegeven ⇒ hogere drempel, geen valse "klaar"
-    const base = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 3 }, fameSpent: 0 });
-    const spent = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 0 }, fameSpent: 3 });
-    expect(fameGain(base)).toBe(0);
-    expect(fameGain(spent)).toBe(0);
-    expect(fameTargetGold(fameEarnedTotal(spent) + 1)).toBe(fameTargetGold(fameEarnedTotal(base) + 1));
+  it("a normal player with unclaimed Fame keeps the next target ABOVE current gold", () => {
+    const lifetime = 48_400_000_000_000_000_000; // 48.4Qi
+    const player = stateWith({ lifetimeEarned: { gold: lifetime }, balances: { fame: 1551 }, fameSpent: 448 });
+    expect(fameGain(player)).toBeGreaterThan(0);
+    expect(fameTargetGold(player.fameEarned + 1)).toBeGreaterThan(lifetime);
+  });
+
+  it("spending Fame does not move the next target (fameEarned is monotone)", () => {
+    const before = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 3 }, fameSpent: 0 });
+    const after = stateWith({ lifetimeEarned: { gold: 9_000_000 }, balances: { fame: 0 }, fameSpent: 3 });
+    expect(fameTargetGold(after.fameEarned + 1)).toBe(fameTargetGold(before.fameEarned + 1));
   });
 });
