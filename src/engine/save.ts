@@ -4,7 +4,7 @@ import { UPGRADES } from "../content/upgrades";
 import { ACHIEVEMENTS } from "../content/achievements";
 import { PERKS } from "../content/perks";
 import type { CurrencyMap } from "../content/types";
-import { fameTargetGold } from "./formulas";
+import { fameTargetGold, totalFameFor } from "./formulas";
 import {
   SAVE_VERSION,
   zeroBalances,
@@ -50,6 +50,19 @@ const MIGRATIONS: Record<number, (raw: RawObject) => RawObject> = {
   5: (raw) => ({ ...raw, achievements: [] }),
   // v6 kende geen prestige-perks: nog niks gekocht, nog niks aan Fame uitgegeven.
   6: (raw) => ({ ...raw, perks: {}, fameSpent: 0 }),
+  // v7 leidde Fame puur uit lifetime af; v8 bewaart het monotoon als fameEarned.
+  // Reconstrueer het als het hoogste van wat de huidige curve geeft én wat de
+  // speler al had vastgezet (balans + uitgegeven) — gebankte veteranen die onder
+  // de oude, ruimere curve fame verdienden verliezen zo niets.
+  7: (raw) => {
+    const lifetime = asObject(raw.lifetimeEarned).gold;
+    const balance = asObject(raw.balances).fame;
+    const curve = totalFameFor(isValidAmount(lifetime) ? lifetime : 0);
+    const locked =
+      (isValidAmount(balance) ? balance : 0) +
+      (isValidAmount(raw.fameSpent) ? (raw.fameSpent as number) : 0);
+    return { ...raw, fameEarned: Math.max(curve, locked) };
+  },
 };
 
 export function serializeSave(state: GameState): string {
@@ -168,6 +181,14 @@ export function parseSave(json: string): GameState | null {
       : [];
     const perks = sanitizeNumberMap(raw.perks, perkIds, "perk");
     const fameSpent = isValidAmount(raw.fameSpent) ? raw.fameSpent : 0;
+    // fameEarned moet monotoon zijn én de invarianten dekken: minstens wat je
+    // lifetime nú oplevert én minstens wat je vasthoudt + uitgaf. Een te lage
+    // (of geknoeide) waarde wordt zo opgetrokken; nooit een save weigeren.
+    const fameEarned = Math.max(
+      isValidAmount(raw.fameEarned) ? raw.fameEarned : 0,
+      totalFameFor(lifetimeEarned["gold"] ?? 0),
+      (balances["fame"] ?? 0) + fameSpent,
+    );
     const lastSavedAt = isValidAmount(raw.lastSavedAt) ? raw.lastSavedAt : 0;
     const prestiges =
       isValidAmount(raw.prestiges) && Number.isInteger(raw.prestiges)
@@ -188,6 +209,7 @@ export function parseSave(json: string): GameState | null {
       upgrades,
       achievements,
       perks,
+      fameEarned,
       fameSpent,
       prestiges,
       raid,

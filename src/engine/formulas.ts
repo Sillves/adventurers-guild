@@ -259,20 +259,14 @@ export function fameTargetGold(famePoints: number): number {
 }
 
 /**
- * Totaal ooit verdiende Fame: wat je nog in bezit hebt plus wat je permanent aan
- * perks uitgaf. Je volgende nieuwe punt komt pas als totalFameFor(lifetime) hier
- * weer voorbij gaat — UI's moeten hierop rekenen, niet op de kale balans, anders
- * tonen ze "klaar" terwijl fameGain nog 0 is (spenders + gebankte veteranen).
+ * Nog-te-claimen Fame bij een refound: alles wat je ooit verdiende, min wat je
+ * permanent aan perks uitgaf, min wat je al in bezit hebt. Leest puur uit
+ * `fameEarned` (de monotone bron) — niet meer uit de live curve, dus een
+ * curve-wijziging of uitgegeven Fame laat dit nooit negatief "fantoom"-gedrag
+ * vertonen. De volgende-punt-drempel voor de UI is fameTargetGold(fameEarned + 1).
  */
-export function fameEarnedTotal(state: GameState): number {
-  return (state.balances['fame'] ?? 0) + state.fameSpent;
-}
-
 export function fameGain(state: GameState): number {
-  // Permanent uitgegeven Fame (aan perks) telt niet meer mee: anders zou een
-  // refound je uitgegeven Fame teruggeven en was de kost niet permanent.
-  const earnedFame = totalFameFor(state.lifetimeEarned['gold'] ?? 0);
-  return Math.max(0, earnedFame - state.fameSpent - (state.balances['fame'] ?? 0));
+  return Math.max(0, state.fameEarned - state.fameSpent - (state.balances['fame'] ?? 0));
 }
 
 export function isRealmUnlocked(realm: RealmDef, state: GameState): boolean {

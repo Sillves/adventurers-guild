@@ -6,6 +6,7 @@ import {
   heroMilestones, heroMultiplier, incomePerSecond, isRealmUnlocked, maxAffordableHeroes, milestoneMultiplier, nextMilestone, productionPerSecond,
   PRESTIGE_THRESHOLD_GOLD, totalFameFor,
 } from './formulas';
+import { earn } from './commands';
 import { createInitialState } from './state';
 import { REALMS } from '../content/realms';
 
@@ -194,19 +195,19 @@ describe('prestige', () => {
     expect(fameGain(state)).toBe(0);
   });
 
-  it('derives fame from lifetime gold: nth point at n² × 1M', () => {
-    expect(fameGain({ ...createInitialState(0), lifetimeEarned: { gold: 1_000_000 } })).toBe(1);
-    expect(fameGain({ ...createInitialState(0), lifetimeEarned: { gold: 9_000_000 } })).toBe(3);
+  it('earn() banks fame from lifetime gold: nth point at n² × 1M', () => {
+    // earn is de enige plek die fameEarned bijwerkt (monotoon met lifetime goud)
+    expect(earn(createInitialState(0), { gold: 1_000_000 }).fameEarned).toBe(1);
+    expect(earn(createInitialState(0), { gold: 9_000_000 }).fameEarned).toBe(3);
+    expect(fameGain(earn(createInitialState(0), { gold: 9_000_000 }))).toBe(3);
   });
 
   it('subtracts owned fame, so re-grinding old milestones yields nothing', () => {
-    const state = {
-      ...createInitialState(0),
-      balances: { gold: 0, fame: 3 },
-      lifetimeEarned: { gold: 9_500_000 },
-    };
+    // 3 fame al in bezit; 9.5M lifetime is nog steeds 3 waard ⇒ niks nieuw
+    const state = { ...createInitialState(0), balances: { gold: 0, fame: 3 }, lifetimeEarned: { gold: 9_500_000 }, fameEarned: 3 };
     expect(fameGain(state)).toBe(0);
-    expect(fameGain({ ...state, lifetimeEarned: { gold: 16_000_000 } })).toBe(1);
+    // doorgrinden naar 16M (het 4e punt) levert via earn() precies 1 nieuw punt
+    expect(fameGain(earn(state, { gold: 6_500_000 }))).toBe(1);
   });
 
   it('computes the lifetime gold target for the nth fame point', () => {
