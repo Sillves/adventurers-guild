@@ -14,6 +14,13 @@ const storage = new RotatingSaveStorage(localStorageStore);
 let state = $state.raw<GameState>(createInitialState(Date.now()));
 let offlineReport = $state.raw<OfflineReport | null>(null);
 let lastTick = 0;
+// Wandklok-ijkpunt naast lastTick (die op de monotone performance-klok loopt).
+// Slaapt de laptop, dan staat de monotone klok stil maar de wandklok niet — het
+// verschil tussen beide is precies de gemiste tijd, die we als offline verrekenen.
+let lastWall = 0;
+// Eén live frame mag nooit meer dan dit bijschrijven: een grotere sprong is geen
+// frame maar een gat (slaap/achtergrond) en gaat via het gecapte offline-pad.
+const MAX_LIVE_DT = 5;
 
 // Wachtrij met net-ontgrendelde achievement-ids; de UI toont er een toast voor
 // en haalt ze er daarna weer af. Ephemeral — staat nooit in de save.
@@ -75,8 +82,23 @@ export const game = {
     // op hebben, zónder een muur van toasts. Live unlocks (in de tick) wél.
     state = reconcileAchievements(state).state;
     lastTick = performance.now();
+    lastWall = Date.now();
     const tick = (now: number): void => {
-      const dt = (now - lastTick) / 1000;
+      const wallNow = Date.now();
+      const rawDt = (now - lastTick) / 1000;
+      const wallDt = (wallNow - lastWall) / 1000;
+      // De wandtijd die deze tick miste t.o.v. de (gecapte) monotone tijd: bij
+      // sluimerstand of een bevroren achtergrondtab loopt de wandklok door
+      // terwijl performance.now() stilstaat. Dat gat verrekenen we via hetzelfde
+      // gecapte offline-pad als bij een herstart — mét "welkom terug"-rapport.
+      const gap = Math.max(0, wallDt - Math.min(Math.max(rawDt, 0), MAX_LIVE_DT));
+      if (gap >= 1) {
+        const result = applyOffline({ ...state, lastSavedAt: wallNow - gap * 1000 }, wallNow);
+        state = result.state;
+        if (result.report !== null) offlineReport = result.report;
+        persist(); // lastSavedAt bijwerken zodat het gat niet dubbel telt
+      }
+      const dt = Math.min(Math.max(rawDt, 0), MAX_LIVE_DT);
       state = advance(state, dt);
       if (comboHeat > 0 && now - lastQuestAt > COMBO_IDLE_MS) {
         comboHeat = Math.max(0, comboHeat - dt * COMBO_DRAIN_PER_SECOND);
@@ -121,6 +143,7 @@ export const game = {
         playSound("prestige");
       }
       lastTick = now;
+      lastWall = wallNow;
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);

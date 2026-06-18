@@ -13,6 +13,14 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    date: '2026-06-18',
+    icon: '🌙',
+    title: 'Sleep counts now',
+    description:
+      'Closing your laptop lid (or letting it sleep) used to freeze your guild — you came back to zero progress for that whole time. Now waking up credits the away-time just like reopening the app does, capped at your offline limit, with the usual welcome-back report.',
+    prs: [64],
+  },
+  {
     date: '2026-06-17',
     icon: '🏆',
     title: 'Honest Fame progress',
