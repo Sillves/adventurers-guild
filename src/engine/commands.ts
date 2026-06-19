@@ -10,7 +10,7 @@ import {
   isUpgradeUnlocked,
   totalFameFor,
 } from "./formulas";
-import { perkCost } from "./perks";
+import { heroCostMultiplier, perkCost } from "./perks";
 import { addMaps, canAfford, scaleMap, subtractMaps } from "./maps";
 import { createInitialState, type GameState } from "./state";
 
@@ -61,7 +61,7 @@ export function buyHero(
   const def = HEROES.find((h) => h.id === heroId);
   if (def === undefined || count < 1 || !Number.isInteger(count)) return state;
   const owned = state.heroes[heroId] ?? 0;
-  const cost = bulkHeroCost(def, owned, count);
+  const cost = bulkHeroCost(def, owned, count, heroCostMultiplier(state.perks));
   if (!canAfford(state.balances, cost)) return state;
   return {
     ...state,

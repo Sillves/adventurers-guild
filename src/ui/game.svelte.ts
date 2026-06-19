@@ -8,6 +8,7 @@ import { localStorageStore, RotatingSaveStorage } from "../engine/storage";
 import { ClickGuard, ROBOTIC_LABEL_MS } from "./clickguard";
 import { playSound, startMusic, vibrate } from "./sound";
 import { reconcileAchievements } from "../engine/achievements";
+import { raidIntervalMultiplier } from "../engine/perks";
 
 const storage = new RotatingSaveStorage(localStorageStore);
 
@@ -48,12 +49,19 @@ let lastGuardedAt = 0;
 
 // Raid-spawner: alleen tijdens actieve speeltijd (tab zichtbaar), elke 10-20
 // minuten. De teller is ephemeral — de tab sluiten pauzeert hem, een lopende
-// raid zelf staat wél in de save (en lost offline op via applyOffline).
+// raid zelf staat wél in de save (en lost offline op via applyOffline). De
+// Fame-perk Call to Arms verkort het interval (raidIntervalMultiplier < 1).
 const RAID_SPAWN_MIN_S = 600;
 const RAID_SPAWN_MAX_S = 1200;
 let activeSeconds = 0;
-let nextRaidAtActive =
-  RAID_SPAWN_MIN_S + Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
+
+/** Wachttijd tot de volgende raid, geschaald door de Call-to-Arms-perk. */
+function rollRaidDelay(): number {
+  const span = RAID_SPAWN_MIN_S + Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
+  return span * raidIntervalMultiplier(state.perks);
+}
+
+let nextRaidAtActive = rollRaidDelay();
 
 function persist(): void {
   state = { ...state, lastSavedAt: Date.now() };
@@ -81,6 +89,8 @@ export const game = {
     // Eenmalig stil aanvullen: bestaande spelers krijgen meteen waar ze al recht
     // op hebben, zónder een muur van toasts. Live unlocks (in de tick) wél.
     state = reconcileAchievements(state).state;
+    // herbereken de eerste raid-wachttijd nu de save (en dus Call-to-Arms) geladen is
+    nextRaidAtActive = rollRaidDelay();
     lastTick = performance.now();
     lastWall = Date.now();
     const tick = (now: number): void => {
@@ -215,10 +225,7 @@ export const game = {
     if (state.raid === null) {
       playSound("prestige");
       vibrate([30, 40, 30]);
-      nextRaidAtActive =
-        activeSeconds +
-        RAID_SPAWN_MIN_S +
-        Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
+      nextRaidAtActive = activeSeconds + rollRaidDelay();
       return phase === "incoming" ? "won" : "hit";
     }
     // het gevecht klinkt steeds hoger naarmate de barbaren wankelen
@@ -230,10 +237,7 @@ export const game = {
     const next = commands.payMercenaries(state);
     if (next !== state) {
       playSound("buy");
-      nextRaidAtActive =
-        activeSeconds +
-        RAID_SPAWN_MIN_S +
-        Math.random() * (RAID_SPAWN_MAX_S - RAID_SPAWN_MIN_S);
+      nextRaidAtActive = activeSeconds + rollRaidDelay();
     }
     state = next;
   },

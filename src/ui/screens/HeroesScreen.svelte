@@ -3,6 +3,7 @@
   // de knop-gain is het échte inkomensverschil (incl. synergy → auto-quests):
   // pure productie loog tot ~10× te laag bij volle synergy/crit/marshal-stacks
   import { bulkHeroCost, heroCost, heroGoldPerSecond, incomePerSecond, maxAffordableHeroes, milestoneMultiplier, nextMilestone, productionPerSecond } from '../../engine/formulas';
+  import { heroCostMultiplier } from '../../engine/perks';
   import { canAfford } from '../../engine/maps';
   import { formatNumber } from '../format';
   import { game } from '../game.svelte';
@@ -51,6 +52,9 @@
 
   // totale heldenproductie/s, voor het aandeel-percentage per held
   const totalProd = $derived(productionPerSecond(game.state)['gold'] ?? 0);
+  // Fame-perk-korting op de heldenkost: overal dezelfde, zodat de getoonde prijs
+  // klopt met wat de engine afschrijft
+  const heroDiscount = $derived(heroCostMultiplier(game.state.perks));
 </script>
 
 <section>
@@ -67,11 +71,11 @@
   {#each realmHeroes.slice(0, visibleCount) as hero (hero.id)}
     {@const owned = ownedCount(hero.id)}
     {@const buyCount = buyAmount === 'max'
-      ? Math.max(maxAffordableHeroes(hero, owned, game.state.balances), 1)
+      ? Math.max(maxAffordableHeroes(hero, owned, game.state.balances, heroDiscount), 1)
       : buyAmount === 'boost'
         ? nextMilestone(owned) - owned
         : buyAmount}
-    {@const cost = buyCount === 1 ? heroCost(hero, owned) : bulkHeroCost(hero, owned, buyCount)}
+    {@const cost = buyCount === 1 ? heroCost(hero, owned, heroDiscount) : bulkHeroCost(hero, owned, buyCount, heroDiscount)}
     {@const production = heroGoldPerSecond(game.state, hero.id)}
     {@const sharePct = totalProd > 0 ? (production / totalProd) * 100 : 0}
     {@const after = { ...game.state, heroes: { ...game.state.heroes, [hero.id]: owned + buyCount } }}

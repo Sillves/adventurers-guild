@@ -89,7 +89,13 @@ export type PerkEffect =
   /** +perLevel op de productie-multiplier per niveau. */
   | { readonly kind: "production"; readonly perLevel: number }
   /** Extra offline-uren per niveau, bovenop de cap van 8u. */
-  | { readonly kind: "offlineCapHours"; readonly perLevel: number };
+  | { readonly kind: "offlineCapHours"; readonly perLevel: number }
+  /** −perLevel op de heldenkost per niveau (0.02 = 2% goedkoper per niveau). */
+  | { readonly kind: "heroDiscount"; readonly perLevel: number }
+  /** −perLevel op het raid-spawn-interval per niveau: barbaren komen vaker. */
+  | { readonly kind: "raidSpeed"; readonly perLevel: number }
+  /** +perLevel op de frenzy-factor per niveau, bovenop de basis van ×2. */
+  | { readonly kind: "frenzyPower"; readonly perLevel: number };
 
 export interface PerkDef {
   readonly id: string;
