@@ -87,9 +87,9 @@ describe('buyUpgrade', () => {
 
   it('locks a legion upgrade until you own enough of that hero', () => {
     const rich = { ...createInitialState(0), balances: { gold: 1e20, fame: 0 } };
-    const tooFew = { ...rich, heroes: { farmhand: 249 } };
-    expect(buyUpgrade(tooFew, 'farmhand-host')).toBe(tooFew); // 250 vereist
-    const enough = { ...rich, heroes: { farmhand: 250 } };
+    const tooFew = { ...rich, heroes: { farmhand: 49 } };
+    expect(buyUpgrade(tooFew, 'farmhand-host')).toBe(tooFew); // 50 vereist
+    const enough = { ...rich, heroes: { farmhand: 50 } };
     expect(buyUpgrade(enough, 'farmhand-host').upgrades).toContain('farmhand-host');
   });
 

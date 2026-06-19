@@ -17,7 +17,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
     icon: '⚔️',
     title: 'Legions & deeper upgrades',
     description:
-      'Your starter heroes get more to grind for. New tier-4 upgrades for Farmhands, Squires, Warriors, Archers and Mages keep your old heroes worth pumping. And huge new Legion upgrades unlock when you hoard 250, 500 or 1,000 of one hero type — stack them into a force of nature.',
+      'Your starter heroes get more to grind for. New tier-4 upgrades for Farmhands, Squires, Warriors, Archers and Mages keep your old heroes worth pumping. And huge new Legion upgrades unlock when you hoard 50, 150 or 300 of one hero type — stack them into a force of nature.',
     prs: [67],
   },
   {
