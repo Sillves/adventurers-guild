@@ -51,6 +51,8 @@ export interface UpgradeDef {
   readonly effect: UpgradeEffect;
   /** Optionele vereiste: deze upgrade moet eerst gekocht zijn. */
   readonly requires?: string;
+  /** Optionele vereiste: minstens `count` exemplaren van een specifieke held. */
+  readonly requiresHeroCount?: { readonly heroId: string; readonly count: number };
 }
 
 export type AchievementCondition =
