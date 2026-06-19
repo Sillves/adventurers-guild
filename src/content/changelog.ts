@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-19',
+    icon: '⚔️',
+    title: 'Legions & deeper upgrades',
+    description:
+      'Your starter heroes get more to grind for. New tier-4 upgrades for Farmhands, Squires, Warriors, Archers and Mages keep your old heroes worth pumping. And huge new Legion upgrades unlock when you hoard 50, 150 or 300 of one hero type — stack them into a force of nature.',
+    prs: [67],
+  },
+  {
+    date: '2026-06-19',
     icon: '🏆',
     title: 'Three new Fame perks',
     description:

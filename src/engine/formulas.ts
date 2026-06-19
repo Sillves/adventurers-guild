@@ -294,6 +294,7 @@ export function isHeroRevealed(heroId: string, state: GameState): boolean {
  */
 export function isUpgradeUnlocked(def: UpgradeDef, state: GameState): boolean {
   if (def.requires !== undefined && !state.upgrades.includes(def.requires)) return false;
+  if (def.requiresHeroCount !== undefined && (state.heroes[def.requiresHeroCount.heroId] ?? 0) < def.requiresHeroCount.count) return false;
   if ('multiplier' in def.effect && def.effect.target.startsWith('hero:')) {
     const heroId = def.effect.target.slice('hero:'.length);
     return (state.heroes[heroId] ?? 0) > 0;
