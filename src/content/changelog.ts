@@ -13,6 +13,14 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    date: '2026-06-19',
+    icon: '🏆',
+    title: 'Three new Fame perks',
+    description:
+      'The Fame shop grows: 💰 Thrifty Guild makes heroes cheaper to recruit, 🪓 Call to Arms brings barbarian raids around sooner, and 🔥 War Spoils makes your victory frenzy hit harder. Level each one up with Fame for a permanent edge.',
+    prs: [66],
+  },
+  {
     date: '2026-06-18',
     icon: '💾',
     title: 'Saves that stick',

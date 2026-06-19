@@ -8,6 +8,7 @@
   import { HEROES } from '../content/heroes';
   import { UPGRADES } from '../content/upgrades';
   import { heroCost, incomePerSecond, isUpgradeUnlocked } from '../engine/formulas';
+  import { heroCostMultiplier } from '../engine/perks';
   import { addMaps, canAfford } from '../engine/maps';
   import { formatNumber } from './format';
   import { game } from './game.svelte';
@@ -107,10 +108,11 @@
   }
 
   // Alleen zichtbare heroes tellen mee: na de eerste niet-gekochte hero stopt de reveal.
+  const heroDiscount = $derived(heroCostMultiplier(game.state.perks));
   const heroAffordable = $derived.by(() => {
     for (const hero of HEROES.filter((h) => h.realmId === realmId)) {
       const owned = game.state.heroes[hero.id] ?? 0;
-      if (canAfford(game.state.balances, heroCost(hero, owned))) return true;
+      if (canAfford(game.state.balances, heroCost(hero, owned, heroDiscount))) return true;
       if (owned === 0) break;
     }
     return false;

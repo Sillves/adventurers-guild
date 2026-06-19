@@ -43,3 +43,36 @@ export function offlinePerkHours(perks: PerkLevels): number {
   }
   return hours;
 }
+
+/**
+ * Multiplier op de heldenkost: 1 − Σ perLevel×niveau. Geklemd op minstens 10%
+ * van de basisprijs, zodat geknoei of veel niveaus de kost nooit tot 0 drukt.
+ */
+export function heroCostMultiplier(perks: PerkLevels): number {
+  let reduction = 0;
+  for (const p of PERKS) {
+    if (p.effect.kind === "heroDiscount") reduction += p.effect.perLevel * levelOf(perks, p);
+  }
+  return Math.max(0.1, 1 - reduction);
+}
+
+/**
+ * Multiplier op het raid-spawn-interval: 1 − Σ perLevel×niveau. Lager = vaker.
+ * Geklemd op minstens 30% van de basis, zodat raids niet aan één stuk doorgaan.
+ */
+export function raidIntervalMultiplier(perks: PerkLevels): number {
+  let reduction = 0;
+  for (const p of PERKS) {
+    if (p.effect.kind === "raidSpeed") reduction += p.effect.perLevel * levelOf(perks, p);
+  }
+  return Math.max(0.3, 1 - reduction);
+}
+
+/** Extra frenzy-factor bovenop de basis (×2) uit gekochte perk-niveaus. */
+export function frenzyPerkBonus(perks: PerkLevels): number {
+  let bonus = 0;
+  for (const p of PERKS) {
+    if (p.effect.kind === "frenzyPower") bonus += p.effect.perLevel * levelOf(perks, p);
+  }
+  return bonus;
+}

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { PERKS } from "../content/perks";
-import { buyPerk } from "./commands";
+import { buyHero, buyPerk } from "./commands";
 import { fameGain, fameTargetGold, totalFameFor } from "./formulas";
-import { clickPerkMultiplier, offlinePerkHours, perkCost, productionPerkMultiplier } from "./perks";
+import { clickPerkMultiplier, frenzyPerkBonus, heroCostMultiplier, offlinePerkHours, perkCost, productionPerkMultiplier, raidIntervalMultiplier } from "./perks";
 import { createInitialState, type GameState } from "./state";
 
 function stateWith(overrides: Partial<GameState>): GameState {
@@ -40,6 +40,21 @@ describe("perk effect folding (per level)", () => {
     expect(offlinePerkHours({ "night-watch": 4 })).toBe(4);
   });
 
+  it("discounts hero cost, frenzy and raid interval per level", () => {
+    expect(heroCostMultiplier({})).toBe(1);
+    expect(heroCostMultiplier({ "thrifty-guild": 5 })).toBeCloseTo(0.9); // 1 − 0.02×5
+    expect(frenzyPerkBonus({})).toBe(0);
+    expect(frenzyPerkBonus({ "war-spoils": 3 })).toBeCloseTo(0.3); // +0.1×3
+    expect(raidIntervalMultiplier({})).toBe(1);
+    expect(raidIntervalMultiplier({ "call-to-arms": 4 })).toBeCloseTo(0.8); // 1 − 0.05×4
+  });
+
+  it("clamps hero discount and raid interval to a safe floor", () => {
+    // zelfs bij geknoei kan de kost nooit onder 10% en het interval nooit onder 30%
+    expect(heroCostMultiplier({ "thrifty-guild": 999 })).toBe(Math.max(0.1, 1 - 0.02 * 8));
+    expect(raidIntervalMultiplier({ "call-to-arms": 999 })).toBe(Math.max(0.3, 1 - 0.05 * 8));
+  });
+
   it("clamps tampered levels to [0, maxLevel] and floors fractions", () => {
     expect(clickPerkMultiplier({ "mighty-quests": 999 })).toBeCloseTo(1 + 0.25 * mighty.maxLevel);
     expect(productionPerkMultiplier({ "seasoned-guild": 2.9 })).toBeCloseTo(1 + 0.1 * 2);
@@ -67,6 +82,14 @@ describe("buyPerk", () => {
   it("refuses to exceed maxLevel (unchanged state)", () => {
     const maxed = stateWith({ balances: { fame: 1e9 }, perks: { "mighty-quests": mighty.maxLevel } });
     expect(buyPerk(maxed, "mighty-quests")).toBe(maxed);
+  });
+
+  it("charges the discounted hero price when Thrifty Guild is owned", () => {
+    // farmhand kost normaal 15; met 5 niveaus korting (−10%) → ceil(15 × 0.9) = 14
+    const thrifty = stateWith({ balances: { gold: 14, fame: 0 }, perks: { "thrifty-guild": 5 } });
+    const after = buyHero(thrifty, "farmhand");
+    expect(after.heroes["farmhand"]).toBe(1);
+    expect(after.balances["gold"]).toBe(0);
   });
 });
 

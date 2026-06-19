@@ -34,10 +34,21 @@
     const fame = game.state.balances['fame'] ?? 0;
     const bonusBefore = fameBonus(fame);
     const bonusAfter = fameBonus(Math.max(0, fame - cost));
+    // De passieve productie-bonus die je opgeeft door deze Fame uit te geven —
+    // als suffix bij perks die zelf niet in prod/click te meten zijn.
+    const lossPct = (bonusBefore / bonusAfter - 1) * 100;
+    const loss = lossPct >= 0.05 ? ` · −${lossPct.toFixed(1)}% prod` : '';
     if (perk.effect.kind === 'offlineCapHours') {
-      const lossPct = (bonusBefore / bonusAfter - 1) * 100;
-      const loss = lossPct >= 0.05 ? ` · −${lossPct.toFixed(1)}% prod` : '';
       return { text: `+${perk.effect.perLevel}h offline${loss}`, positive: true };
+    }
+    if (perk.effect.kind === 'heroDiscount') {
+      return { text: `−${(perk.effect.perLevel * 100).toFixed(0)}% hero cost${loss}`, positive: true };
+    }
+    if (perk.effect.kind === 'raidSpeed') {
+      return { text: `raids ${(perk.effect.perLevel * 100).toFixed(0)}% sooner${loss}`, positive: true };
+    }
+    if (perk.effect.kind === 'frenzyPower') {
+      return { text: `+${perk.effect.perLevel.toFixed(1)}× frenzy${loss}`, positive: true };
     }
     const after = { ...game.state.perks, [perk.id]: level + 1 };
     const isProd = perk.effect.kind === 'production';

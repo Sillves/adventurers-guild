@@ -14,7 +14,7 @@ import { advance } from '../src/engine/advance';
 import * as commands from '../src/engine/commands';
 import { clickGain, comboCap, critParams, fameGain, heroCost, incomePerSecond, isUpgradeUnlocked } from '../src/engine/formulas';
 import { scaleMap } from '../src/engine/maps';
-import { perkCost } from '../src/engine/perks';
+import { frenzyPerkBonus, heroCostMultiplier, perkCost, raidIntervalMultiplier } from '../src/engine/perks';
 import { createInitialState, type GameState } from '../src/engine/state';
 
 const DAYS = 60;
@@ -48,16 +48,20 @@ function simulate(shouldPrestige: PrestigePolicy, startFame = 0, buyPerks = fals
     t += STEP_SECONDS;
 
     // raid-buit: een verdediger op maximale cadans (elke 10 min) wint 5 min
-    // inkomen plus ~1 min frenzy-extra
+    // inkomen plus frenzy-extra. War Spoils maakt de frenzy sterker en Call to
+    // Arms de raids frequenter — beide vouwen we in de buit zodat de envelope
+    // ook een geüpgradede raid-speler als plafond dekt.
     if (t % 600 === 0 && (state.balances['fame'] ?? 0) >= 50) {
-      state = commands.earn(state, scaleMap(incomePerSecond(state), 360));
+      const frenzyFactor = 2 + frenzyPerkBonus(state.perks);
+      const lootSeconds = (300 + 60 * (frenzyFactor - 1)) / raidIntervalMultiplier(state.perks);
+      state = commands.earn(state, scaleMap(incomePerSecond(state), lootSeconds));
     }
 
     for (;;) {
       let bestCost = Infinity;
       let buy: (() => GameState) | null = null;
       for (const hero of HEROES) {
-        const cost = heroCost(hero, state.heroes[hero.id] ?? 0)['gold'] ?? Infinity;
+        const cost = heroCost(hero, state.heroes[hero.id] ?? 0, heroCostMultiplier(state.perks))['gold'] ?? Infinity;
         if (cost < bestCost) {
           bestCost = cost;
           buy = () => commands.buyHero(state, hero.id);

@@ -2,25 +2,30 @@ import { HEROES } from '../content/heroes';
 import { UPGRADES } from '../content/upgrades';
 import type { CurrencyMap, HeroDef, RealmDef, UpgradeDef } from '../content/types';
 import { addMaps, canAfford, scaleMap } from './maps';
-import { clickPerkMultiplier, productionPerkMultiplier } from './perks';
+import { clickPerkMultiplier, frenzyPerkBonus, productionPerkMultiplier } from './perks';
 
 import type { GameState } from './state';
 
 export const PRESTIGE_THRESHOLD_GOLD = 1_000_000;
 
-export function heroCost(def: HeroDef, owned: number): CurrencyMap {
+/**
+ * Kost van de volgende held. `costMult` is de korting uit Fame-perks (1 = geen
+ * korting); alle aanroepers geven dezelfde multiplier door zodat de getoonde en
+ * de werkelijk afgeschreven prijs altijd gelijk zijn.
+ */
+export function heroCost(def: HeroDef, owned: number, costMult = 1): CurrencyMap {
   const result: Record<string, number> = {};
   for (const [currency, base] of Object.entries(def.baseCost)) {
-    result[currency] = Math.ceil(base * Math.pow(def.costGrowth, owned));
+    result[currency] = Math.ceil(base * Math.pow(def.costGrowth, owned) * costMult);
   }
   return result;
 }
 
 /** Kost van `count` heroes in één keer: exact de som van de losse aankopen. */
-export function bulkHeroCost(def: HeroDef, owned: number, count: number): CurrencyMap {
+export function bulkHeroCost(def: HeroDef, owned: number, count: number, costMult = 1): CurrencyMap {
   let total: CurrencyMap = {};
   for (let i = 0; i < count; i++) {
-    total = addMaps(total, heroCost(def, owned + i));
+    total = addMaps(total, heroCost(def, owned + i, costMult));
   }
   return total;
 }
@@ -28,10 +33,10 @@ export function bulkHeroCost(def: HeroDef, owned: number, count: number): Curren
 const MAX_BULK = 1000;
 
 /** Grootste aantal heroes dat in één keer betaalbaar is (begrensd op 1000). */
-export function maxAffordableHeroes(def: HeroDef, owned: number, balances: CurrencyMap): number {
+export function maxAffordableHeroes(def: HeroDef, owned: number, balances: CurrencyMap, costMult = 1): number {
   let total: CurrencyMap = {};
   for (let n = 0; n < MAX_BULK; n++) {
-    total = addMaps(total, heroCost(def, owned + n));
+    total = addMaps(total, heroCost(def, owned + n, costMult));
     if (!canAfford(balances, total)) return n;
   }
   return MAX_BULK;
@@ -147,7 +152,7 @@ export const FRENZY_FACTOR = 2;
 
 export function raidModifier(state: GameState): number {
   const plunder = state.raid?.phase === 'plundering' ? RAID_PRODUCTION_FACTOR : 1;
-  const frenzy = state.frenzySeconds > 0 ? FRENZY_FACTOR : 1;
+  const frenzy = state.frenzySeconds > 0 ? FRENZY_FACTOR + frenzyPerkBonus(state.perks) : 1;
   return plunder * frenzy;
 }
 
