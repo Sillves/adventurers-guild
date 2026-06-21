@@ -56,11 +56,11 @@ def bow():  # archer
     for y in range(2, 14):                          # houten boog: "(" naar links
         bx = 9 - round(6 * math.sin((y - 2) / 11 * math.pi))
         put(im, bx, y, "wood_lt"); put(im, bx + 1, y, "wood")
-    for y in range(3, 13):                          # pees, recht
+    for y in range(3, 13):                          # pees, recht (archer-kant)
         put(im, 9, y, STR)
-    for x in range(6, 14):                          # pijl over de pees
+    for x in range(2, 10):                          # pijl wijst naar links (richting doel)
         put(im, x, 8, "wood")
-    put(im, 13, 7, "steel_lt"); put(im, 13, 9, "steel_lt"); put(im, 14, 8, "steel")  # punt
+    put(im, 2, 7, "steel_lt"); put(im, 2, 9, "steel_lt"); put(im, 1, 8, "steel")  # punt links
     add_outline(im); return im
 
 
