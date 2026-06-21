@@ -1,6 +1,7 @@
 <script lang="ts">
   import { MERC_COST_SECONDS } from '../../engine/commands';
-  import { autoClickPerSecond, clickGain, comboCap, fameGain, fameTargetGold, incomePerSecond } from '../../engine/formulas';
+  import { autoClickPerSecond, clickGain, comboCap, fameGain, fameTargetGold, FRENZY_FACTOR, incomePerSecond } from '../../engine/formulas';
+  import { frenzyPerkBonus } from '../../engine/perks';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
   import GuildYard from '../GuildYard.svelte';
@@ -33,6 +34,8 @@
   );
   const mercCost = $derived((incomePerSecond(game.state)['gold'] ?? 0) * MERC_COST_SECONDS);
   const frenzySeconds = $derived(Math.ceil(game.state.frenzySeconds));
+  // werkelijke frenzy-multiplier incl. de War Spoils-perk (basis ×2 + 0.1/niveau)
+  const frenzyMult = $derived(FRENZY_FACTOR + frenzyPerkBonus(game.state.perks));
 
   interface FloatingGain {
     readonly id: number;
@@ -104,7 +107,7 @@
       {/if}
     </div>
   {:else if frenzySeconds > 0}
-    <div class="frenzy-banner">⚔️ War spoils! ×2 production — {frenzySeconds}s</div>
+    <div class="frenzy-banner">⚔️ War spoils! ×{frenzyMult % 1 === 0 ? frenzyMult : frenzyMult.toFixed(1)} production — {frenzySeconds}s</div>
   {/if}
 
   <div class="quest-area">

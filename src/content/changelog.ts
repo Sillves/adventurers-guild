@@ -13,6 +13,14 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    date: '2026-06-21',
+    icon: '🔥',
+    title: 'War Spoils shows its true power',
+    description:
+      'The victory frenzy banner was always reading “×2” even after you levelled up War Spoils. Your production was already getting the bigger boost — now the banner shows the real multiplier too.',
+    prs: [68],
+  },
+  {
     date: '2026-06-19',
     icon: '🏆',
     title: 'Three new Fame perks',
