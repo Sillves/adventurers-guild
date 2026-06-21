@@ -22,6 +22,14 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
   },
   {
     date: '2026-06-21',
+    icon: '🎵',
+    title: 'Music volume works on iPhone',
+    description:
+      'On iPhone and iPad the music slider did nothing — iOS ignores the old way of setting volume. Music now runs through the same audio engine as the sound effects, so the slider works on every device.',
+    prs: [69],
+  },
+  {
+    date: '2026-06-21',
     icon: '🔥',
     title: 'War Spoils shows its true power',
     description:
