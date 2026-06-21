@@ -15,6 +15,8 @@
 {/if}
 
 <style>
-  .img { display: block; }
+  /* inline-block + vertical-align zodat een icoon zowel los (flex) als náást
+     tekst netjes uitlijnt, zonder de regel te breken of een baseline-gat */
+  .img { display: inline-block; vertical-align: middle; }
   .pixel { image-rendering: pixelated; }
 </style>

@@ -5,6 +5,7 @@
   import { clickPerkMultiplier, perkCost, productionPerkMultiplier } from '../../engine/perks';
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
+  import Icon from '../Icon.svelte';
 
   const currentFame = $derived(game.state.balances['fame'] ?? 0);
   const gain = $derived(fameGain(game.state));
@@ -67,8 +68,8 @@
   </p>
 
   <div class="panel">
-    <div>Current Fame: <strong>🏆 {formatNumber(currentFame)}</strong> (+{formatNumber((fameBonus(currentFame) - 1) * 100)}% production)</div>
-    <div>Lifetime gold: <strong>🪙 {formatNumber(lifetimeGold)}</strong></div>
+    <div>Current Fame: <strong><Icon icon="sprites/fame.png" size={15} /> {formatNumber(currentFame)}</strong> (+{formatNumber((fameBonus(currentFame) - 1) * 100)}% production)</div>
+    <div>Lifetime gold: <strong><Icon icon="sprites/coin.png" size={15} /> {formatNumber(lifetimeGold)}</strong></div>
     <div>Fame on refound: <strong class="success">+{formatNumber(gain)}</strong></div>
     <p class="dim">
       Next Fame point at {formatNumber(nextTarget)} lifetime gold — each point costs more than the
@@ -89,7 +90,7 @@
   {/if}
 
   <div class="shop">
-    <h3>🏆 Fame Shop</h3>
+    <h3><Icon icon="sprites/fame.png" size={16} /> Fame Shop</h3>
     <p class="dim">
       Spend Fame on permanent perks. Fame spent here is gone for good — it no longer counts toward
       your production bonus, so weigh each perk against the boost you give up.
@@ -101,7 +102,7 @@
       {@const affordable = (game.state.balances['fame'] ?? 0) >= cost}
       {@const net = maxed ? null : netEffect(perk, level, cost)}
       <div class="perk" class:owned={maxed}>
-        <span class="icon">{perk.icon}</span>
+        <span class="icon"><Icon icon={perk.icon} size={22} /></span>
         <div class="info">
           <strong>{perk.name} <span class="lvl">Lv {level}/{perk.maxLevel}</span></strong>
           <span class="dim">{perk.description}</span>
@@ -113,7 +114,7 @@
           <span class="bought">✓ Max</span>
         {:else}
           <button disabled={!affordable} onclick={() => game.buyPerk(perk.id)}>
-            🏆 {formatNumber(cost)}
+            <Icon icon="sprites/fame.png" size={14} /> {formatNumber(cost)}
           </button>
         {/if}
       </div>
