@@ -79,24 +79,25 @@ def thrifty():  # geldzak (heldenkorting)
 
 def call_to_arms():  # strijdbijl
     im = new_icon()
-    for y in range(2, 14):                       # verticale steel
+    for y in range(2, 14):                        # verticale steel
         put(im, 9, y, "wood"); put(im, 10, y, "wood_lt")
-    # bijlkop links: groot blad dat naar links uitbult (de snijkant)
-    blade = {2: (7, 9), 3: (5, 9), 4: (4, 9), 5: (3, 9), 6: (3, 9), 7: (4, 9), 8: (5, 9), 9: (7, 9)}
-    for y, (x0, x1) in blade.items():
+    # asymmetrische bijlkop bovenaan: vlakke top, snijkant bult links uit
+    head = {2: (6, 10), 3: (4, 10), 4: (3, 10), 5: (3, 10), 6: (4, 10), 7: (6, 10)}
+    for y, (x0, x1) in head.items():
         for x in range(x0, x1):
-            put(im, x, y, "steel_lt" if x <= 3 else "steel_dk" if x >= 8 else "steel")
+            put(im, x, y, "steel_lt" if x <= 4 else "steel_dk" if x >= 9 else "steel")
     add_outline(im); return im
 
 
-def war_spoils():  # vlam
+def war_spoils():  # vlam (teardrop, heetst in het onder-midden)
     im = new_icon()
-    for y in range(2, 14):
-        w = int((y - 1) * 0.45)
-        for x in range(7 - w, 8 + w):
-            put(im, x, y, FY if y < 6 else FO if y < 10 else FR)
-    for y in range(8, 13):                        # hete kern
-        put(im, 7, y, FY)
+    rows = {2: (7, 9), 3: (6, 9), 4: (6, 10), 5: (5, 10), 6: (5, 11),
+            7: (4, 11), 8: (4, 11), 9: (4, 11), 10: (5, 11), 11: (5, 10), 12: (6, 9)}
+    for y, (x0, x1) in rows.items():
+        for x in range(x0, x1):
+            d = math.hypot(x - 7.3, (y - 9) * 0.85)
+            put(im, x, y, FY if d < 2.2 else FO if d < 3.8 else FR)
+    put(im, 7, 9, (255, 250, 225, 255)); put(im, 7, 10, FY)  # hete kern
     add_outline(im); return im
 
 
