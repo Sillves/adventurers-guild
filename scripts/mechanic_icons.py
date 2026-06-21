@@ -89,18 +89,34 @@ def drum():  # click-combo — zijaanzicht-trommel met diagonale rijging
     add_outline(im); return im
 
 
-def horn():  # auto-click — heraut-bugel: mondstuk -> uitlopende bel
+def horn():  # auto-click — gebogen strijdhoorn (bel rechtsboven, punt linksonder)
     im = new_icon()
-    put(im, 2, 7, "gold_dk"); put(im, 2, 8, "gold_dk")        # mondstuk
-    for x in range(3, 7):                            # smalle buis
-        put(im, x, 7, "gold_lt"); put(im, x, 8, "gold")
-    for x in range(7, 14):                           # bel, breder naar rechts
-        half = int((x - 6) * 0.75)
-        for y in range(7 - half, 9 + half):
-            put(im, x, y, "gold_lt" if y < 7 else "gold_dk" if y > 8 else "gold")
-    for y in range(2, 14):                           # blinkende belrand
-        if abs(y - 7.5) < 5.6:
-            put(im, 13, y, "gold_lt")
+    G, GL, GD = (228, 172, 42, 255), (250, 212, 92, 255), (168, 118, 24, 255)
+    BAND, BAND_L, MOUTH = (120, 135, 165, 255), (172, 188, 212, 255), (165, 92, 28, 255)
+    samples = []                                     # gebogen middellijn met taps toelopende straal
+    for i in range(61):
+        t = i / 60
+        x = (1 - t) ** 2 * 11.0 + 2 * (1 - t) * t * 6.0 + t ** 2 * 2.5
+        y = (1 - t) ** 2 * 6.0 + 2 * (1 - t) * t * 10.0 + t ** 2 * 12.0
+        r = 2.3 * (1 - t) + 0.7 * t
+        samples.append((x, y, r, t))
+    for px in range(16):
+        for py in range(16):
+            for (cx, cy, r, t) in samples:
+                if (px - cx) ** 2 + (py - cy) ** 2 <= r * r:
+                    if (0.34 < t < 0.42) or (0.48 < t < 0.56):   # twee blauwe banden
+                        put(im, px, py, BAND_L if (px + py) % 2 else BAND)
+                    else:
+                        put(im, px, py, GL if (px < cx - 0.2 and py < cy + 0.4) else GD if px > cx + 0.7 else G)
+                    break
+    bx, by = 11.5, 4.2                               # uitlopende bel + donkere opening
+    for px in range(16):
+        for py in range(16):
+            d = ((px - bx) / 3.6) ** 2 + ((py - by) / 3.0) ** 2
+            if d <= 0.45 and px > bx - 2.5:
+                put(im, px, py, MOUTH)
+            elif 0.45 < d <= 1.05:
+                put(im, px, py, GL)
     add_outline(im); return im
 
 
