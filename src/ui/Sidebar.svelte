@@ -39,11 +39,11 @@
   }
 
   const items: ReadonlyArray<{ id: Screen; label: string; icon: string }> = [
-    { id: 'guild', label: 'Guild', icon: '🏰' },
-    { id: 'heroes', label: 'Heroes', icon: '🧙' },
-    { id: 'upgrades', label: 'Upgrades', icon: '⬆️' },
-    { id: 'prestige', label: 'Prestige', icon: '👑' },
-    { id: 'leaderboard', label: 'Ranking', icon: '🥇' },
+    { id: 'guild', label: 'Guild', icon: 'icons/home.png' },
+    { id: 'heroes', label: 'Heroes', icon: 'icons/multiplayer.png' },
+    { id: 'upgrades', label: 'Upgrades', icon: 'icons/wrench.png' },
+    { id: 'prestige', label: 'Prestige', icon: 'icons/trophy.png' },
+    { id: 'leaderboard', label: 'Ranking', icon: 'icons/leaderboardsSimple.png' },
   ];
 
   // de teller toont wat er werkelijk per seconde binnenkomt: heldenproductie,
@@ -155,20 +155,20 @@
         </div>
       {/if}
     {/each}
-    <button class="scale-hint" onclick={() => (showStats = true)}>📊 Stats</button>
-    <button class="scale-hint" onclick={() => (showAchievements = true)}>🏅 Achievements</button>
-    <button class="scale-hint" onclick={() => (showNumbers = true)}>What's a Qa? ℹ️</button>
+    <button class="scale-hint" onclick={() => (showStats = true)}><Icon icon="icons/barsVertical.png" size={13} /> Stats</button>
+    <button class="scale-hint" onclick={() => (showAchievements = true)}><Icon icon="icons/medal1.png" size={13} /> Achievements</button>
+    <button class="scale-hint" onclick={() => (showNumbers = true)}><Icon icon="icons/question.png" size={13} /> What's a Qa?</button>
     <button class="scale-hint" onclick={openChangelog}>
-      📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
+      <Icon icon="icons/star.png" size={13} /> What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
     </button>
   </div>
   <!-- mobiel: snelle mute in de topbalk; desktop toont sliders -->
   <button class="mute" aria-label={silent ? 'Unmute' : 'Mute'} onclick={onToggleSilence}>
-    {silent ? '🔇' : '🔊'}
+    <Icon icon={silent ? 'icons/audioOff.png' : 'icons/audioOn.png'} size={18} />
   </button>
   <div class="volumes">
-    <label class="vol"><span>🎵</span><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
-    <label class="vol"><span>🔔</span><input type="range" min="0" max="100" value={sfxVol} oninput={onSfxVol} aria-label="Sound effects volume" /></label>
+    <label class="vol"><Icon icon="icons/musicOn.png" size={16} /><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
+    <label class="vol"><Icon icon="icons/audioOn.png" size={16} /><input type="range" min="0" max="100" value={sfxVol} oninput={onSfxVol} aria-label="Sound effects volume" /></label>
   </div>
   {#if wakeLockSupported}
     <div class="awake switch-row">
@@ -183,13 +183,13 @@
       ><span class="knob"></span></button>
     </div>
   {/if}
-  <button class="settings-toggle" onclick={() => (showSettings = !showSettings)}>
-    ⚙️{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
+  <button class="settings-toggle" onclick={() => (showSettings = !showSettings)} aria-label="Settings">
+    <Icon icon="icons/gear.png" size={20} />{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
   </button>
   {#if showSettings}
     <div class="settings-panel">
-      <label class="vol"><span>🎵</span><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
-      <label class="vol"><span>🔔</span><input type="range" min="0" max="100" value={sfxVol} oninput={onSfxVol} aria-label="Sound effects volume" /></label>
+      <label class="vol"><Icon icon="icons/musicOn.png" size={16} /><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
+      <label class="vol"><Icon icon="icons/audioOn.png" size={16} /><input type="range" min="0" max="100" value={sfxVol} oninput={onSfxVol} aria-label="Sound effects volume" /></label>
       {#if wakeLockSupported}
         <hr class="sep" />
         <div class="switch-row">
@@ -206,19 +206,19 @@
       {/if}
       <hr class="sep" />
       <button class="menu-item" onclick={openChangelog}>
-        <span class="mi-icon">📜</span><span class="mi-label">What's new</span>{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
+        <span class="mi-icon"><Icon icon="icons/star.png" size={16} /></span><span class="mi-label">What's new</span>{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
       </button>
-      <button class="menu-item" onclick={() => { showSettings = false; showStats = true; }}><span class="mi-icon">📊</span><span class="mi-label">Stats</span></button>
-      <button class="menu-item" onclick={() => { showSettings = false; showAchievements = true; }}><span class="mi-icon">🏅</span><span class="mi-label">Achievements</span></button>
-      <button class="menu-item" onclick={() => { showSettings = false; showNumbers = true; }}><span class="mi-icon">ℹ️</span><span class="mi-label">What's a Qa?</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; showStats = true; }}><span class="mi-icon"><Icon icon="icons/barsVertical.png" size={16} /></span><span class="mi-label">Stats</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; showAchievements = true; }}><span class="mi-icon"><Icon icon="icons/medal1.png" size={16} /></span><span class="mi-label">Achievements</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; showNumbers = true; }}><span class="mi-icon"><Icon icon="icons/question.png" size={16} /></span><span class="mi-label">What's a Qa?</span></button>
       <hr class="sep" />
-      <button class="menu-item" onclick={() => { showSettings = false; void exportSave(); }}><span class="mi-icon">📤</span><span class="mi-label">Export save</span></button>
-      <button class="menu-item" onclick={() => { showSettings = false; importSave(); }}><span class="mi-icon">📥</span><span class="mi-label">Import save</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; void exportSave(); }}><span class="mi-icon"><Icon icon="icons/export.png" size={16} /></span><span class="mi-label">Export save</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; importSave(); }}><span class="mi-icon"><Icon icon="icons/import.png" size={16} /></span><span class="mi-label">Import save</span></button>
       <hr class="sep" />
-      <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
+      <a class="credits" href="https://github.com/Sillves/adventurers-guild/blob/master/docs/CREDITS.md" target="_blank" rel="noreferrer">Credits & licenses</a>
     </div>
   {/if}
-  <a class="credits desktop-credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
+  <a class="credits desktop-credits" href="https://github.com/Sillves/adventurers-guild/blob/master/docs/CREDITS.md" target="_blank" rel="noreferrer">Credits & licenses</a>
   <div class="save-actions">
     <button onclick={exportSave}>Export save</button>
     <button onclick={importSave}>Import save</button>
@@ -278,7 +278,7 @@
   .settings-panel { display: none; }
   /* consistente menu-rij in het settings-paneel: vaste icoonkolom + label */
   .menu-item { width: 100%; gap: 10px; }
-  .menu-item .mi-icon { flex: none; width: 20px; text-align: center; font-size: 0.95rem; }
+  .menu-item .mi-icon { flex: none; width: 20px; display: inline-flex; justify-content: center; }
   .menu-item .mi-label { flex: 1; }
   /* dunne groepsscheiding tussen secties van het paneel */
   .sep { width: 100%; height: 0; margin: 2px 0; border: none; border-top: 1px solid var(--border); }
