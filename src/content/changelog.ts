@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-21',
+    icon: '🎨',
+    title: 'A cleaner look',
+    description:
+      'The tab bar, settings menu and audio controls now use crisp, consistent icons instead of a mix of emoji, for a tidier and more uniform interface across every device.',
+    prs: [71],
+  },
+  {
+    date: '2026-06-21',
     icon: '✨',
     title: 'Tidier settings on mobile',
     description:
