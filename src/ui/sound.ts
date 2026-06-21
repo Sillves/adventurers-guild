@@ -7,6 +7,16 @@ const LEGACY_MUTE_KEY = 'ag.muted';
 const MUSIC_CEILING = 0.25;
 
 let music: HTMLAudioElement | null = null;
+// Muziek loopt via een Web Audio GainNode (net als de SFX): op iOS Safari is
+// HTMLAudioElement.volume read-only, dus daar deed de muziek-slider niets.
+// De gain regelt het volume wél op élk apparaat. music.volume blijft als
+// fallback voor het geval createMediaElementSource niet beschikbaar is.
+let musicGain: GainNode | null = null;
+
+/** Hoorbaar muziekniveau bij de huidige sliderstand. */
+function musicLevel(): number {
+  return MUSIC_CEILING * (musicVol / 100);
+}
 
 function readVolume(key: string, fallback: number): number {
   try {
@@ -46,7 +56,9 @@ export function getSfxVolume(): number {
 export function setMusicVolume(value: number): void {
   musicVol = Math.min(Math.max(Math.round(value), 0), 100);
   persist(MUSIC_VOL_KEY, musicVol);
-  if (music !== null) music.volume = MUSIC_CEILING * (musicVol / 100);
+  // bij voorkeur via de gain (werkt op iOS); anders terugvallen op het element
+  if (musicGain !== null) musicGain.gain.value = musicLevel();
+  else if (music !== null) music.volume = musicLevel();
 }
 
 export function setSfxVolume(value: number): void {
@@ -145,12 +157,28 @@ export function startMusic(): void {
   try {
     music = new Audio('audio/music.mp3');
     music.loop = true;
-    music.volume = MUSIC_CEILING * (musicVol / 100);
+    music.volume = musicLevel(); // fallback als Web Audio-routing niet lukt
+    // Route door de gedeelde AudioContext zodat de slider óók op iOS werkt.
+    // createMediaElementSource mag maar één keer per element — dat klopt, want
+    // startMusic maakt het element precies één keer aan.
+    try {
+      ctx ??= new AudioContext();
+      if (ctx.state === 'suspended') void ctx.resume();
+      const source = ctx.createMediaElementSource(music);
+      musicGain = ctx.createGain();
+      musicGain.gain.value = musicLevel();
+      source.connect(musicGain).connect(ctx.destination);
+      music.volume = 1; // de gain regelt nu het niveau (element-volume is read-only op iOS)
+    } catch {
+      musicGain = null; // geen Web Audio — music.volume blijft de regelaar
+    }
     void music.play().catch(() => {
       music = null; // autoplay geweigerd — volgende interactie probeert opnieuw
+      musicGain = null;
     });
   } catch {
     music = null;
+    musicGain = null;
   }
 }
 
