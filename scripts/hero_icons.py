@@ -15,14 +15,14 @@ STR = (220, 225, 235, 255)
 
 def pitchfork():  # farmhand
     im = new_icon()
-    for y in range(6, 14):                        # steel
-        put(im, 7, y, "wood"); put(im, 8, y, "wood_lt")
-    for x in (4, 7, 11):                           # 3 tanden
-        for y in range(2, 7):
-            put(im, x, y, "steel" if y > 2 else "steel_lt")
-        put(im, x + 1 if x < 7 else x, 2, "steel_lt")
-    for x in range(4, 12):                          # dwarsbalk
+    for y in range(7, 14):                          # handvat (gecentreerd)
+        put(im, 7, y, "wood_lt"); put(im, 8, y, "wood")
+    for x in range(3, 13):                          # dwarsbalk/socket
         put(im, x, 6, "steel_dk")
+    for tx in (3, 7, 11):                           # 3 dikke tanden met punt
+        for y in range(2, 6):
+            put(im, tx, y, "steel_lt"); put(im, tx + 1, y, "steel")
+        put(im, tx, 2, "steel_lt"); put(im, tx + 1, 2, "steel_lt")
     add_outline(im); return im
 
 
@@ -53,15 +53,14 @@ def sword():  # warrior
 
 def bow():  # archer
     im = new_icon()
-    for y in range(2, 14):                          # houten boog (arc links)
-        dx = round(3.2 * math.sin((y - 2) / 11 * math.pi))
-        put(im, 3 + dx, y, "wood"); put(im, 4 + dx, y, "wood_lt")
-    for y in range(3, 13):                          # pees
-        put(im, 4, y, STR)
-    for x in range(5, 14):                          # pijl
-        put(im, x, 7, "wood_lt")
-    put(im, 13, 6, "steel_lt"); put(im, 13, 8, "steel_lt"); put(im, 14, 7, "steel")  # punt
-    put(im, 5, 6, "steel"); put(im, 5, 8, "steel")  # veren
+    for y in range(2, 14):                          # houten boog: "(" naar links
+        bx = 9 - round(6 * math.sin((y - 2) / 11 * math.pi))
+        put(im, bx, y, "wood_lt"); put(im, bx + 1, y, "wood")
+    for y in range(3, 13):                          # pees, recht
+        put(im, 9, y, STR)
+    for x in range(6, 14):                          # pijl over de pees
+        put(im, x, 8, "wood")
+    put(im, 13, 7, "steel_lt"); put(im, 13, 9, "steel_lt"); put(im, 14, 8, "steel")  # punt
     add_outline(im); return im
 
 
