@@ -19,9 +19,9 @@ def coin():
 
 
 def star():
-    # buitenstraal afgestemd zodat de ster dezelfde ~14px vult als de munt
+    # buitenstraal afgestemd zodat de ster ná de omtrek dezelfde ~14px vult
     cx = cy = 7.5
-    r_out, r_in = 7.7, 3.3
+    r_out, r_in = 6.5, 2.8
     pts = []
     for i in range(10):
         ang = -math.pi / 2 + i * math.pi / 5
@@ -34,30 +34,32 @@ def star():
 
 
 def sword():
+    # binnen ~13px content gehouden (marge voor de omtrek) -> ná omtrek ~14px
     im = new_icon()
-    for i in range(10):                     # kling, linksonder -> rechtsboven
-        x, y = 3 + i, 12 - i
+    for i in range(9):                      # kling, linksonder -> rechtsboven
+        x, y = 3 + i, 11 - i
         put(im, x, y, "steel")
         put(im, x, y - 1, "steel_lt")
         put(im, x + 1, y, "steel_dk")
-    put(im, 14, 1, "steel"); put(im, 13, 1, "steel_lt")   # punt
-    for (x, y) in [(2, 12), (3, 13), (1, 11), (4, 14)]:    # pareerstang
+    put(im, 12, 2, "steel"); put(im, 11, 2, "steel_lt")   # punt
+    for (x, y) in [(2, 11), (3, 12), (1, 10), (4, 13)]:    # pareerstang
         put(im, x, y, "wood")
-    put(im, 1, 13, "wood"); put(im, 0, 14, "wood"); put(im, 2, 13, "wood_lt")  # gevest
+    put(im, 1, 12, "wood"); put(im, 1, 13, "wood"); put(im, 2, 12, "wood_lt")  # gevest
     add_outline(im)
     return im
 
 
 def potion():
+    # content binnen y2..13 (≈12px) -> ná omtrek ~14px, even groot als de rest
     im = new_icon()
-    for y in range(7, 15):                  # romp
+    for y in range(7, 14):                  # romp
         for x in range(4, 12):
-            if math.hypot(x - 7.5, y - 10.5) < 4.2:
+            if math.hypot(x - 7.5, y - 10.0) < 3.9:
                 put(im, x, y, "green" if (x + y) % 5 else "green_lt")
-    for y in range(3, 7):                   # hals
+    for y in range(4, 7):                   # hals
         for x in range(6, 10):
             put(im, x, y, "blue")
-    for y in range(1, 3):                   # kurk
+    for y in range(2, 4):                   # kurk
         for x in range(6, 10):
             put(im, x, y, "wood")
     put(im, 6, 9, "green_lt"); put(im, 6, 10, "white")     # glans
