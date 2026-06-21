@@ -109,7 +109,7 @@
           <span class="cost">✓ Max level</span>
         {:else}
           <span class="gain">{gainText(shown)}</span>
-          <span class="cost" class:too-expensive={!affordable}>🪙 {formatNumber(shown.cost.gold ?? 0)}</span>
+          <span class="cost" class:too-expensive={!affordable}><Icon icon="sprites/coin.png" size={12} /> {formatNumber(shown.cost.gold ?? 0)}</span>
         {/if}
       </button>
     {/each}

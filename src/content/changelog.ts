@@ -13,6 +13,22 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    date: '2026-06-22',
+    icon: '🪙',
+    title: 'Hand-made pixel coins & perks',
+    description:
+      'Gold and Fame now have custom pixel-art icons that match the heroes, and every perk in the Fame shop got its own little drawing — a fist, a moon, a money bag, an axe and more. The grey emoji coin is gone for good.',
+    prs: [73],
+  },
+  {
+    date: '2026-06-21',
+    icon: '🎨',
+    title: 'A cleaner look',
+    description:
+      'The tab bar, settings menu and audio controls now use crisp, consistent icons instead of a mix of emoji, for a tidier and more uniform interface across every device.',
+    prs: [71],
+  },
+  {
     date: '2026-06-21',
     icon: '✨',
     title: 'Tidier settings on mobile',

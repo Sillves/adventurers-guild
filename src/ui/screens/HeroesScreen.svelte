@@ -93,7 +93,7 @@
       </div>
       <button disabled={!canAfford(game.state.balances, cost)} onclick={() => game.buyHero(hero.id, buyCount)}>
         Recruit{#if buyCount > 1}&nbsp;×{buyCount}{/if}<br />
-        <small>🪙 {formatNumber(cost.gold ?? 0)}</small><br />
+        <small><Icon icon="sprites/coin.png" size={12} /> {formatNumber(cost.gold ?? 0)}</small><br />
         <small class="gain">+{formatNumber(buyGain)}/s</small>
       </button>
     </div>
