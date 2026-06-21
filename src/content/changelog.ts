@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-22',
+    icon: '🗡️',
+    title: 'Pixel weapons for your heroes',
+    description:
+      'Your starter heroes’ upgrades now show hand-drawn pixel gear instead of emoji — a pitchfork for Farmhands, a shield for Squires, a sword for Warriors, a bow for Archers and a spellbook for Mages, across every tier and Legion.',
+    prs: [74],
+  },
+  {
+    date: '2026-06-22',
     icon: '🪙',
     title: 'Hand-made pixel coins & perks',
     description:
