@@ -71,8 +71,15 @@ def sparkle():  # click-crit — 4-puntige fonkeling + glinster
             if v or h:
                 near = dx + dy
                 put(im, x, y, "white" if near < 1.6 else "gold_lt" if near < 4 else "gold")
-    for (x, y) in [(12, 3), (13, 3), (12, 2)]:        # kleine tweede glinster
-        put(im, x, y, "gold_lt")
+    corners = [                                        # hoek-glinsters -> hitmarker-look
+        [(2, 2), (3, 2), (2, 3)],                       # linksboven
+        [(13, 2), (12, 2), (13, 3)],                    # rechtsboven
+        [(2, 13), (3, 13), (2, 12)],                    # linksonder
+        [(13, 13), (12, 13), (13, 12)],                 # rechtsonder
+    ]
+    for mark in corners:
+        for (x, y) in mark:
+            put(im, x, y, "gold_lt")
     add_outline(im); return im
 
 
