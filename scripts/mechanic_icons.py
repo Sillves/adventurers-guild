@@ -76,16 +76,28 @@ def sparkle():  # click-crit — 4-puntige fonkeling + glinster
     add_outline(im); return im
 
 
-def drum():  # click-combo — zijaanzicht-trommel met diagonale rijging
+def drum():  # click-combo — tapse conga-drum met vel en X-touwrijging
     im = new_icon()
-    for y in range(3, 14):
-        r = 1 if y in (3, 13) else 0
-        for x in range(3 + r, 13 - r):
-            put(im, x, y, HOOP if y in (3, 4, 12, 13) else (DRUM if (x + y) % 2 else DRUM_D))
-    xs = [4, 6, 8, 10, 12]                            # V-zigzag tussen de hoepels
-    for i in range(len(xs) - 1):
-        a, b = (5, 11) if i % 2 == 0 else (11, 5)
-        line(im, xs[i], a, xs[i + 1], b, LACE)
+    BODY, BODY_D, BODY_L = (160, 76, 46, 255), (116, 50, 32, 255), (188, 100, 64, 255)
+    HEAD, HEAD_D, ROPE = (228, 204, 154, 255), (190, 164, 118, 255), (238, 220, 172, 255)
+
+    def half(y):
+        h = 4.4 * (1 - (y - 4) / 10.0) + 2.6 * ((y - 4) / 10.0)
+        return h * (1 - (y - 12) * 0.22) if y >= 13 else h
+    for y in range(4, 15):                            # tapse romp + afgeronde bodem
+        hw = half(y)
+        for x in range(16):
+            if abs(x - 7.5) <= hw:
+                put(im, x, y, BODY_L if x - 7.5 < -hw + 1.5 else BODY_D if x - 7.5 > hw - 2 else BODY)
+    for x in range(16):                                # vel-ellips bovenop
+        for y in range(2, 5):
+            if ((x - 7.5) / 4.4) ** 2 + ((y - 3.2) / 1.8) ** 2 <= 1:
+                put(im, x, y, HEAD if y < 4 else HEAD_D)
+    for x in range(3, 12):                              # rand onder het vel
+        if abs(x - 7.5) <= 4.3:
+            put(im, x, 4, HEAD_D)
+    line(im, 4, 5, 11, 10, ROPE); line(im, 11, 5, 4, 10, ROPE)    # bovenste X
+    line(im, 5, 10, 9, 14, ROPE); line(im, 10, 10, 6, 14, ROPE)   # onderste X
     add_outline(im); return im
 
 
