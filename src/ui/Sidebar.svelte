@@ -191,6 +191,7 @@
       <label class="vol"><span>🎵</span><input type="range" min="0" max="100" value={musicVol} oninput={onMusicVol} aria-label="Music volume" /></label>
       <label class="vol"><span>🔔</span><input type="range" min="0" max="100" value={sfxVol} oninput={onSfxVol} aria-label="Sound effects volume" /></label>
       {#if wakeLockSupported}
+        <hr class="sep" />
         <div class="switch-row">
           <span>Keep screen on</span>
           <button
@@ -203,14 +204,17 @@
           ><span class="knob"></span></button>
         </div>
       {/if}
-      <button onclick={openChangelog}>
-        📜 What's new{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
+      <hr class="sep" />
+      <button class="menu-item" onclick={openChangelog}>
+        <span class="mi-icon">📜</span><span class="mi-label">What's new</span>{#if changelogUnseen > 0}<span class="news-dot"></span>{/if}
       </button>
-      <button onclick={() => { showSettings = false; showStats = true; }}>📊 Stats</button>
-      <button onclick={() => { showSettings = false; showAchievements = true; }}>🏅 Achievements</button>
-      <button onclick={() => { showSettings = false; showNumbers = true; }}>What's a Qa? ℹ️</button>
-      <button onclick={() => { showSettings = false; void exportSave(); }}>Export save</button>
-      <button onclick={() => { showSettings = false; importSave(); }}>Import save</button>
+      <button class="menu-item" onclick={() => { showSettings = false; showStats = true; }}><span class="mi-icon">📊</span><span class="mi-label">Stats</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; showAchievements = true; }}><span class="mi-icon">🏅</span><span class="mi-label">Achievements</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; showNumbers = true; }}><span class="mi-icon">ℹ️</span><span class="mi-label">What's a Qa?</span></button>
+      <hr class="sep" />
+      <button class="menu-item" onclick={() => { showSettings = false; void exportSave(); }}><span class="mi-icon">📤</span><span class="mi-label">Export save</span></button>
+      <button class="menu-item" onclick={() => { showSettings = false; importSave(); }}><span class="mi-icon">📥</span><span class="mi-label">Import save</span></button>
+      <hr class="sep" />
       <a class="credits" href="https://github.com/game-icons/icons" target="_blank" rel="noreferrer">Credits & licenses</a>
     </div>
   {/if}
@@ -272,6 +276,12 @@
   }
   .settings-toggle,
   .settings-panel { display: none; }
+  /* consistente menu-rij in het settings-paneel: vaste icoonkolom + label */
+  .menu-item { width: 100%; gap: 10px; }
+  .menu-item .mi-icon { flex: none; width: 20px; text-align: center; font-size: 0.95rem; }
+  .menu-item .mi-label { flex: 1; }
+  /* dunne groepsscheiding tussen secties van het paneel */
+  .sep { width: 100%; height: 0; margin: 2px 0; border: none; border-top: 1px solid var(--border); }
   .balances { margin-top: auto; padding: 12px 4px; display: grid; gap: 6px; }
   .scale-hint {
     justify-self: start;
@@ -407,21 +417,32 @@
     .settings-panel .vol { padding: 4px 12px; }
     .settings-panel {
       display: grid;
-      gap: 8px;
+      gap: 3px;
       position: fixed;
       top: calc(48px + env(safe-area-inset-top));
       right: 8px;
+      /* vaste, compacte breedte i.p.v. meegroeien met de inhoud */
+      width: 240px;
+      max-width: calc(100vw - 16px);
+      /* past hij niet, dan scrolt het paneel zelf i.p.v. van het scherm te lopen */
+      max-height: calc(100vh - 56px - env(safe-area-inset-top));
+      overflow-y: auto;
       z-index: 12;
       background: var(--panel-raised);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px;
+      padding: 8px;
+      box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
       /* één lettergrootte voor alle rijen in het paneel */
       font-size: 0.9rem;
     }
+    .settings-panel .menu-item { padding: 9px 10px; border-radius: 8px; }
+    .settings-panel .menu-item:active { background: var(--panel); }
     .settings-panel .switch-row,
     .settings-panel .credits { font-size: inherit; }
-    .settings-panel .credits { display: block; text-align: left; padding: 4px 12px; }
+    .settings-panel .credits { display: block; text-align: center; padding: 8px; }
+    /* ongelezen-stip als badge in de hoek van het tandwiel, niet zwevend ernaast */
+    .settings-toggle .news-dot { position: absolute; top: 7px; right: 7px; margin: 0; }
     .dot { top: 2px; right: calc(50% - 16px); }
     /* op mobiel zit de wakker-blijven-toggle in het instellingenpaneel */
     .awake,

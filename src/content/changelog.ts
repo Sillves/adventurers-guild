@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-21',
+    icon: '✨',
+    title: 'Tidier settings on mobile',
+    description:
+      'The mobile settings menu got a clean-up: grouped sections with dividers, lined-up icons and labels, a fixed compact width, and the “new” dot now sits neatly on the ⚙️ button instead of floating off the edge.',
+    prs: [70],
+  },
+  {
+    date: '2026-06-21',
     icon: '🔥',
     title: 'War Spoils shows its true power',
     description:
