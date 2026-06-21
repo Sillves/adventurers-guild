@@ -4,6 +4,7 @@ Eén icoon per held, toegepast op al z'n upgrade-tiers + legioenen.
 Draaien: python3 scripts/hero_icons.py [--write]
 """
 import math, os, sys
+from PIL import Image
 sys.path.insert(0, os.path.dirname(__file__))
 from pixelart import (new_icon, put, add_outline, fill_polygon,
                       save_previews, save_icon, fit_report)
@@ -61,7 +62,8 @@ def bow():  # archer
     for x in range(2, 10):                          # pijl wijst naar links (richting doel)
         put(im, x, 8, "wood")
     put(im, 2, 7, "steel_lt"); put(im, 2, 9, "steel_lt"); put(im, 1, 8, "steel")  # punt links
-    add_outline(im); return im
+    add_outline(im)
+    return im.transpose(Image.FLIP_LEFT_RIGHT)      # gespiegeld: boog/pijl wijzen naar rechts
 
 
 def spellbook():  # mage
