@@ -13,7 +13,15 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
-    date: '2026-06-22',
+    date: '2026-06-21',
+    icon: '🗡️',
+    title: 'Pixel weapons for your heroes',
+    description:
+      'Your starter heroes’ upgrades now show hand-drawn pixel gear instead of emoji — a pitchfork for Farmhands, a shield for Squires, a sword for Warriors, a bow for Archers and a spellbook for Mages, across every tier and Legion.',
+    prs: [74],
+  },
+  {
+    date: '2026-06-21',
     icon: '🪙',
     title: 'Hand-made pixel coins & perks',
     description:
@@ -51,6 +59,14 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
     description:
       'The victory frenzy banner was always reading “×2” even after you levelled up War Spoils. Your production was already getting the bigger boost — now the banner shows the real multiplier too.',
     prs: [68],
+  },
+  {
+    date: '2026-06-19',
+    icon: '⚔️',
+    title: 'Legions & deeper upgrades',
+    description:
+      'Your starter heroes get more to grind for. New tier-4 upgrades for Farmhands, Squires, Warriors, Archers and Mages keep your old heroes worth pumping. And huge new Legion upgrades unlock when you hoard 50, 150 or 300 of one hero type — stack them into a force of nature.',
+    prs: [67],
   },
   {
     date: '2026-06-19',

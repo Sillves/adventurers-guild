@@ -3,6 +3,7 @@
   import { formatDuration, formatNumber } from '../format';
   import { game } from '../game.svelte';
   import { leaderboard } from '../leaderboard.svelte';
+  import Icon from '../Icon.svelte';
 
   let nameInput = $state(leaderboard.name);
 
@@ -47,8 +48,8 @@
       <div class="row head">
         <span class="rank">#</span>
         <span class="name">Guild</span>
-        <span class="num">🏆<span class="th"> Fame</span></span>
-        <span class="num">🪙<span class="th"> Lifetime</span></span>
+        <span class="num"><Icon icon="sprites/fame.png" size={13} /><span class="th"> Fame</span></span>
+        <span class="num"><Icon icon="sprites/coin.png" size={13} /><span class="th"> Lifetime</span></span>
         <span class="num" title="Refounds">👑<span class="th"> Refounds</span></span>
       </div>
       {#each leaderboard.board as entry (entry.rank)}
