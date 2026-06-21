@@ -13,7 +13,7 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
-    date: '2026-06-22',
+    date: '2026-06-21',
     icon: '🗡️',
     title: 'Pixel weapons for your heroes',
     description:
@@ -21,7 +21,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
     prs: [74],
   },
   {
-    date: '2026-06-22',
+    date: '2026-06-21',
     icon: '🪙',
     title: 'Hand-made pixel coins & perks',
     description:
