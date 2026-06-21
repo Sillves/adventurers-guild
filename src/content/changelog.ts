@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-21',
+    icon: '📜',
+    title: 'Pixel icons for quest upgrades',
+    description:
+      'The active-play upgrades now have hand-drawn pixel icons too — a scroll for quest power, a banner for hero synergy, a sparkle for critical quests, a war drum for combos and a herald’s horn for your auto-quest staff.',
+    prs: [75],
+  },
+  {
+    date: '2026-06-21',
     icon: '🗡️',
     title: 'Pixel weapons for your heroes',
     description:
