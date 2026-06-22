@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
     date: '2026-06-22',
+    icon: '👑',
+    title: 'Welcome-back shows your Fame progress',
+    description:
+      'Fame was always building up while you were away — your offline gold counts toward your next Fame point — but the welcome-back report never said so. It now shows how much Fame your time away made ready to claim on your next refound.',
+    prs: [78],
+  },
+  {
+    date: '2026-06-22',
     icon: '🐲',
     title: 'Pixel icons for your mightiest heroes',
     description:

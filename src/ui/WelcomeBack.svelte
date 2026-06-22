@@ -29,6 +29,11 @@
         <span><Icon icon="sprites/horn.png" size={14} /> Staff +{formatNumber(report.staffGold)}</span>
       </div>
     {/if}
+    {#if report.fameReady > 0}
+      <div class="fame-ready">
+        <Icon icon="sprites/fame.png" size={16} /> +{formatNumber(report.fameReady)} Fame ready to claim
+      </div>
+    {/if}
     {#if report.plundered}
       <div class="plundered">
         🪓 Barbarians broke through while you were away — they took 20% of your gold and are still plundering. Fight them off!
@@ -55,6 +60,10 @@
   .dim { color: var(--text-dim); }
   .earned { font-size: 1.2rem; color: var(--gold); display: flex; justify-content: center; gap: 8px; }
   .breakdown { display: flex; justify-content: center; gap: 16px; color: var(--text-dim); font-size: 0.85rem; }
+  .fame-ready {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    color: var(--gold); font-weight: 600; font-size: 0.95rem;
+  }
   .plundered {
     max-width: 280px;
     background: var(--panel-raised);
