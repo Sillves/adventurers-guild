@@ -5,6 +5,7 @@
   import { formatEta, formatNumber } from '../format';
   import { game } from '../game.svelte';
   import GuildYard from '../GuildYard.svelte';
+  import Icon from '../Icon.svelte';
 
   const gain = $derived(clickGain(game.state).gold ?? 0);
   const maxCombo = $derived(comboCap(game.state.upgrades));
@@ -43,14 +44,15 @@
     readonly text: string;
     readonly crit: boolean;
     readonly auto: boolean;
+    readonly icon?: string;
   }
 
   let floats = $state<FloatingGain[]>([]);
   let nextFloatId = 0;
 
-  function addFloat(text: string, crit: boolean, auto = false): void {
+  function addFloat(text: string, crit: boolean, auto = false, icon = ''): void {
     const id = nextFloatId++;
-    floats = [...floats.slice(-24), { id, x: (Math.random() - 0.5) * 140, text, crit, auto }];
+    floats = [...floats.slice(-24), { id, x: (Math.random() - 0.5) * 140, text, crit, auto, icon }];
     setTimeout(() => (floats = floats.filter((f) => f.id !== id)), 900);
   }
 
@@ -70,7 +72,7 @@
   // het personeel klikt zichtbaar mee: elke seconde één zachte float met hun opbrengst
   $effect(() => {
     if (autoRate <= 0) return;
-    const timer = setInterval(() => addFloat(`📯 +${formatNumber(autoRate)}`, false, true), 1000);
+    const timer = setInterval(() => addFloat(`+${formatNumber(autoRate)}`, false, true, 'sprites/horn.png'), 1000);
     return () => clearInterval(timer);
   });
 
@@ -120,7 +122,7 @@
       {/if}
     </button>
     {#each floats as f (f.id)}
-      <span class="float" class:crit={f.crit} class:auto={f.auto} style="left: calc(50% + {f.x}px)">{f.text}</span>
+      <span class="float" class:crit={f.crit} class:auto={f.auto} style="left: calc(50% + {f.x}px)">{#if f.icon}<Icon icon={f.icon} size={13} /> {/if}{f.text}</span>
     {/each}
   </div>
 

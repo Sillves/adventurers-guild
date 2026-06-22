@@ -26,7 +26,7 @@
     {#if report.heroGold > 0 && report.staffGold > 0}
       <div class="breakdown">
         <span>🧙 Heroes +{formatNumber(report.heroGold)}</span>
-        <span>📯 Staff +{formatNumber(report.staffGold)}</span>
+        <span><Icon icon="sprites/horn.png" size={14} /> Staff +{formatNumber(report.staffGold)}</span>
       </div>
     {/if}
     {#if report.plundered}
