@@ -13,6 +13,14 @@ export interface ChangelogEntry {
 // Nieuwe entries komen BOVENAAN. Hou de toon licht; dit is een spelletje.
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    date: '2026-06-22',
+    icon: '🐲',
+    title: 'Pixel icons for your mightiest heroes',
+    description:
+      'The last emoji are gone: the high-tier hero upgrades now have hand-made pixel art — a war hammer for Paladins, a dragon fang for Dragon Tamers, an arcane orb for Archmages, a mountain for Titans, a scepter for Demigods and a radiant burst for Celestials. The crit, banner, Mighty Quests and Fame icons got a polish pass too.',
+    prs: [77],
+  },
+  {
     date: '2026-06-21',
     icon: '📜',
     title: 'Pixel icons for quest upgrades',
