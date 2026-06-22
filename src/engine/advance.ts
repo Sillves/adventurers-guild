@@ -1,6 +1,6 @@
 import type { CurrencyMap } from '../content/types';
 import { earn, raidDeadline } from './commands';
-import { autoClickPerSecond, incomePerSecond } from './formulas';
+import { autoClickPerSecond, fameGain, incomePerSecond } from './formulas';
 import { scaleMap } from './maps';
 import { offlinePerkHours } from './perks';
 import type { GameState } from './state';
@@ -18,6 +18,8 @@ export interface OfflineReport {
   readonly heroGold: number;
   /** Verstreek de raid-deadline terwijl je weg was? Dan is er geplunderd. */
   readonly plundered: boolean;
+  /** Extra claimbare Fame die je offline-goud opleverde (0 als er niets bijkwam). */
+  readonly fameReady: number;
 }
 
 export function advance(state: GameState, seconds: number): GameState {
@@ -63,6 +65,9 @@ export function applyOffline(
   if (elapsed < OFFLINE_REPORT_MIN_SECONDS && crossed !== true) return { state, report: null };
 
   const goldBefore = state.lifetimeEarned['gold'] ?? 0;
+  // claimbare Fame vóór de offline-tijd; Fame is geen tick-currency maar je
+  // lifetime-goud tilt fameEarned mee omhoog, dus offline-goud maakt Fame klaar
+  const fameBefore = fameGain(state);
   let next = state;
   let staffGold = 0;
   if (crossed === true && state.raid?.phase === 'incoming') {
@@ -79,8 +84,9 @@ export function applyOffline(
   if (elapsed < OFFLINE_REPORT_MIN_SECONDS) return { state: next, report: null };
   const total = (next.lifetimeEarned['gold'] ?? 0) - goldBefore;
   const earned: CurrencyMap = { gold: total };
+  const fameReady = Math.max(0, fameGain(next) - fameBefore);
   return {
     state: next,
-    report: { seconds: elapsed, earned, staffGold, heroGold: total - staffGold, plundered: crossed === true },
+    report: { seconds: elapsed, earned, staffGold, heroGold: total - staffGold, plundered: crossed === true, fameReady },
   };
 }

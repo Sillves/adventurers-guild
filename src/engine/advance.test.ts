@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { advance, applyOffline, OFFLINE_CAP_SECONDS } from './advance';
+import { fameGain } from './formulas';
 import { createInitialState } from './state';
 
 const producing = {
@@ -151,5 +152,19 @@ describe('offline report breakdown', () => {
     expect(report?.staffGold).toBeCloseTo(600);
     // helden: 100s vol (6.25/s) + 500s op halve kracht (3.125/s)
     expect(report?.heroGold).toBeCloseTo(625 + 1562.5);
+  });
+
+  it('reports the claimable Fame that offline gold made ready', () => {
+    // lifetime-goud net onder de eerste Fame-drempel (1M); offline tilt het erover
+    const near = { ...producing, lifetimeEarned: { gold: 950_000 }, lastSavedAt: 0 };
+    const before = fameGain(near);
+    const { state: after, report } = applyOffline(near, OFFLINE_CAP_SECONDS * 1000);
+    expect(report?.fameReady).toBe(fameGain(after) - before);
+    expect(report?.fameReady).toBeGreaterThan(0);
+  });
+
+  it('reports zero Fame ready when offline gold earns no new point', () => {
+    const { report } = applyOffline({ ...producing, lastSavedAt: 0 }, 120_000); // 2 min
+    expect(report?.fameReady).toBe(0);
   });
 });
